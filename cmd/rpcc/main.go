@@ -38,42 +38,59 @@ func main() {
 }
 
 var (
-	reHeader   = regexp.MustCompilePOSIX(`/\*\*[[:space:]]+([[:digit:]]+)\.([[:digit:]]+)[[:space:]]*([^\*]+)`)
+	reVersion  = regexp.MustCompilePOSIX(`/\*\*[[:space:]]+Version:[[:space:]]+([[:digit:]]+)\.([[:digit:]]+)`)
+	reSection  = regexp.MustCompilePOSIX(`/\*\*[[:space:]]+Section:[[:space:]]+([[:digit:]]+)\.([[:digit:]]+)[[:space:]]*([^\*]+)`)
 	reFunction = regexp.MustCompilePOSIX(`^(C_[a-zA-Z0-9_]+)`)
 )
 
 func processFile(in io.Reader) error {
 	reader := bufio.NewReader(in)
 
-	var v0, v1, v2 uint8
+	var vMajor, vMinor, s0, s1, s2 uint8
+	var title string
 
-	// Find header line.
+	// Parse header.
 	for {
 		line, err := reader.ReadString('\n')
 		if err != nil {
 			return err
 		}
-		m := reHeader.FindStringSubmatch(line)
+		m := reVersion.FindStringSubmatch(line)
+		if m != nil {
+			vMajori64, err := strconv.ParseInt(m[1], 10, 8)
+			if err != nil {
+				return err
+			}
+			vMajor = uint8(vMajori64) - 2
+
+			vMinori64, err := strconv.ParseInt(m[2], 10, 8)
+			if err != nil {
+				return err
+			}
+			vMinor = uint8(vMinori64)
+			continue
+		}
+		m = reSection.FindStringSubmatch(line)
 		if m == nil {
 			continue
 		}
-		v0i64, err := strconv.ParseInt(m[1], 10, 8)
+		s0i64, err := strconv.ParseInt(m[1], 10, 8)
 		if err != nil {
 			return err
 		}
-		v0 = uint8(v0i64)
+		s0 = uint8(s0i64)
 
-		v1i64, err := strconv.ParseInt(m[2], 10, 8)
+		s1i64, err := strconv.ParseInt(m[2], 10, 8)
 		if err != nil {
 			return err
 		}
-		v1 = uint8(v1i64)
+		s1 = uint8(s1i64)
 
-		title := strings.TrimSpace(m[3])
-
-		fmt.Printf("%d.%d %s\n", v0, v1, title)
+		title = strings.TrimSpace(m[3])
 		break
 	}
+	fmt.Printf("* Version %d.%d\n", vMajor+2, vMinor)
+	fmt.Printf("** %d.%d %s\n", s0, s1, title)
 
 	// Process all functions
 	for {
@@ -88,9 +105,9 @@ func processFile(in io.Reader) error {
 		if m == nil {
 			continue
 		}
-		v2++
+		s2++
 
 		name := m[1]
-		fmt.Printf(" - %d.%d.%d %s\n", v0, v1, v2, name)
+		fmt.Printf(" - %d.%d.%d %s\n", s0, s1, s2, name)
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Markku Rossi.
+ * Copyright (C) 2020-2021 Markku Rossi.
  *
  * All rights reserved.
  */
@@ -28,45 +28,6 @@ CK_RV
 C_CancelFunction
 (
   CK_SESSION_HANDLE hSession  /* the session's handle */
-)
-{
-  VP_FUNCTION_NOT_SUPPORTED;
-}
-
-/* C_WaitForSlotEvent waits for a slot event (token insertion,
- * removal, etc.) to occur.
- */
-CK_RV
-C_WaitForSlotEvent
-(
-  CK_FLAGS flags,        /* blocking/nonblocking flag */
-  CK_SLOT_ID_PTR pSlot,  /* location that receives the slot ID */
-  CK_VOID_PTR pRserved   /* reserved.  Should be NULL_PTR */
-)
-{
-  VP_FUNCTION_NOT_SUPPORTED;
-}
-
-/* C_GetInterfaceList returns all the interfaces supported by the module*/
-CK_RV
-C_GetInterfaceList
-(
-  CK_INTERFACE_PTR  pInterfacesList,  /* returned interfaces */
-  CK_ULONG_PTR      pulCount          /* number of interfaces returned */
-)
-{
-  VP_FUNCTION_NOT_SUPPORTED;
-}
-
-/* C_GetInterface returns a specific interface from the module. */
-CK_RV
-C_GetInterface
-(
-  CK_UTF8CHAR_PTR       pInterfaceName, /* name of the interface */
-  CK_VERSION_PTR        pVersion,       /* version of the interface */
-  CK_INTERFACE_PTR_PTR  ppInterface,    /* returned interface */
-  CK_FLAGS 		flags           /* flags controlling the semantics
-                                         * of the interface */
 )
 {
   VP_FUNCTION_NOT_SUPPORTED;

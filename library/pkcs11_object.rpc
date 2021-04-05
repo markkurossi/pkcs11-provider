@@ -1,13 +1,14 @@
 /* -*- c -*-
  *
- * Copyright (C) 2020, 2021 Markku Rossi.
+ * Copyright (C) 2020-2021 Markku Rossi.
  *
  * All rights reserved.
  */
 
 #include "vp_includes.h"
 
-/** 5.7 Object management functions */
+/** Version: 3.0 */
+/** Section: 5.7 Object management functions */
 
 /* C_CreateObject creates a new object. */
 CK_RV
