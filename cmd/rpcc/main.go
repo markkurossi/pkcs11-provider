@@ -41,6 +41,9 @@ var (
 	reVersion  = regexp.MustCompilePOSIX(`/\*\*[[:space:]]+Version:[[:space:]]+([[:digit:]]+)\.([[:digit:]]+)`)
 	reSection  = regexp.MustCompilePOSIX(`/\*\*[[:space:]]+Section:[[:space:]]+([[:digit:]]+)\.([[:digit:]]+)[[:space:]]*([^\*]+)`)
 	reFunction = regexp.MustCompilePOSIX(`^(C_[a-zA-Z0-9_]+)`)
+
+	vMajorLast uint8
+	vMinorLast uint8
 )
 
 func processFile(in io.Reader) error {
@@ -89,7 +92,11 @@ func processFile(in io.Reader) error {
 		title = strings.TrimSpace(m[3])
 		break
 	}
-	fmt.Printf("* Version %d.%d\n", vMajor+2, vMinor)
+	if vMajor != vMajorLast || vMinor != vMinorLast {
+		vMajorLast = vMajor
+		vMinorLast = vMinor
+		fmt.Printf("* Version %d.%d\n", vMajor+2, vMinor)
+	}
 	fmt.Printf("** %d.%d %s\n", s0, s1, title)
 
 	// Process all functions
