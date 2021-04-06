@@ -1,12 +1,15 @@
-/*
- * Copyright (C) 2020 Markku Rossi.
+/* This file is auto-generated from pkcs11_5_12_message_digest.rpc by rpcc. */
+/* -*- c -*-
+ *
+ * Copyright (C) 2020-2021 Markku Rossi.
  *
  * All rights reserved.
  */
 
 #include "vp_includes.h"
 
-/* Message digesting */
+/** Version: 3.0 */
+/** Section: 5.12 Message digesting functions */
 
 /* C_DigestInit initializes a message-digesting operation. */
 CK_RV

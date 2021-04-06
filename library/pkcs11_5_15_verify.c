@@ -1,12 +1,15 @@
-/*
- * Copyright (C) 2020 Markku Rossi.
+/* This file is auto-generated from pkcs11_5_15_verify.rpc by rpcc. */
+/* -*- c -*-
+ *
+ * Copyright (C) 2020-2021 Markku Rossi.
  *
  * All rights reserved.
  */
 
 #include "vp_includes.h"
 
-/* Verifying signatures and MACs */
+/** Version: 3.0 */
+/** Section: 5.15 Functions for verifying signatures and MACs */
 
 /* C_VerifyInit initializes a verification operation, where the
  * signature is an appendix to the data, and plaintext cannot

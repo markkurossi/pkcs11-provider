@@ -1,12 +1,15 @@
-/*
- * Copyright (C) 2020 Markku Rossi.
+/* This file is auto-generated from pkcs11_5_05_slot_and_token.rpc by rpcc. */
+/* -*- c -*-
+ *
+ * Copyright (C) 2020-2021 Markku Rossi.
  *
  * All rights reserved.
  */
 
 #include "vp_includes.h"
 
-/* Slot and token management */
+/** Version: 3.0 */
+/** Section: 5.5 Slot and token management function */
 
 /* C_GetSlotList obtains a list of slots in the system. */
 CK_RV
@@ -41,6 +44,20 @@ C_GetTokenInfo
 (
   CK_SLOT_ID        slotID,  /* ID of the token's slot */
   CK_TOKEN_INFO_PTR pInfo    /* receives the token information */
+)
+{
+  VP_FUNCTION_NOT_SUPPORTED;
+}
+
+/* C_WaitForSlotEvent waits for a slot event (token insertion,
+ * removal, etc.) to occur.
+ */
+CK_RV
+C_WaitForSlotEvent
+(
+  CK_FLAGS flags,        /* blocking/nonblocking flag */
+  CK_SLOT_ID_PTR pSlot,  /* location that receives the slot ID */
+  CK_VOID_PTR pRserved   /* reserved.  Should be NULL_PTR */
 )
 {
   VP_FUNCTION_NOT_SUPPORTED;

@@ -1,12 +1,15 @@
-/*
- * Copyright (C) 2020 Markku Rossi.
+/* This file is auto-generated from pkcs11_5_13_sign.rpc by rpcc. */
+/* -*- c -*-
+ *
+ * Copyright (C) 2020-2021 Markku Rossi.
  *
  * All rights reserved.
  */
 
 #include "vp_includes.h"
 
-/* Signing and MACing */
+/** Version: 3.0 */
+/** Section: 5.13 Signing and MACing functions */
 
 /* C_SignInit initializes a signature (private key encryption)
  * operation, where the signature is (will be) an appendix to

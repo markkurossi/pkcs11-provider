@@ -1,12 +1,15 @@
-/*
- * Copyright (C) 2020 Markku Rossi.
+/* This file is auto-generated from pkcs11_5_04_general_purpose.rpc by rpcc. */
+/* -*- c -*-
+ *
+ * Copyright (C) 2020-2021 Markku Rossi.
  *
  * All rights reserved.
  */
 
 #include "vp_includes.h"
 
-/* General-purpose */
+/** Version: 3.0 */
+/** Section: 5.4 General-purpose functions */
 
 /* C_Initialize initializes the Cryptoki library. */
 CK_RV
@@ -50,6 +53,31 @@ C_GetFunctionList
   CK_FUNCTION_LIST_PTR_PTR ppFunctionList  /* receives pointer to
                                             * function list
                                             */
+)
+{
+  VP_FUNCTION_NOT_SUPPORTED;
+}
+
+/* C_GetInterfaceList returns all the interfaces supported by the module*/
+CK_RV
+C_GetInterfaceList
+(
+  CK_INTERFACE_PTR  pInterfacesList,  /* returned interfaces */
+  CK_ULONG_PTR      pulCount          /* number of interfaces returned */
+)
+{
+  VP_FUNCTION_NOT_SUPPORTED;
+}
+
+/* C_GetInterface returns a specific interface from the module. */
+CK_RV
+C_GetInterface
+(
+  CK_UTF8CHAR_PTR       pInterfaceName, /* name of the interface */
+  CK_VERSION_PTR        pVersion,       /* version of the interface */
+  CK_INTERFACE_PTR_PTR  ppInterface,    /* returned interface */
+  CK_FLAGS 		flags           /* flags controlling the semantics
+                                         * of the interface */
 )
 {
   VP_FUNCTION_NOT_SUPPORTED;

@@ -1,12 +1,15 @@
-/*
- * Copyright (C) 2020 Markku Rossi.
+/* This file is auto-generated from pkcs11_5_19_random.rpc by rpcc. */
+/* -*- c -*-
+ *
+ * Copyright (C) 2020-2021 Markku Rossi.
  *
  * All rights reserved.
  */
 
 #include "vp_includes.h"
 
-/* Random number generation */
+/** Version: 3.0 */
+/** Section: 5.19 Random number generation functions */
 
 /* C_SeedRandom mixes additional seed material into the token's
  * random number generator.

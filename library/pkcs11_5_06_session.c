@@ -1,12 +1,15 @@
-/*
- * Copyright (C) 2020 Markku Rossi.
+/* This file is auto-generated from pkcs11_5_06_session.rpc by rpcc. */
+/* -*- c -*-
+ *
+ * Copyright (C) 2020-2021 Markku Rossi.
  *
  * All rights reserved.
  */
 
 #include "vp_includes.h"
 
-/* Session management */
+/** Version: 3.0 */
+/** Section: 5.6 Session management functions */
 
 /* C_OpenSession opens a session between an application and a
  * token.
@@ -57,6 +60,17 @@ C_GetSessionInfo
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
+/* C_SessionCancel terminates active session based operations. */
+CK_RV
+C_SessionCancel
+(
+  CK_SESSION_HANDLE hSession,  /* the session's handle */
+  CK_FLAGS          flags      /* flags control which sessions are cancelled */
+)
+{
+  VP_FUNCTION_NOT_SUPPORTED;
+}
+
 /* C_GetOperationState obtains the state of the cryptographic operation
  * in a session.
  */
@@ -95,6 +109,21 @@ C_Login
   CK_USER_TYPE      userType,  /* the user type */
   CK_UTF8CHAR_PTR   pPin,      /* the user's PIN */
   CK_ULONG          ulPinLen   /* the length of the PIN */
+)
+{
+  VP_FUNCTION_NOT_SUPPORTED;
+}
+
+/* C_LoginUser logs a user into a token. */
+CK_RV
+C_LoginUser
+(
+  CK_SESSION_HANDLE hSession,  /* the session's handle */
+  CK_USER_TYPE      userType,  /* the user type */
+  CK_UTF8CHAR_PTR   pPin,      /* the user's PIN */
+  CK_ULONG          ulPinLen,  /* the length of the PIN */
+  CK_UTF8CHAR_PTR   pUsername, /* the user's name */
+  CK_ULONG          ulUsernameLen /*the length of the user's name */
 )
 {
   VP_FUNCTION_NOT_SUPPORTED;

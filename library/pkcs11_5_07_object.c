@@ -1,12 +1,15 @@
-/*
- * Copyright (C) 2020 Markku Rossi.
+/* This file is auto-generated from pkcs11_5_07_object.rpc by rpcc. */
+/* -*- c -*-
+ *
+ * Copyright (C) 2020-2021 Markku Rossi.
  *
  * All rights reserved.
  */
 
 #include "vp_includes.h"
 
-/* Object management */
+/** Version: 3.0 */
+/** Section: 5.7 Object management functions */
 
 /* C_CreateObject creates a new object. */
 CK_RV
@@ -18,6 +21,13 @@ C_CreateObject
   CK_OBJECT_HANDLE_PTR phObject  /* gets new object's handle. */
 )
 {
+  /**
+   * Inputs:
+   *            CK_SESSION_HANDLE hSession
+   *   [ulCount]CK_ATTRIBUTE      pTemplate
+   * Outputs:
+   *            CK_OBJECT_HANDLE  phObject
+   */
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -34,6 +44,14 @@ C_CopyObject
   CK_OBJECT_HANDLE_PTR phNewObject  /* receives handle of copy */
 )
 {
+  /**
+   * Inputs:
+   *            CK_SESSION_HANDLE hSession
+   *            CK_OBJECT_HANDLE  hObject
+   *   [ulCount]CK_ATTRIBUTE      pTemplate
+   * Outputs:
+   *            CK_OBJECT_HANDLE  phNewObject
+   */
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -45,6 +63,11 @@ C_DestroyObject
   CK_OBJECT_HANDLE  hObject    /* the object's handle */
 )
 {
+  /**
+   * Inputs:
+   *            CK_SESSION_HANDLE hSession
+   *            CK_OBJECT_HANDLE  hObject
+   */
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -57,6 +80,13 @@ C_GetObjectSize
   CK_ULONG_PTR      pulSize    /* receives size of object */
 )
 {
+  /**
+   * Inputs:
+   *            CK_SESSION_HANDLE hSession
+   *            CK_OBJECT_HANDLE  hObject
+   * Outputs:
+   *            CK_ULONG          pulSize
+   */
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -72,6 +102,14 @@ C_GetAttributeValue
   CK_ULONG          ulCount     /* attributes in template */
 )
 {
+  /**
+   * Inputs:
+   *            CK_SESSION_HANDLE hSession
+   *            CK_OBJECT_HANDLE  hObject
+   *   [ulCount]CK_ATTRIBUTE      pTemplate
+   * Outputs:
+   *   [ulCount]CK_ATTRIBUTE      pTemplate
+   */
   VP_FUNCTION_NOT_SUPPORTED;
 }
 

@@ -1,12 +1,15 @@
-/*
- * Copyright (C) 2020 Markku Rossi.
+/* This file is auto-generated from pkcs11_5_17_dual_function.rpc by rpcc. */
+/* -*- c -*-
+ *
+ * Copyright (C) 2020-2021 Markku Rossi.
  *
  * All rights reserved.
  */
 
 #include "vp_includes.h"
 
-/* Dual-function cryptographic operations */
+/** Version: 3.0 */
+/** Section: 5.17 Dual-function cryptographic functions */
 
 /* C_DigestEncryptUpdate continues a multiple-part digesting
  * and encryption operation.

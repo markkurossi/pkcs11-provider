@@ -1,12 +1,15 @@
-/*
- * Copyright (C) 2020 Markku Rossi.
+/* This file is auto-generated from pkcs11_5_18_key_management.rpc by rpcc. */
+/* -*- c -*-
+ *
+ * Copyright (C) 2020-2021 Markku Rossi.
  *
  * All rights reserved.
  */
 
 #include "vp_includes.h"
 
-/* Key management */
+/** Version: 3.0 */
+/** Section: 5.18 Key management functions */
 
 /* C_GenerateKey generates a secret key, creating a new key
  * object.

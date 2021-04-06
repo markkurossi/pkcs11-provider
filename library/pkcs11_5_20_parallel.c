@@ -1,0 +1,37 @@
+/* This file is auto-generated from pkcs11_5_20_parallel.rpc by rpcc. */
+/* -*- c -*-
+ *
+ * Copyright (C) 2020-2021 Markku Rossi.
+ *
+ * All rights reserved.
+ */
+
+#include "vp_includes.h"
+
+/** Version: 3.0 */
+/** Section: 5.20 Parallel function management functions */
+
+/* C_GetFunctionStatus is a legacy function; it obtains an
+ * updated status of a function running in parallel with an
+ * application.
+ */
+CK_RV
+C_GetFunctionStatus
+(
+  CK_SESSION_HANDLE hSession  /* the session's handle */
+)
+{
+  VP_FUNCTION_NOT_SUPPORTED;
+}
+
+/* C_CancelFunction is a legacy function; it cancels a function
+ * running in parallel.
+ */
+CK_RV
+C_CancelFunction
+(
+  CK_SESSION_HANDLE hSession  /* the session's handle */
+)
+{
+  VP_FUNCTION_NOT_SUPPORTED;
+}
