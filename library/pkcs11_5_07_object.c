@@ -29,6 +29,28 @@ C_CreateObject
    *            CK_OBJECT_HANDLE  phObject
    */
   VP_FUNCTION_NOT_SUPPORTED;
+
+  VPBuffer buf;
+  unsigned char *data;
+  int i;
+
+  vp_buffer_init(&buf);
+
+  vp_buffer_add_uint32(&buf, hSession);
+
+  vp_buffer_add_uint32(&buf, ulCount);
+  for (i = 0; i < ulCount; i++)
+    {
+      vp_buffer_add_uint32(&buf, pTemplate[i].type);
+      vp_buffer_add_data(&buf, pTemplate[i].pValue, pTemplate[i].ulValueLen);
+    }
+
+  data = vp_buffer_ptr(&buf);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
 }
 
 /* C_CopyObject copies an object, creating a new object for the

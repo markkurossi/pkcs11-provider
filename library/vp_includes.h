@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Markku Rossi.
+ * Copyright (C) 2020-2021 Markku Rossi.
  *
  * All rights reserved.
  */
@@ -9,8 +9,12 @@
 
 #include <syslog.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
 
 #define CK_PTR *
 #define CK_BOOL bool
@@ -26,6 +30,8 @@ typedef unsigned long int CK_HANDLE;
 #include <pkcs11.h>
 
 void vp_log(int priority, char *msg, ...);
+
+#include "vp_buffer.h"
 
 #define VP_FUNCTION_NOT_SUPPORTED			\
 do {		       					\
