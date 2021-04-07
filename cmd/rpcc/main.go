@@ -16,6 +16,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/markkurossi/pkcs11-provider/ipc"
 )
 
 var (
@@ -28,8 +30,8 @@ var (
 	reField        = regexp.MustCompilePOSIX(`\*[[:space:]]+([[:^space:]]+)[[:space:]]+([[:^space:]]+)`)
 	reType         = regexp.MustCompilePOSIX(`^(\[([A-Za-z_0-9]+)\])?([A-Za-z_0-9]+)$`)
 
-	vMajorLast uint8
-	vMinorLast uint8
+	vMajorLast int
+	vMinorLast int
 
 	output     io.WriteCloser = os.Stdout
 	outputC    bool
@@ -75,7 +77,7 @@ func main() {
 func processFile(in io.Reader) error {
 	reader := bufio.NewReader(in)
 
-	var vMajor, vMinor, s0, s1, s2 uint8
+	var vMajor, vMinor, s0, s1, s2 int
 	var title string
 
 	// Parse header.
@@ -91,13 +93,13 @@ func processFile(in io.Reader) error {
 			if err != nil {
 				return err
 			}
-			vMajor = uint8(vMajori64) - 2
+			vMajor = int(vMajori64) - 2
 
 			vMinori64, err := strconv.ParseInt(m[2], 10, 8)
 			if err != nil {
 				return err
 			}
-			vMinor = uint8(vMinori64)
+			vMinor = int(vMinori64)
 			continue
 		}
 		m = reSection.FindStringSubmatch(line)
@@ -108,13 +110,13 @@ func processFile(in io.Reader) error {
 		if err != nil {
 			return err
 		}
-		s0 = uint8(s0i64)
+		s0 = int(s0i64)
 
 		s1i64, err := strconv.ParseInt(m[2], 10, 8)
 		if err != nil {
 			return err
 		}
-		s1 = uint8(s1i64)
+		s1 = int(s1i64)
 
 		title = strings.TrimSpace(m[3])
 		break
@@ -191,23 +193,26 @@ func processFile(in io.Reader) error {
 				continue
 			}
 		}
+
+		msgType := ipc.NewType(vMajor, vMinor, s0, s1, s2)
+
 		if outputC {
 			print(`  VPBuffer buf;
   unsigned char *data;
 `)
-			var nested int
+			var depth int
 			for _, input := range inputs {
-				n, err := input.Nested()
+				d, err := input.Depth()
 				if err != nil {
 					return err
 				}
-				if n > nested {
-					nested = n
+				if d > depth {
+					depth = d
 				}
 			}
-			if nested > 0 {
+			if depth > 0 {
 				print("  int")
-				for i := 0; i < nested; i++ {
+				for i := 0; i < depth; i++ {
 					if i == 0 {
 						print(" ")
 					} else {
@@ -220,7 +225,9 @@ func processFile(in io.Reader) error {
   vp_buffer_init(&buf);
 `)
 			}
-			print("\n")
+
+			printf("  vp_buffer_add_uint32(&buf, 0x%08x);\n", int(msgType))
+			printf("  vp_buffer_add_space(&buf, 4);\n\n")
 
 			for _, input := range inputs {
 				err = input.Input(0)
@@ -245,6 +252,7 @@ func processFile(in io.Reader) error {
 	}
 }
 
+// TypeInfo provides information about a PKCS #11 API type.
 type TypeInfo struct {
 	Basic    bool
 	Name     string
@@ -252,23 +260,23 @@ type TypeInfo struct {
 }
 
 var types = map[string]TypeInfo{
-	"CK_SESSION_HANDLE": TypeInfo{
+	"CK_SESSION_HANDLE": {
 		Basic: true,
 		Name:  "uint32",
 	},
-	"CK_OBJECT_HANDLE": TypeInfo{
+	"CK_OBJECT_HANDLE": {
 		Basic: true,
 		Name:  "uint32",
 	},
-	"CK_ATTRIBUTE_TYPE": TypeInfo{
+	"CK_ATTRIBUTE_TYPE": {
 		Basic: true,
 		Name:  "uint32",
 	},
-	"CK_VOID_PTR": TypeInfo{
+	"CK_VOID_PTR": {
 		Basic: true,
 		Name:  "byte",
 	},
-	"CK_ATTRIBUTE": TypeInfo{
+	"CK_ATTRIBUTE": {
 		Compound: []Field{
 			{
 				ElementType: "CK_ATTRIBUTE_TYPE",
@@ -283,6 +291,7 @@ var types = map[string]TypeInfo{
 	},
 }
 
+// Field defines a function argument or type field.
 type Field struct {
 	SizeName    string
 	ElementType string
@@ -297,7 +306,8 @@ func (f *Field) String() string {
 	return fmt.Sprintf("%s %s", f.ElementType, f.ElementName)
 }
 
-func (f *Field) Nested() (int, error) {
+// Depth computes the depth of nested array types.
+func (f *Field) Depth() (int, error) {
 	if len(f.SizeName) == 0 {
 		return 0, nil
 	}
@@ -308,19 +318,20 @@ func (f *Field) Nested() (int, error) {
 	if typeInfo.Basic {
 		return 0, nil
 	}
-	nested := 0
+	depth := 0
 	for _, field := range typeInfo.Compound {
-		n, err := field.Nested()
+		d, err := field.Depth()
 		if err != nil {
 			return 0, err
 		}
-		if n > nested {
-			nested = n
+		if d > depth {
+			depth = d
 		}
 	}
-	return 1 + nested, nil
+	return 1 + depth, nil
 }
 
+// Input generates the input marshalling code for the field.
 func (f *Field) Input(level int) error {
 	var indent = "  "
 	for i := 0; i < level; i++ {

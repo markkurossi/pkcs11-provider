@@ -26,6 +26,8 @@ C_CreateObject
   int i;
 
   vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0050701);
+  vp_buffer_add_space(&buf, 4);
 
   vp_buffer_add_uint32(&buf, hSession);
   vp_buffer_add_uint32(&buf, ulCount);
@@ -64,6 +66,8 @@ C_CopyObject
   int i;
 
   vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0050702);
+  vp_buffer_add_space(&buf, 4);
 
   vp_buffer_add_uint32(&buf, hSession);
   vp_buffer_add_uint32(&buf, hObject);
@@ -95,6 +99,8 @@ C_DestroyObject
 {
   VPBuffer buf;
   unsigned char *data;
+  vp_buffer_add_uint32(&buf, 0xc0050703);
+  vp_buffer_add_space(&buf, 4);
 
   vp_buffer_add_uint32(&buf, hSession);
   vp_buffer_add_uint32(&buf, hObject);
@@ -119,6 +125,8 @@ C_GetObjectSize
 {
   VPBuffer buf;
   unsigned char *data;
+  vp_buffer_add_uint32(&buf, 0xc0050704);
+  vp_buffer_add_space(&buf, 4);
 
   vp_buffer_add_uint32(&buf, hSession);
   vp_buffer_add_uint32(&buf, hObject);
@@ -149,6 +157,8 @@ C_GetAttributeValue
   int i;
 
   vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0050705);
+  vp_buffer_add_space(&buf, 4);
 
   vp_buffer_add_uint32(&buf, hSession);
   vp_buffer_add_uint32(&buf, hObject);
@@ -187,6 +197,8 @@ C_SetAttributeValue
   int i;
 
   vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0050706);
+  vp_buffer_add_space(&buf, 4);
 
   vp_buffer_add_uint32(&buf, hSession);
   vp_buffer_add_uint32(&buf, hObject);
@@ -224,6 +236,8 @@ C_FindObjectsInit
   int i;
 
   vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0050707);
+  vp_buffer_add_space(&buf, 4);
 
   vp_buffer_add_uint32(&buf, hSession);
   vp_buffer_add_uint32(&buf, ulCount);
@@ -271,6 +285,8 @@ C_FindObjectsFinal
 {
   VPBuffer buf;
   unsigned char *data;
+  vp_buffer_add_uint32(&buf, 0xc0050709);
+  vp_buffer_add_space(&buf, 4);
 
   vp_buffer_add_uint32(&buf, hSession);
 
