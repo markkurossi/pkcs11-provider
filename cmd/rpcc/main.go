@@ -19,23 +19,30 @@ import (
 )
 
 var (
-	reVersion  = regexp.MustCompilePOSIX(`/\*\*[[:space:]]+Version:[[:space:]]+([[:digit:]]+)\.([[:digit:]]+)`)
-	reSection  = regexp.MustCompilePOSIX(`/\*\*[[:space:]]+Section:[[:space:]]+([[:digit:]]+)\.([[:digit:]]+)[[:space:]]*([^\*]+)`)
-	reFunction = regexp.MustCompilePOSIX(`^(C_[a-zA-Z0-9_]+)`)
-	reSigStart = regexp.MustCompilePOSIX(`^[[:space:]]*/\*\*[[:space:]]*$`)
-	reSigEnd   = regexp.MustCompilePOSIX(`^[[:space:]]*\*/[[:space:]]*$`)
+	reVersion      = regexp.MustCompilePOSIX(`/\*\*[[:space:]]+Version:[[:space:]]+([[:digit:]]+)\.([[:digit:]]+)`)
+	reSection      = regexp.MustCompilePOSIX(`/\*\*[[:space:]]+Section:[[:space:]]+([[:digit:]]+)\.([[:digit:]]+)[[:space:]]*([^\*]+)`)
+	reFunction     = regexp.MustCompilePOSIX(`^(C_[a-zA-Z0-9_]+)`)
+	reSigStart     = regexp.MustCompilePOSIX(`^[[:space:]]*/\*\*[[:space:]]*$`)
+	reSigEnd       = regexp.MustCompilePOSIX(`^[[:space:]]*\*/[[:space:]]*$`)
+	reFieldSection = regexp.MustCompilePOSIX(`^[[:space:]]*\*[[:space:]]*([[:alnum:]]+):[[:space:]]*$`)
+	reField        = regexp.MustCompilePOSIX(`\*[[:space:]]+([[:^space:]]+)[[:space:]]+([[:^space:]]+)`)
+	reType         = regexp.MustCompilePOSIX(`^(\[([A-Za-z_0-9]+)\])?([A-Za-z_0-9]+)$`)
 
 	vMajorLast uint8
 	vMinorLast uint8
 
-	output   io.WriteCloser = os.Stdout
-	outputC  bool
-	outputGo bool
+	output     io.WriteCloser = os.Stdout
+	outputC    bool
+	outputGo   bool
+	printInfo  bool
+	printDebug bool
 )
 
 func main() {
 	log.SetFlags(0)
 	flag.BoolVar(&outputC, "c", false, "generate C code")
+	flag.BoolVar(&printInfo, "i", false, "print file information")
+	flag.BoolVar(&printDebug, "d", false, "print debug information")
 	o := flag.String("o", "", "output file name")
 	flag.Parse()
 
@@ -77,7 +84,7 @@ func processFile(in io.Reader) error {
 		if err != nil {
 			return err
 		}
-		passThrough(line)
+		print(line)
 		m := reVersion.FindStringSubmatch(line)
 		if m != nil {
 			vMajori64, err := strconv.ParseInt(m[1], 10, 8)
@@ -115,9 +122,9 @@ func processFile(in io.Reader) error {
 	if vMajor != vMajorLast || vMinor != vMinorLast {
 		vMajorLast = vMajor
 		vMinorLast = vMinor
-		fmt.Printf("* Version %d.%d\n", vMajor+2, vMinor)
+		info("* Version %d.%d\n", vMajor+2, vMinor)
 	}
-	fmt.Printf("** %d.%d %s\n", s0, s1, title)
+	info("** %d.%d %s\n", s0, s1, title)
 
 	// Process all functions
 	for {
@@ -128,41 +135,285 @@ func processFile(in io.Reader) error {
 			}
 			return nil
 		}
-		passThrough(line)
 		m := reFunction.FindStringSubmatch(line)
 		if m != nil {
+			print(line)
 			s2++
 			name := m[1]
-			fmt.Printf(" - %d.%d.%d %s\n", s0, s1, s2, name)
+			info(" - %d.%d.%d %s\n", s0, s1, s2, name)
 			continue
 		}
 		m = reSigStart.FindStringSubmatch(line)
 		if m == nil {
+			print(line)
 			continue
 		}
 		// Process signature
+
+		var inputs []Field
+		var outputs []Field
+		var fieldSection *[]Field
+
 		for {
 			line, err = reader.ReadString('\n')
 			if err != nil {
 				return err
 			}
-			passThrough(line)
 			if reSigEnd.FindStringSubmatch(line) != nil {
 				// Signature processed
 				break
 			}
+			m = reFieldSection.FindStringSubmatch(line)
+			if m != nil {
+				switch m[1] {
+				case "Inputs":
+					fieldSection = &inputs
+
+				case "Outputs":
+					fieldSection = &outputs
+
+				default:
+					return fmt.Errorf("unknown field section: %s", m[1])
+				}
+				continue
+			}
+
+			m = reField.FindStringSubmatch(line)
+			if m != nil {
+				field, err := parseField(m[1], m[2])
+				if err != nil {
+					return err
+				}
+				if fieldSection == nil {
+					return fmt.Errorf("field declaration without section")
+				}
+				*fieldSection = append(*fieldSection, field)
+				continue
+			}
 		}
-		passThrough("  VP_FUNCTION_NOT_SUPPORTED;\n")
+		if outputC {
+			print(`  VPBuffer buf;
+  unsigned char *data;
+`)
+			var nested int
+			for _, input := range inputs {
+				n, err := input.Nested()
+				if err != nil {
+					return err
+				}
+				if n > nested {
+					nested = n
+				}
+			}
+			if nested > 0 {
+				print("  int")
+				for i := 0; i < nested; i++ {
+					if i == 0 {
+						print(" ")
+					} else {
+						print(", ")
+					}
+					printf("%c", 'i'+i)
+				}
+				print(`;
+
+  vp_buffer_init(&buf);
+`)
+			}
+			print("\n")
+
+			for _, input := range inputs {
+				err = input.Input(0)
+				if err != nil {
+					return err
+				}
+			}
+			print(`
+  data = vp_buffer_ptr(&buf);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+`)
+
+			for idx, o := range outputs {
+				fmt.Printf("  // Output %d: %#v\n", idx, o)
+			}
+			print("  VP_FUNCTION_NOT_SUPPORTED;\n")
+		}
 	}
+}
+
+type TypeInfo struct {
+	Basic    bool
+	Name     string
+	Compound []Field
+}
+
+var types = map[string]TypeInfo{
+	"CK_SESSION_HANDLE": TypeInfo{
+		Basic: true,
+		Name:  "uint32",
+	},
+	"CK_OBJECT_HANDLE": TypeInfo{
+		Basic: true,
+		Name:  "uint32",
+	},
+	"CK_ATTRIBUTE_TYPE": TypeInfo{
+		Basic: true,
+		Name:  "uint32",
+	},
+	"CK_VOID_PTR": TypeInfo{
+		Basic: true,
+		Name:  "byte",
+	},
+	"CK_ATTRIBUTE": TypeInfo{
+		Compound: []Field{
+			{
+				ElementType: "CK_ATTRIBUTE_TYPE",
+				ElementName: "type",
+			},
+			{
+				SizeName:    "ulValueLen",
+				ElementType: "CK_VOID_PTR",
+				ElementName: "pValue",
+			},
+		},
+	},
+}
+
+type Field struct {
+	SizeName    string
+	ElementType string
+	ElementName string
+}
+
+func (f *Field) String() string {
+	if len(f.SizeName) > 0 {
+		return fmt.Sprintf("[%s]%s %s",
+			f.SizeName, f.ElementType, f.ElementName)
+	}
+	return fmt.Sprintf("%s %s", f.ElementType, f.ElementName)
+}
+
+func (f *Field) Nested() (int, error) {
+	if len(f.SizeName) == 0 {
+		return 0, nil
+	}
+	typeInfo, ok := types[f.ElementType]
+	if !ok {
+		return 0, fmt.Errorf("unknown type: %s", f.ElementType)
+	}
+	if typeInfo.Basic {
+		return 0, nil
+	}
+	nested := 0
+	for _, field := range typeInfo.Compound {
+		n, err := field.Nested()
+		if err != nil {
+			return 0, err
+		}
+		if n > nested {
+			nested = n
+		}
+	}
+	return 1 + nested, nil
+}
+
+func (f *Field) Input(level int) error {
+	var indent = "  "
+	for i := 0; i < level; i++ {
+		indent += "    "
+	}
+
+	debug("%s// %s\n", indent, f)
+
+	idxName := fmt.Sprintf("%c", 'i'+level)
+	idxElName := fmt.Sprintf("%cel", 'i'+level)
+
+	var ctx string
+	if level > 0 {
+		ctx = fmt.Sprintf("%cel->", 'i'+level-1)
+	}
+
+	typeInfo, ok := types[f.ElementType]
+	if !ok {
+		return fmt.Errorf("unknown type: %s", f.ElementType)
+	}
+	if len(f.SizeName) == 0 {
+		// Single instance.
+		if typeInfo.Basic {
+			printf("%svp_buffer_add_%s(&buf, %s%s);\n",
+				indent, typeInfo.Name, ctx, f.ElementName)
+		} else {
+			printf("%s// single not basic\n", indent)
+		}
+	} else {
+		// Array
+		if typeInfo.Basic {
+			// Array of basic types.
+			printf("%svp_buffer_add_%s_arr(&buf, %s%s, %s%s);\n",
+				indent, typeInfo.Name,
+				ctx, f.ElementName,
+				ctx, f.SizeName)
+		} else {
+			// Array of compound type.
+			printf("%svp_buffer_add_uint32(&buf, %s%s);\n",
+				indent, ctx, f.SizeName)
+			printf("%sfor (%s = 0; %s < %s; %s++)\n", indent,
+				idxName, idxName, f.SizeName, idxName)
+			printf("%s  {\n", indent)
+			printf("%s    %s *%s = &%s%s[%s];\n\n",
+				indent, f.ElementType, idxElName, ctx, f.ElementName, idxName)
+
+			for _, c := range typeInfo.Compound {
+				err := c.Input(level + 1)
+				if err != nil {
+					return err
+				}
+			}
+
+			printf("%s  }\n", indent)
+		}
+	}
+	return nil
+}
+
+func parseField(t, v string) (f Field, err error) {
+	m := reType.FindStringSubmatch(t)
+	if m == nil {
+		err = fmt.Errorf("invalid field type: '%s'", t)
+		return
+	}
+	return Field{
+		SizeName:    m[2],
+		ElementType: m[3],
+		ElementName: v,
+	}, nil
 }
 
 func header(source string) {
 	msg := fmt.Sprintf("/* This file is auto-generated from %s by rpcc. */\n",
 		source)
-	passThrough(msg)
+	print(msg)
 }
 
-func passThrough(line string) {
+func info(format string, a ...interface{}) {
+	if !printInfo {
+		return
+	}
+	fmt.Printf(format, a...)
+}
+
+func debug(format string, a ...interface{}) {
+	if !printDebug {
+		return
+	}
+	fmt.Printf(format, a...)
+}
+
+func print(line string) {
 	if !outputC {
 		return
 	}
@@ -170,4 +421,11 @@ func passThrough(line string) {
 	if err != nil {
 		log.Fatalf("write failed: %s", err)
 	}
+}
+
+func printf(format string, a ...interface{}) {
+	if !outputC {
+		return
+	}
+	fmt.Fprintf(output, format, a...)
 }

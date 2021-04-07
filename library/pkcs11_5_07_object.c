@@ -21,15 +21,6 @@ C_CreateObject
   CK_OBJECT_HANDLE_PTR phObject  /* gets new object's handle. */
 )
 {
-  /**
-   * Inputs:
-   *            CK_SESSION_HANDLE hSession
-   *   [ulCount]CK_ATTRIBUTE      pTemplate
-   * Outputs:
-   *            CK_OBJECT_HANDLE  phObject
-   */
-  VP_FUNCTION_NOT_SUPPORTED;
-
   VPBuffer buf;
   unsigned char *data;
   int i;
@@ -37,12 +28,13 @@ C_CreateObject
   vp_buffer_init(&buf);
 
   vp_buffer_add_uint32(&buf, hSession);
-
   vp_buffer_add_uint32(&buf, ulCount);
   for (i = 0; i < ulCount; i++)
     {
-      vp_buffer_add_uint32(&buf, pTemplate[i].type);
-      vp_buffer_add_data(&buf, pTemplate[i].pValue, pTemplate[i].ulValueLen);
+      CK_ATTRIBUTE *iel = &pTemplate[i];
+
+      vp_buffer_add_uint32(&buf, iel->type);
+      vp_buffer_add_byte_arr(&buf, iel->pValue, iel->ulValueLen);
     }
 
   data = vp_buffer_ptr(&buf);
@@ -51,6 +43,7 @@ C_CreateObject
       vp_buffer_uninit(&buf);
       return CKR_HOST_MEMORY;
     }
+  VP_FUNCTION_NOT_SUPPORTED;
 }
 
 /* C_CopyObject copies an object, creating a new object for the
@@ -66,14 +59,29 @@ C_CopyObject
   CK_OBJECT_HANDLE_PTR phNewObject  /* receives handle of copy */
 )
 {
-  /**
-   * Inputs:
-   *            CK_SESSION_HANDLE hSession
-   *            CK_OBJECT_HANDLE  hObject
-   *   [ulCount]CK_ATTRIBUTE      pTemplate
-   * Outputs:
-   *            CK_OBJECT_HANDLE  phNewObject
-   */
+  VPBuffer buf;
+  unsigned char *data;
+  int i;
+
+  vp_buffer_init(&buf);
+
+  vp_buffer_add_uint32(&buf, hSession);
+  vp_buffer_add_uint32(&buf, hObject);
+  vp_buffer_add_uint32(&buf, ulCount);
+  for (i = 0; i < ulCount; i++)
+    {
+      CK_ATTRIBUTE *iel = &pTemplate[i];
+
+      vp_buffer_add_uint32(&buf, iel->type);
+      vp_buffer_add_byte_arr(&buf, iel->pValue, iel->ulValueLen);
+    }
+
+  data = vp_buffer_ptr(&buf);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -85,11 +93,18 @@ C_DestroyObject
   CK_OBJECT_HANDLE  hObject    /* the object's handle */
 )
 {
-  /**
-   * Inputs:
-   *            CK_SESSION_HANDLE hSession
-   *            CK_OBJECT_HANDLE  hObject
-   */
+  VPBuffer buf;
+  unsigned char *data;
+
+  vp_buffer_add_uint32(&buf, hSession);
+  vp_buffer_add_uint32(&buf, hObject);
+
+  data = vp_buffer_ptr(&buf);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -102,13 +117,18 @@ C_GetObjectSize
   CK_ULONG_PTR      pulSize    /* receives size of object */
 )
 {
-  /**
-   * Inputs:
-   *            CK_SESSION_HANDLE hSession
-   *            CK_OBJECT_HANDLE  hObject
-   * Outputs:
-   *            CK_ULONG          pulSize
-   */
+  VPBuffer buf;
+  unsigned char *data;
+
+  vp_buffer_add_uint32(&buf, hSession);
+  vp_buffer_add_uint32(&buf, hObject);
+
+  data = vp_buffer_ptr(&buf);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -124,14 +144,29 @@ C_GetAttributeValue
   CK_ULONG          ulCount     /* attributes in template */
 )
 {
-  /**
-   * Inputs:
-   *            CK_SESSION_HANDLE hSession
-   *            CK_OBJECT_HANDLE  hObject
-   *   [ulCount]CK_ATTRIBUTE      pTemplate
-   * Outputs:
-   *   [ulCount]CK_ATTRIBUTE      pTemplate
-   */
+  VPBuffer buf;
+  unsigned char *data;
+  int i;
+
+  vp_buffer_init(&buf);
+
+  vp_buffer_add_uint32(&buf, hSession);
+  vp_buffer_add_uint32(&buf, hObject);
+  vp_buffer_add_uint32(&buf, ulCount);
+  for (i = 0; i < ulCount; i++)
+    {
+      CK_ATTRIBUTE *iel = &pTemplate[i];
+
+      vp_buffer_add_uint32(&buf, iel->type);
+      vp_buffer_add_byte_arr(&buf, iel->pValue, iel->ulValueLen);
+    }
+
+  data = vp_buffer_ptr(&buf);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -147,6 +182,29 @@ C_SetAttributeValue
   CK_ULONG          ulCount     /* attributes in template */
 )
 {
+  VPBuffer buf;
+  unsigned char *data;
+  int i;
+
+  vp_buffer_init(&buf);
+
+  vp_buffer_add_uint32(&buf, hSession);
+  vp_buffer_add_uint32(&buf, hObject);
+  vp_buffer_add_uint32(&buf, ulCount);
+  for (i = 0; i < ulCount; i++)
+    {
+      CK_ATTRIBUTE *iel = &pTemplate[i];
+
+      vp_buffer_add_uint32(&buf, iel->type);
+      vp_buffer_add_byte_arr(&buf, iel->pValue, iel->ulValueLen);
+    }
+
+  data = vp_buffer_ptr(&buf);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -161,6 +219,28 @@ C_FindObjectsInit
   CK_ULONG          ulCount     /* attrs in search template */
 )
 {
+  VPBuffer buf;
+  unsigned char *data;
+  int i;
+
+  vp_buffer_init(&buf);
+
+  vp_buffer_add_uint32(&buf, hSession);
+  vp_buffer_add_uint32(&buf, ulCount);
+  for (i = 0; i < ulCount; i++)
+    {
+      CK_ATTRIBUTE *iel = &pTemplate[i];
+
+      vp_buffer_add_uint32(&buf, iel->type);
+      vp_buffer_add_byte_arr(&buf, iel->pValue, iel->ulValueLen);
+    }
+
+  data = vp_buffer_ptr(&buf);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -189,5 +269,16 @@ C_FindObjectsFinal
   CK_SESSION_HANDLE hSession  /* the session's handle */
 )
 {
+  VPBuffer buf;
+  unsigned char *data;
+
+  vp_buffer_add_uint32(&buf, hSession);
+
+  data = vp_buffer_ptr(&buf);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
   VP_FUNCTION_NOT_SUPPORTED;
 }

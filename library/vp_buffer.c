@@ -97,3 +97,18 @@ vp_buffer_add_uint32(VPBuffer *buf, uint32_t v)
 
   return true;
 }
+
+bool
+vp_buffer_add_byte_arr(VPBuffer *buf, const void *data, size_t len)
+{
+  unsigned char *ucp;
+
+  ucp = vp_buffer_add_space(buf, 4 + len);
+  if (ucp == NULL)
+    return false;
+
+  /* XXX put 32bit v to ucp */
+  memcpy(ucp + 4, data, len);
+
+  return true;
+}
