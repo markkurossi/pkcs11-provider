@@ -23,6 +23,7 @@ C_CreateObject
 {
   VPBuffer buf;
   unsigned char *data;
+  size_t len;
   int i;
 
   vp_buffer_init(&buf);
@@ -45,6 +46,9 @@ C_CreateObject
       vp_buffer_uninit(&buf);
       return CKR_HOST_MEMORY;
     }
+  len = vp_buffer_len(&buf);
+  VP_PUT_UINT32(data + 4, len - 8);
+
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -63,6 +67,7 @@ C_CopyObject
 {
   VPBuffer buf;
   unsigned char *data;
+  size_t len;
   int i;
 
   vp_buffer_init(&buf);
@@ -86,6 +91,9 @@ C_CopyObject
       vp_buffer_uninit(&buf);
       return CKR_HOST_MEMORY;
     }
+  len = vp_buffer_len(&buf);
+  VP_PUT_UINT32(data + 4, len - 8);
+
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -99,6 +107,7 @@ C_DestroyObject
 {
   VPBuffer buf;
   unsigned char *data;
+  size_t len;
   vp_buffer_add_uint32(&buf, 0xc0050703);
   vp_buffer_add_space(&buf, 4);
 
@@ -111,6 +120,9 @@ C_DestroyObject
       vp_buffer_uninit(&buf);
       return CKR_HOST_MEMORY;
     }
+  len = vp_buffer_len(&buf);
+  VP_PUT_UINT32(data + 4, len - 8);
+
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -125,6 +137,7 @@ C_GetObjectSize
 {
   VPBuffer buf;
   unsigned char *data;
+  size_t len;
   vp_buffer_add_uint32(&buf, 0xc0050704);
   vp_buffer_add_space(&buf, 4);
 
@@ -137,6 +150,9 @@ C_GetObjectSize
       vp_buffer_uninit(&buf);
       return CKR_HOST_MEMORY;
     }
+  len = vp_buffer_len(&buf);
+  VP_PUT_UINT32(data + 4, len - 8);
+
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -154,6 +170,7 @@ C_GetAttributeValue
 {
   VPBuffer buf;
   unsigned char *data;
+  size_t len;
   int i;
 
   vp_buffer_init(&buf);
@@ -177,6 +194,9 @@ C_GetAttributeValue
       vp_buffer_uninit(&buf);
       return CKR_HOST_MEMORY;
     }
+  len = vp_buffer_len(&buf);
+  VP_PUT_UINT32(data + 4, len - 8);
+
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -194,6 +214,7 @@ C_SetAttributeValue
 {
   VPBuffer buf;
   unsigned char *data;
+  size_t len;
   int i;
 
   vp_buffer_init(&buf);
@@ -217,6 +238,9 @@ C_SetAttributeValue
       vp_buffer_uninit(&buf);
       return CKR_HOST_MEMORY;
     }
+  len = vp_buffer_len(&buf);
+  VP_PUT_UINT32(data + 4, len - 8);
+
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -233,6 +257,7 @@ C_FindObjectsInit
 {
   VPBuffer buf;
   unsigned char *data;
+  size_t len;
   int i;
 
   vp_buffer_init(&buf);
@@ -255,6 +280,9 @@ C_FindObjectsInit
       vp_buffer_uninit(&buf);
       return CKR_HOST_MEMORY;
     }
+  len = vp_buffer_len(&buf);
+  VP_PUT_UINT32(data + 4, len - 8);
+
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -271,6 +299,24 @@ C_FindObjects
  CK_ULONG_PTR         pulObjectCount     /* actual # returned */
 )
 {
+  VPBuffer buf;
+  unsigned char *data;
+  size_t len;
+  vp_buffer_add_uint32(&buf, 0xc0050708);
+  vp_buffer_add_space(&buf, 4);
+
+  vp_buffer_add_uint32(&buf, hSession);
+  vp_buffer_add_uint32(&buf, ulMaxObjectCount);
+
+  data = vp_buffer_ptr(&buf);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+  len = vp_buffer_len(&buf);
+  VP_PUT_UINT32(data + 4, len - 8);
+
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -285,6 +331,7 @@ C_FindObjectsFinal
 {
   VPBuffer buf;
   unsigned char *data;
+  size_t len;
   vp_buffer_add_uint32(&buf, 0xc0050709);
   vp_buffer_add_space(&buf, 4);
 
@@ -296,5 +343,8 @@ C_FindObjectsFinal
       vp_buffer_uninit(&buf);
       return CKR_HOST_MEMORY;
     }
+  len = vp_buffer_len(&buf);
+  VP_PUT_UINT32(data + 4, len - 8);
+
   VP_FUNCTION_NOT_SUPPORTED;
 }

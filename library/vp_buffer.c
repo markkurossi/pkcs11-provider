@@ -93,7 +93,7 @@ vp_buffer_add_uint32(VPBuffer *buf, uint32_t v)
   if (ucp == NULL)
     return false;
 
-  /* XXX put 32bit v to ucp */
+  VP_PUT_UINT32(ucp, v);
 
   return true;
 }
@@ -107,7 +107,7 @@ vp_buffer_add_byte_arr(VPBuffer *buf, const void *data, size_t len)
   if (ucp == NULL)
     return false;
 
-  /* XXX put 32bit v to ucp */
+  VP_PUT_UINT32(ucp, len);
   memcpy(ucp + 4, data, len);
 
   return true;

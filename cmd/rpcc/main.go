@@ -199,6 +199,7 @@ func processFile(in io.Reader) error {
 		if outputC {
 			print(`  VPBuffer buf;
   unsigned char *data;
+  size_t len;
 `)
 			var depth int
 			for _, input := range inputs {
@@ -242,6 +243,9 @@ func processFile(in io.Reader) error {
       vp_buffer_uninit(&buf);
       return CKR_HOST_MEMORY;
     }
+  len = vp_buffer_len(&buf);
+  VP_PUT_UINT32(data + 4, len - 8);
+
 `)
 
 			for idx, o := range outputs {
@@ -269,6 +273,10 @@ var types = map[string]TypeInfo{
 		Name:  "uint32",
 	},
 	"CK_ATTRIBUTE_TYPE": {
+		Basic: true,
+		Name:  "uint32",
+	},
+	"CK_ULONG": {
 		Basic: true,
 		Name:  "uint32",
 	},

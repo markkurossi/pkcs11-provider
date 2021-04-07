@@ -32,6 +32,7 @@ typedef unsigned long int CK_HANDLE;
 void vp_log(int priority, char *msg, ...);
 
 #include "vp_buffer.h"
+#include "vp_getput.h"
 
 #define VP_FUNCTION_NOT_SUPPORTED			\
 do {		       					\
