@@ -17,7 +17,11 @@ maintainer-clean:
 	$(RM) $(RPC_SRCS)
 
 %.c : %.rpc
-	$(RPCC) -c -o $@ $+
+	if test -x "$(RPCC)"; then \
+	  $(RPCC) -c -o $@ $+; \
+	else \
+	  touch $@; \
+	fi
 
 libvpkcs11.so: $(filter %.c,$(SRCS))
 	cc $(CFLAGS) $(LDFLAGS) -o $@ $+
