@@ -45,12 +45,20 @@ func main() {
 	flag.BoolVar(&outputC, "c", false, "generate C code")
 	flag.BoolVar(&printInfo, "i", false, "print file information")
 	flag.BoolVar(&printDebug, "d", false, "print debug information")
+	typeFile := flag.String("t", "", "type information file")
 	o := flag.String("o", "", "output file name")
 	flag.Parse()
 
 	fmt.Printf("PKCS #11 RPC Compiler\n")
 
 	var err error
+
+	if len(*typeFile) > 0 {
+		err = readTypes(*typeFile)
+		if err != nil {
+			log.Fatalf("failed to read types: %s\n", err)
+		}
+	}
 
 	if len(*o) != 0 {
 		output, err = os.Create(*o)
@@ -254,162 +262,6 @@ func processFile(in io.Reader) error {
 			print("  VP_FUNCTION_NOT_SUPPORTED;\n")
 		}
 	}
-}
-
-// TypeInfo provides information about a PKCS #11 API type.
-type TypeInfo struct {
-	Basic    bool
-	Name     string
-	Compound []Field
-}
-
-var types = map[string]TypeInfo{
-	"CK_SESSION_HANDLE": {
-		Basic: true,
-		Name:  "uint32",
-	},
-	"CK_OBJECT_HANDLE": {
-		Basic: true,
-		Name:  "uint32",
-	},
-	"CK_ATTRIBUTE_TYPE": {
-		Basic: true,
-		Name:  "uint32",
-	},
-	"CK_ULONG": {
-		Basic: true,
-		Name:  "uint32",
-	},
-	"CK_VOID_PTR": {
-		Basic: true,
-		Name:  "byte",
-	},
-	"CK_ATTRIBUTE": {
-		Compound: []Field{
-			{
-				ElementType: "CK_ATTRIBUTE_TYPE",
-				ElementName: "type",
-			},
-			{
-				SizeName:    "ulValueLen",
-				ElementType: "CK_VOID_PTR",
-				ElementName: "pValue",
-			},
-		},
-	},
-}
-
-// Field defines a function argument or type field.
-type Field struct {
-	SizeName    string
-	ElementType string
-	ElementName string
-}
-
-func (f *Field) String() string {
-	if len(f.SizeName) > 0 {
-		return fmt.Sprintf("[%s]%s %s",
-			f.SizeName, f.ElementType, f.ElementName)
-	}
-	return fmt.Sprintf("%s %s", f.ElementType, f.ElementName)
-}
-
-// Depth computes the depth of nested array types.
-func (f *Field) Depth() (int, error) {
-	if len(f.SizeName) == 0 {
-		return 0, nil
-	}
-	typeInfo, ok := types[f.ElementType]
-	if !ok {
-		return 0, fmt.Errorf("unknown type: %s", f.ElementType)
-	}
-	if typeInfo.Basic {
-		return 0, nil
-	}
-	depth := 0
-	for _, field := range typeInfo.Compound {
-		d, err := field.Depth()
-		if err != nil {
-			return 0, err
-		}
-		if d > depth {
-			depth = d
-		}
-	}
-	return 1 + depth, nil
-}
-
-// Input generates the input marshalling code for the field.
-func (f *Field) Input(level int) error {
-	var indent = "  "
-	for i := 0; i < level; i++ {
-		indent += "    "
-	}
-
-	debug("%s// %s\n", indent, f)
-
-	idxName := fmt.Sprintf("%c", 'i'+level)
-	idxElName := fmt.Sprintf("%cel", 'i'+level)
-
-	var ctx string
-	if level > 0 {
-		ctx = fmt.Sprintf("%cel->", 'i'+level-1)
-	}
-
-	typeInfo, ok := types[f.ElementType]
-	if !ok {
-		return fmt.Errorf("unknown type: %s", f.ElementType)
-	}
-	if len(f.SizeName) == 0 {
-		// Single instance.
-		if typeInfo.Basic {
-			printf("%svp_buffer_add_%s(&buf, %s%s);\n",
-				indent, typeInfo.Name, ctx, f.ElementName)
-		} else {
-			printf("%s// single not basic\n", indent)
-		}
-	} else {
-		// Array
-		if typeInfo.Basic {
-			// Array of basic types.
-			printf("%svp_buffer_add_%s_arr(&buf, %s%s, %s%s);\n",
-				indent, typeInfo.Name,
-				ctx, f.ElementName,
-				ctx, f.SizeName)
-		} else {
-			// Array of compound type.
-			printf("%svp_buffer_add_uint32(&buf, %s%s);\n",
-				indent, ctx, f.SizeName)
-			printf("%sfor (%s = 0; %s < %s; %s++)\n", indent,
-				idxName, idxName, f.SizeName, idxName)
-			printf("%s  {\n", indent)
-			printf("%s    %s *%s = &%s%s[%s];\n\n",
-				indent, f.ElementType, idxElName, ctx, f.ElementName, idxName)
-
-			for _, c := range typeInfo.Compound {
-				err := c.Input(level + 1)
-				if err != nil {
-					return err
-				}
-			}
-
-			printf("%s  }\n", indent)
-		}
-	}
-	return nil
-}
-
-func parseField(t, v string) (f Field, err error) {
-	m := reType.FindStringSubmatch(t)
-	if m == nil {
-		err = fmt.Errorf("invalid field type: '%s'", t)
-		return
-	}
-	return Field{
-		SizeName:    m[2],
-		ElementType: m[3],
-		ElementName: v,
-	}, nil
 }
 
 func header(source string) {
