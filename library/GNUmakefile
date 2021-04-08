@@ -18,7 +18,7 @@ maintainer-clean:
 
 %.c : %.rpc
 	if test -x "$(RPCC)"; then \
-	  $(RPCC) -c -o $@ $+; \
+	  $(RPCC) -t pkcs11_types.rpct -c -o $@ $+; \
 	else \
 	  touch $@; \
 	fi
