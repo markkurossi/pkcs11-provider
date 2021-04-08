@@ -85,6 +85,20 @@ vp_buffer_add_data(VPBuffer *buf, const unsigned char *data, size_t len)
 }
 
 bool
+vp_buffer_add_bool(VPBuffer *buf, uint8_t v)
+{
+  unsigned char *ucp;
+
+  ucp = vp_buffer_add_space(buf, 1);
+  if (ucp == NULL)
+    return false;
+
+  ucp[0] = v;
+
+  return true;
+}
+
+bool
 vp_buffer_add_uint32(VPBuffer *buf, uint32_t v)
 {
   unsigned char *ucp;

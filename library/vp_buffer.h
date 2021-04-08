@@ -31,6 +31,8 @@ unsigned char *vp_buffer_add_space(VPBuffer *buf, size_t len);
 
 bool vp_buffer_add_data(VPBuffer *buf, const unsigned char *data, size_t len);
 
+bool vp_buffer_add_bool(VPBuffer *buf, uint8_t v);
+
 bool vp_buffer_add_uint32(VPBuffer *buf, uint32_t v);
 
 bool vp_buffer_add_byte_arr(VPBuffer *buf, const void *data, size_t len);
