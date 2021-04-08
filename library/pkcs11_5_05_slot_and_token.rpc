@@ -19,7 +19,12 @@ C_GetSlotList
   CK_ULONG_PTR   pulCount       /* receives number of slots */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Inputs:
+   *             CK_BBOOL   tokenPresent
+   * Outputs:
+   *   [pulCount]CK_SLOT_ID pSlotList
+   */
 }
 
 /* C_GetSlotInfo obtains information about a particular slot in
@@ -32,7 +37,12 @@ C_GetSlotInfo
   CK_SLOT_INFO_PTR pInfo    /* receives the slot information */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Inputs:
+   *     CK_SLOT_ID slotID
+   * Outputs:
+   *   CK_SLOT_INFO pInfo
+   */
 }
 
 /* C_GetTokenInfo obtains information about a particular token
@@ -100,7 +110,12 @@ C_InitToken
   CK_UTF8CHAR_PTR pLabel     /* 32-byte token label (blank padded) */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Inputs:
+   *             CK_SLOT_ID   slotID
+   *   [ulPinLen]CK_UTF8_CHAR pPin
+   *         [32]CK_UTF8_CHAR pLabel
+   */
 }
 
 /* C_InitPIN initializes the normal user's PIN. */
@@ -112,7 +127,11 @@ C_InitPIN
   CK_ULONG          ulPinLen   /* length in bytes of the PIN */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Inputs:
+   *             CK_SESSION_HANDLE hSession
+   *   [ulPinLen]CK_UTF8_CHAR      pPin
+   */
 }
 
 /* C_SetPIN modifies the PIN of the user who is logged in. */
@@ -126,5 +145,10 @@ C_SetPIN
   CK_ULONG          ulNewLen   /* length of the new PIN */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Inputs:
+   *             CK_SESSION_HANDLE hSession
+   *   [ulOldLen]CK_UTF8_CHAR      pOldPin
+   *   [ulNewLen]CK_UTF8_CHAR      pNewPin
+   */
 }

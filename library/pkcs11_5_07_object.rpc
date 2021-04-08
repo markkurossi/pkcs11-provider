@@ -62,8 +62,8 @@ C_DestroyObject
 {
   /**
    * Inputs:
-   *            CK_SESSION_HANDLE hSession
-   *            CK_OBJECT_HANDLE  hObject
+   *   CK_SESSION_HANDLE hSession
+   *   CK_OBJECT_HANDLE  hObject
    */
 }
 
@@ -78,10 +78,10 @@ C_GetObjectSize
 {
   /**
    * Inputs:
-   *            CK_SESSION_HANDLE hSession
-   *            CK_OBJECT_HANDLE  hObject
+   *   CK_SESSION_HANDLE hSession
+   *   CK_OBJECT_HANDLE  hObject
    * Outputs:
-   *            CK_ULONG          pulSize
+   *   CK_ULONG          pulSize
    */
 }
 
@@ -178,6 +178,6 @@ C_FindObjectsFinal
 {
   /**
    * Inputs:
-   *            CK_SESSION_HANDLE hSession
+   *   CK_SESSION_HANDLE hSession
    */
 }

@@ -20,6 +20,23 @@ C_GetSlotList
   CK_ULONG_PTR   pulCount       /* receives number of slots */
 )
 {
+  VPBuffer buf;
+  unsigned char *data;
+  size_t len;
+  vp_buffer_add_uint32(&buf, 0xc0050501);
+  vp_buffer_add_space(&buf, 4);
+
+  vp_buffer_add_bool(&buf, tokenPresent);
+
+  data = vp_buffer_ptr(&buf);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+  len = vp_buffer_len(&buf);
+  VP_PUT_UINT32(data + 4, len - 8);
+
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -33,6 +50,23 @@ C_GetSlotInfo
   CK_SLOT_INFO_PTR pInfo    /* receives the slot information */
 )
 {
+  VPBuffer buf;
+  unsigned char *data;
+  size_t len;
+  vp_buffer_add_uint32(&buf, 0xc0050502);
+  vp_buffer_add_space(&buf, 4);
+
+  vp_buffer_add_uint32(&buf, slotID);
+
+  data = vp_buffer_ptr(&buf);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+  len = vp_buffer_len(&buf);
+  VP_PUT_UINT32(data + 4, len - 8);
+
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -101,6 +135,25 @@ C_InitToken
   CK_UTF8CHAR_PTR pLabel     /* 32-byte token label (blank padded) */
 )
 {
+  VPBuffer buf;
+  unsigned char *data;
+  size_t len;
+  vp_buffer_add_uint32(&buf, 0xc0050507);
+  vp_buffer_add_space(&buf, 4);
+
+  vp_buffer_add_uint32(&buf, slotID);
+  vp_buffer_add_byte_arr(&buf, pPin, ulPinLen);
+  vp_buffer_add_byte_arr(&buf, pLabel, 32);
+
+  data = vp_buffer_ptr(&buf);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+  len = vp_buffer_len(&buf);
+  VP_PUT_UINT32(data + 4, len - 8);
+
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -113,6 +166,24 @@ C_InitPIN
   CK_ULONG          ulPinLen   /* length in bytes of the PIN */
 )
 {
+  VPBuffer buf;
+  unsigned char *data;
+  size_t len;
+  vp_buffer_add_uint32(&buf, 0xc0050508);
+  vp_buffer_add_space(&buf, 4);
+
+  vp_buffer_add_uint32(&buf, hSession);
+  vp_buffer_add_byte_arr(&buf, pPin, ulPinLen);
+
+  data = vp_buffer_ptr(&buf);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+  len = vp_buffer_len(&buf);
+  VP_PUT_UINT32(data + 4, len - 8);
+
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -127,5 +198,24 @@ C_SetPIN
   CK_ULONG          ulNewLen   /* length of the new PIN */
 )
 {
+  VPBuffer buf;
+  unsigned char *data;
+  size_t len;
+  vp_buffer_add_uint32(&buf, 0xc0050509);
+  vp_buffer_add_space(&buf, 4);
+
+  vp_buffer_add_uint32(&buf, hSession);
+  vp_buffer_add_byte_arr(&buf, pOldPin, ulOldLen);
+  vp_buffer_add_byte_arr(&buf, pNewPin, ulNewLen);
+
+  data = vp_buffer_ptr(&buf);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+  len = vp_buffer_len(&buf);
+  VP_PUT_UINT32(data + 4, len - 8);
+
   VP_FUNCTION_NOT_SUPPORTED;
 }
