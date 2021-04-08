@@ -229,14 +229,16 @@ func processFile(in io.Reader) error {
 					}
 					printf("%c", 'i'+i)
 				}
-				print(`;
-
-  vp_buffer_init(&buf);
-`)
+				print(";\n")
 			}
 
-			printf("  vp_buffer_add_uint32(&buf, 0x%08x);\n", int(msgType))
-			printf("  vp_buffer_add_space(&buf, 4);\n\n")
+			printf(`
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0x%08x);
+  vp_buffer_add_space(&buf, 4);
+
+`,
+				int(msgType))
 
 			for _, input := range inputs {
 				err = input.Input(0)
