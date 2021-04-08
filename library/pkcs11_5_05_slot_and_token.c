@@ -23,6 +23,8 @@ C_GetSlotList
   VPBuffer buf;
   unsigned char *data;
   size_t len;
+
+  vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050501);
   vp_buffer_add_space(&buf, 4);
 
@@ -53,6 +55,8 @@ C_GetSlotInfo
   VPBuffer buf;
   unsigned char *data;
   size_t len;
+
+  vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050502);
   vp_buffer_add_space(&buf, 4);
 
@@ -138,6 +142,8 @@ C_InitToken
   VPBuffer buf;
   unsigned char *data;
   size_t len;
+
+  vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050507);
   vp_buffer_add_space(&buf, 4);
 
@@ -169,6 +175,8 @@ C_InitPIN
   VPBuffer buf;
   unsigned char *data;
   size_t len;
+
+  vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050508);
   vp_buffer_add_space(&buf, 4);
 
@@ -201,6 +209,8 @@ C_SetPIN
   VPBuffer buf;
   unsigned char *data;
   size_t len;
+
+  vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050509);
   vp_buffer_add_space(&buf, 4);
 

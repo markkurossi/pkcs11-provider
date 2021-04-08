@@ -108,6 +108,8 @@ C_DestroyObject
   VPBuffer buf;
   unsigned char *data;
   size_t len;
+
+  vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050703);
   vp_buffer_add_space(&buf, 4);
 
@@ -138,6 +140,8 @@ C_GetObjectSize
   VPBuffer buf;
   unsigned char *data;
   size_t len;
+
+  vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050704);
   vp_buffer_add_space(&buf, 4);
 
@@ -302,6 +306,8 @@ C_FindObjects
   VPBuffer buf;
   unsigned char *data;
   size_t len;
+
+  vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050708);
   vp_buffer_add_space(&buf, 4);
 
@@ -332,6 +338,8 @@ C_FindObjectsFinal
   VPBuffer buf;
   unsigned char *data;
   size_t len;
+
+  vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050709);
   vp_buffer_add_space(&buf, 4);
 
