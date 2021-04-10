@@ -6,8 +6,9 @@
 
 type CK_BBOOL	       bool
 type CK_BYTE	       byte
-type CK_UTF8_CHAR      byte
+type CK_CHAR	       byte
 type CK_ULONG	       uint32
+type CK_UTF8CHAR       byte
 type CK_VOID_PTR       byte
 type CK_FLAGS	       uint32
 type CK_SESSION_HANDLE uint32

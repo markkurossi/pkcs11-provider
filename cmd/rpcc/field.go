@@ -12,14 +12,83 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
 // TypeInfo provides information about a PKCS #11 API type.
 type TypeInfo struct {
-	Basic    bool
 	Name     string
+	Basic    bool
+	Native   string
 	Compound []Field
+}
+
+func (t TypeInfo) String() string {
+	if t.Basic {
+		return fmt.Sprintf("type %s %s", t.Name, t.Native)
+	}
+	result := fmt.Sprintf("type %s struct {\n", t.Name)
+	for _, c := range t.Compound {
+		result += fmt.Sprintf("  %s\n", c)
+	}
+	result += "}"
+
+	return result
+}
+
+// GoType returns the Go type name for the type.
+func (t TypeInfo) GoType() string {
+	if t.Basic {
+		return fmt.Sprintf("type %s %s", GoTypeName(t.Name), GoType(t.Native))
+	}
+	result := fmt.Sprintf("type %s struct {\n", GoTypeName(t.Name))
+
+	var max int
+	for _, c := range t.Compound {
+		parts := strings.Split(c.GoType(), " ")
+		if len(parts[0]) > max {
+			max = len(parts[0])
+		}
+	}
+
+	for _, c := range t.Compound {
+		parts := strings.Split(c.GoType(), " ")
+		result += fmt.Sprintf("\t%s", parts[0])
+
+		for i := len(parts[0]); i < max; i++ {
+			result += " "
+		}
+		result += " " + strings.Join(parts[1:], " ")
+		result += "\n"
+	}
+	result += "}"
+
+	return result
+}
+
+// GoTypeName converts the name to Go type name.
+func GoTypeName(name string) string {
+	var parts []string
+
+	for _, part := range strings.Split(name, "_") {
+		switch part {
+		case "CK", "ID":
+			parts = append(parts, part)
+
+		case "UTF8CHAR":
+			parts = append(parts, "UTF8Char")
+
+		default:
+			parts = append(parts, strings.Title(strings.ToLower(part)))
+		}
+	}
+	return strings.Join(parts, "")
+}
+
+// GoType returns the Go type name for the type.
+func GoType(native string) string {
+	return native
 }
 
 var (
@@ -57,8 +126,9 @@ func readTypes(file string) error {
 		m := reBasic.FindStringSubmatch(line)
 		if m != nil {
 			types[m[1]] = TypeInfo{
-				Basic: true,
-				Name:  m[2],
+				Basic:  true,
+				Name:   m[1],
+				Native: m[2],
 			}
 			continue
 		}
@@ -103,16 +173,13 @@ func readTypes(file string) error {
 			}
 
 			types[name] = TypeInfo{
+				Name:     name,
 				Compound: fields,
 			}
 			continue
 		}
 
 		return fmt.Errorf("unexpected line: %s", line)
-	}
-
-	for k, v := range types {
-		fmt.Fprintf(os.Stderr, "%s: %v\n", k, v.Basic)
 	}
 
 	return nil
@@ -125,12 +192,32 @@ type Field struct {
 	ElementName string
 }
 
-func (f *Field) String() string {
+func (f Field) String() string {
 	if len(f.SizeName) > 0 {
+		var sizeName string
+		_, err := strconv.Atoi(f.SizeName)
+		if err == nil {
+			sizeName = f.SizeName
+		}
 		return fmt.Sprintf("[%s]%s %s",
-			f.SizeName, f.ElementType, f.ElementName)
+			sizeName, f.ElementType, f.ElementName)
 	}
 	return fmt.Sprintf("%s %s", f.ElementType, f.ElementName)
+}
+
+// GoType returns the Go type name for the field.
+func (f Field) GoType() string {
+	if len(f.SizeName) > 0 {
+		var sizeName string
+		_, err := strconv.Atoi(f.SizeName)
+		if err == nil {
+			sizeName = f.SizeName
+		}
+		return fmt.Sprintf("%s [%s]%s",
+			strings.Title(f.ElementName), sizeName, GoTypeName(f.ElementType))
+	}
+	return fmt.Sprintf("%s %s", strings.Title(f.ElementName),
+		GoTypeName(f.ElementType))
 }
 
 // Depth computes the depth of nested array types.
@@ -183,7 +270,7 @@ func (f *Field) Input(level int) error {
 		// Single instance.
 		if typeInfo.Basic {
 			printf("%svp_buffer_add_%s(&buf, %s%s);\n",
-				indent, typeInfo.Name, ctx, f.ElementName)
+				indent, typeInfo.Native, ctx, f.ElementName)
 		} else {
 			printf("%s// single not basic\n", indent)
 		}
@@ -192,7 +279,7 @@ func (f *Field) Input(level int) error {
 		if typeInfo.Basic {
 			// Array of basic types.
 			printf("%svp_buffer_add_%s_arr(&buf, %s%s, %s%s);\n",
-				indent, typeInfo.Name,
+				indent, typeInfo.Native,
 				ctx, f.ElementName,
 				ctx, f.SizeName)
 		} else {

@@ -14,6 +14,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -43,6 +44,7 @@ var (
 func main() {
 	log.SetFlags(0)
 	flag.BoolVar(&outputC, "c", false, "generate C code")
+	flag.BoolVar(&outputGo, "go", false, "generate Go code")
 	flag.BoolVar(&printInfo, "i", false, "print file information")
 	flag.BoolVar(&printDebug, "d", false, "print debug information")
 	typeFile := flag.String("t", "", "type information file")
@@ -66,6 +68,13 @@ func main() {
 			log.Fatalf("failed to create output file: %s", err)
 		}
 		defer output.Close()
+	}
+
+	if outputGo {
+		err = goTypes()
+		if err != nil {
+			log.Fatalf("failed to generate types: %s", err)
+		}
 	}
 
 	for _, arg := range flag.Args() {
@@ -264,6 +273,28 @@ func processFile(in io.Reader) error {
 			print("  VP_FUNCTION_NOT_SUPPORTED;\n")
 		}
 	}
+}
+
+func goTypes() error {
+	var arr []TypeInfo
+
+	for _, t := range types {
+		arr = append(arr, t)
+	}
+	sort.Slice(arr, func(i, j int) bool {
+		if arr[i].Basic == arr[j].Basic {
+			return arr[i].Name < arr[j].Name
+		} else if arr[i].Basic {
+			return true
+		} else {
+			return false
+		}
+	})
+	for _, t := range arr {
+		fmt.Printf("%s\n", t.GoType())
+	}
+
+	return nil
 }
 
 func header(source string) {
