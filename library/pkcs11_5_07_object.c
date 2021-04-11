@@ -26,11 +26,12 @@ C_CreateObject
   size_t len;
   int i;
 
+  /* XXX lookup session by hSession */
+
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050701);
   vp_buffer_add_space(&buf, 4);
 
-  vp_buffer_add_uint32(&buf, hSession);
   vp_buffer_add_uint32(&buf, ulCount);
   for (i = 0; i < ulCount; i++)
     {
@@ -70,11 +71,12 @@ C_CopyObject
   size_t len;
   int i;
 
+  /* XXX lookup session by hSession */
+
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050702);
   vp_buffer_add_space(&buf, 4);
 
-  vp_buffer_add_uint32(&buf, hSession);
   vp_buffer_add_uint32(&buf, hObject);
   vp_buffer_add_uint32(&buf, ulCount);
   for (i = 0; i < ulCount; i++)
@@ -109,11 +111,12 @@ C_DestroyObject
   unsigned char *data;
   size_t len;
 
+  /* XXX lookup session by hSession */
+
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050703);
   vp_buffer_add_space(&buf, 4);
 
-  vp_buffer_add_uint32(&buf, hSession);
   vp_buffer_add_uint32(&buf, hObject);
 
   data = vp_buffer_ptr(&buf);
@@ -141,11 +144,12 @@ C_GetObjectSize
   unsigned char *data;
   size_t len;
 
+  /* XXX lookup session by hSession */
+
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050704);
   vp_buffer_add_space(&buf, 4);
 
-  vp_buffer_add_uint32(&buf, hSession);
   vp_buffer_add_uint32(&buf, hObject);
 
   data = vp_buffer_ptr(&buf);
@@ -177,11 +181,12 @@ C_GetAttributeValue
   size_t len;
   int i;
 
+  /* XXX lookup session by hSession */
+
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050705);
   vp_buffer_add_space(&buf, 4);
 
-  vp_buffer_add_uint32(&buf, hSession);
   vp_buffer_add_uint32(&buf, hObject);
   vp_buffer_add_uint32(&buf, ulCount);
   for (i = 0; i < ulCount; i++)
@@ -221,11 +226,12 @@ C_SetAttributeValue
   size_t len;
   int i;
 
+  /* XXX lookup session by hSession */
+
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050706);
   vp_buffer_add_space(&buf, 4);
 
-  vp_buffer_add_uint32(&buf, hSession);
   vp_buffer_add_uint32(&buf, hObject);
   vp_buffer_add_uint32(&buf, ulCount);
   for (i = 0; i < ulCount; i++)
@@ -264,11 +270,12 @@ C_FindObjectsInit
   size_t len;
   int i;
 
+  /* XXX lookup session by hSession */
+
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050707);
   vp_buffer_add_space(&buf, 4);
 
-  vp_buffer_add_uint32(&buf, hSession);
   vp_buffer_add_uint32(&buf, ulCount);
   for (i = 0; i < ulCount; i++)
     {
@@ -307,11 +314,12 @@ C_FindObjects
   unsigned char *data;
   size_t len;
 
+  /* XXX lookup session by hSession */
+
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050708);
   vp_buffer_add_space(&buf, 4);
 
-  vp_buffer_add_uint32(&buf, hSession);
   vp_buffer_add_uint32(&buf, ulMaxObjectCount);
 
   data = vp_buffer_ptr(&buf);
@@ -339,11 +347,12 @@ C_FindObjectsFinal
   unsigned char *data;
   size_t len;
 
+  /* XXX lookup session by hSession */
+
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050709);
   vp_buffer_add_space(&buf, 4);
 
-  vp_buffer_add_uint32(&buf, hSession);
 
   data = vp_buffer_ptr(&buf);
   if (data == NULL)

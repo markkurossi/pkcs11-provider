@@ -176,11 +176,12 @@ C_InitPIN
   unsigned char *data;
   size_t len;
 
+  /* XXX lookup session by hSession */
+
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050508);
   vp_buffer_add_space(&buf, 4);
 
-  vp_buffer_add_uint32(&buf, hSession);
   vp_buffer_add_byte_arr(&buf, pPin, ulPinLen);
 
   data = vp_buffer_ptr(&buf);
@@ -210,11 +211,12 @@ C_SetPIN
   unsigned char *data;
   size_t len;
 
+  /* XXX lookup session by hSession */
+
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050509);
   vp_buffer_add_space(&buf, 4);
 
-  vp_buffer_add_uint32(&buf, hSession);
   vp_buffer_add_byte_arr(&buf, pOldPin, ulOldLen);
   vp_buffer_add_byte_arr(&buf, pNewPin, ulNewLen);
 

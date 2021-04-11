@@ -21,8 +21,9 @@ C_CreateObject
 )
 {
   /**
-   * Inputs:
+   * Session:
    *            CK_SESSION_HANDLE hSession
+   * Inputs:
    *   [ulCount]CK_ATTRIBUTE      pTemplate
    * Outputs:
    *            CK_OBJECT_HANDLE  phObject
@@ -43,8 +44,9 @@ C_CopyObject
 )
 {
   /**
-   * Inputs:
+   * Session:
    *            CK_SESSION_HANDLE hSession
+   * Inputs:
    *            CK_OBJECT_HANDLE  hObject
    *   [ulCount]CK_ATTRIBUTE      pTemplate
    * Outputs:
@@ -61,8 +63,9 @@ C_DestroyObject
 )
 {
   /**
-   * Inputs:
+   * Session:
    *   CK_SESSION_HANDLE hSession
+   * Inputs:
    *   CK_OBJECT_HANDLE  hObject
    */
 }
@@ -77,8 +80,9 @@ C_GetObjectSize
 )
 {
   /**
-   * Inputs:
+   * Session:
    *   CK_SESSION_HANDLE hSession
+   * Inputs:
    *   CK_OBJECT_HANDLE  hObject
    * Outputs:
    *   CK_ULONG          pulSize
@@ -98,8 +102,9 @@ C_GetAttributeValue
 )
 {
   /**
-   * Inputs:
+   * Session:
    *            CK_SESSION_HANDLE hSession
+   * Inputs:
    *            CK_OBJECT_HANDLE  hObject
    *   [ulCount]CK_ATTRIBUTE      pTemplate
    * Outputs:
@@ -120,8 +125,9 @@ C_SetAttributeValue
 )
 {
   /**
-   * Inputs:
+   * Session:
    *            CK_SESSION_HANDLE hSession
+   * Inputs:
    *            CK_OBJECT_HANDLE  hObject
    *   [ulCount]CK_ATTRIBUTE      pTemplate
    */
@@ -139,8 +145,9 @@ C_FindObjectsInit
 )
 {
   /**
-   * Inputs:
+   * Session:
    *            CK_SESSION_HANDLE hSession
+   * Inputs:
    *   [ulCount]CK_ATTRIBUTE      pTemplate
    */
 }
@@ -159,8 +166,9 @@ C_FindObjects
 )
 {
   /**
-   * Inputs:
+   * Session:
    *                   CK_SESSION_HANDLE hSession
+   * Inputs:
    *                   CK_ULONG          ulMaxObjectCount
    * Outputs:
    *   [pulObjectCount]CK_OBJECT_HANDLE  phObject
@@ -177,7 +185,7 @@ C_FindObjectsFinal
 )
 {
   /**
-   * Inputs:
+   * Session:
    *   CK_SESSION_HANDLE hSession
    */
 }

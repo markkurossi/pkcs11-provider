@@ -51,8 +51,6 @@ func main() {
 	o := flag.String("o", "", "output file name")
 	flag.Parse()
 
-	fmt.Printf("PKCS #11 RPC Compiler\n")
-
 	var err error
 
 	if len(*typeFile) > 0 {
@@ -84,22 +82,40 @@ func main() {
 		}
 		defer f.Close()
 		header(arg)
-		err = processFile(f)
+
+		input := &Input{
+			Reader: bufio.NewReader(f),
+		}
+
+		fmt.Printf("%s\n", arg)
+		err = processFile(input)
 		if err != nil {
-			log.Fatalf("%s: %s\n", arg, err)
+			log.Fatalf("%s:%d: %s\n", arg, input.Line, err)
 		}
 	}
 }
 
-func processFile(in io.Reader) error {
-	reader := bufio.NewReader(in)
+type Input struct {
+	Reader *bufio.Reader
+	Line   int
+}
 
+func (i *Input) ReadLine() (string, error) {
+	line, err := i.Reader.ReadString('\n')
+	if err != nil {
+		return "", err
+	}
+	i.Line++
+	return line, nil
+}
+
+func processFile(in *Input) error {
 	var vMajor, vMinor, s0, s1, s2 int
 	var title string
 
 	// Parse header.
 	for {
-		line, err := reader.ReadString('\n')
+		line, err := in.ReadLine()
 		if err != nil {
 			return err
 		}
@@ -147,7 +163,7 @@ func processFile(in io.Reader) error {
 
 	// Process all functions
 	for {
-		line, err := reader.ReadString('\n')
+		line, err := in.ReadLine()
 		if err != nil {
 			if err != io.EOF {
 				return err
@@ -169,12 +185,13 @@ func processFile(in io.Reader) error {
 		}
 		// Process signature
 
+		var session []Field
 		var inputs []Field
 		var outputs []Field
 		var fieldSection *[]Field
 
 		for {
-			line, err = reader.ReadString('\n')
+			line, err = in.ReadLine()
 			if err != nil {
 				return err
 			}
@@ -185,6 +202,9 @@ func processFile(in io.Reader) error {
 			m = reFieldSection.FindStringSubmatch(line)
 			if m != nil {
 				switch m[1] {
+				case "Session":
+					fieldSection = &session
+
 				case "Inputs":
 					fieldSection = &inputs
 
@@ -241,6 +261,19 @@ func processFile(in io.Reader) error {
 				print(";\n")
 			}
 
+			switch len(session) {
+			case 0:
+
+			case 1:
+				printf(`
+  /* XXX lookup session by %s */
+`,
+					session[0].ElementName)
+
+			default:
+				return fmt.Errorf("multiple session variables")
+			}
+
 			printf(`
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0x%08x);
@@ -268,7 +301,7 @@ func processFile(in io.Reader) error {
 `)
 
 			for idx, o := range outputs {
-				fmt.Printf("  // Output %d: %#v\n", idx, o)
+				info("  // Output %d: %#v\n", idx, o)
 			}
 			print("  VP_FUNCTION_NOT_SUPPORTED;\n")
 		}

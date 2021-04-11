@@ -112,9 +112,9 @@ C_InitToken
 {
   /**
    * Inputs:
-   *             CK_SLOT_ID   slotID
-   *   [ulPinLen]CK_UTF8_CHAR pPin
-   *         [32]CK_UTF8_CHAR pLabel
+   *             CK_SLOT_ID  slotID
+   *   [ulPinLen]CK_UTF8CHAR pPin
+   *         [32]CK_UTF8CHAR pLabel
    */
 }
 
@@ -128,9 +128,10 @@ C_InitPIN
 )
 {
   /**
+   * Session:
+   *            CK_SESSION_HANDLE hSession
    * Inputs:
-   *             CK_SESSION_HANDLE hSession
-   *   [ulPinLen]CK_UTF8_CHAR      pPin
+   *   [ulPinLen]CK_UTF8CHAR      pPin
    */
 }
 
@@ -146,9 +147,10 @@ C_SetPIN
 )
 {
   /**
+   * Session:
+   *            CK_SESSION_HANDLE hSession
    * Inputs:
-   *             CK_SESSION_HANDLE hSession
-   *   [ulOldLen]CK_UTF8_CHAR      pOldPin
-   *   [ulNewLen]CK_UTF8_CHAR      pNewPin
+   *   [ulOldLen]CK_UTF8CHAR      pOldPin
+   *   [ulNewLen]CK_UTF8CHAR      pNewPin
    */
 }
