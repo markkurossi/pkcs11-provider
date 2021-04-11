@@ -68,13 +68,6 @@ func main() {
 		defer output.Close()
 	}
 
-	if outputGo {
-		err = goTypes()
-		if err != nil {
-			log.Fatalf("failed to generate types: %s", err)
-		}
-	}
-
 	for _, arg := range flag.Args() {
 		f, err := os.Open(arg)
 		if err != nil {
@@ -87,19 +80,42 @@ func main() {
 			Reader: bufio.NewReader(f),
 		}
 
-		fmt.Printf("%s\n", arg)
+		fmt.Fprintf(os.Stderr, "%s\n", arg)
 		err = processFile(input)
 		if err != nil {
 			log.Fatalf("%s:%d: %s\n", arg, input.Line, err)
 		}
 	}
+
+	if outputGo {
+		fmt.Printf(`// This file is auto-generated rpcc.
+//
+// Copyright (C) 2021 Markku Rossi.
+//
+// All rights reserved.
+//
+
+package ipc
+
+`)
+		err = goTypes()
+		if err != nil {
+			log.Fatalf("failed to generate types: %s", err)
+		}
+		err = goRPC()
+		if err != nil {
+			log.Fatalf("failed to generate RPC: %s", err)
+		}
+	}
 }
 
+// Input defines RPC input file.
 type Input struct {
 	Reader *bufio.Reader
 	Line   int
 }
 
+// ReadLine reads the next input line.
 func (i *Input) ReadLine() (string, error) {
 	line, err := i.Reader.ReadString('\n')
 	if err != nil {
@@ -111,6 +127,7 @@ func (i *Input) ReadLine() (string, error) {
 
 func processFile(in *Input) error {
 	var vMajor, vMinor, s0, s1, s2 int
+	var functionName string
 	var title string
 
 	// Parse header.
@@ -174,8 +191,8 @@ func processFile(in *Input) error {
 		if m != nil {
 			print(line)
 			s2++
-			name := m[1]
-			info(" - %d.%d.%d %s\n", s0, s1, s2, name)
+			functionName = m[1]
+			info(" - %d.%d.%d %s\n", s0, s1, s2, functionName)
 			continue
 		}
 		m = reSigStart.FindStringSubmatch(line)
@@ -305,6 +322,13 @@ func processFile(in *Input) error {
 			}
 			print("  VP_FUNCTION_NOT_SUPPORTED;\n")
 		}
+
+		if outputGo {
+			goMessages = append(goMessages, GoMessage{
+				Type: msgType,
+				Name: functionName,
+			})
+		}
 	}
 }
 
@@ -323,9 +347,42 @@ func goTypes() error {
 			return false
 		}
 	})
-	for _, t := range arr {
-		fmt.Printf("%s\n", t.GoType())
+	for idx, t := range arr {
+		if idx > 0 {
+			fmt.Println()
+		}
+		if t.Basic {
+			fmt.Printf(`// %s defines basic protocol type %s.
+%s
+`,
+				GoTypeName(t.Name), t.Name, t.GoType())
+		} else {
+			fmt.Printf(`// %s defines compound protocol type %s.
+%s
+`,
+				GoTypeName(t.Name), t.Name, t.GoType())
+		}
 	}
+
+	return nil
+}
+
+var goMessages []GoMessage
+
+// GoMessage defines a Go RPC message.
+type GoMessage struct {
+	Type ipc.Type
+	Name string
+}
+
+func goRPC() error {
+	fmt.Printf(`
+var msgTypeNames = map[Type]string{
+`)
+	for _, msg := range goMessages {
+		fmt.Printf("\t0x%08x: %q,\n", int(msg.Type), msg.Name)
+	}
+	fmt.Printf("}\n")
 
 	return nil
 }
