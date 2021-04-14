@@ -105,7 +105,7 @@ package ipc
 	}
 
 	if outputGo {
-		err = goMessageNames()
+		err = goRPC()
 		if err != nil {
 			log.Fatalf("failed to generate RPC: %s", err)
 		}
@@ -328,12 +328,11 @@ func processFile(in *Input) error {
 
 		if outputGo {
 			goMessages = append(goMessages, GoMessage{
-				Type: msgType,
-				Name: functionName,
+				Type:    msgType,
+				Name:    functionName,
+				Inputs:  inputs,
+				Outputs: outputs,
 			})
-
-			goRPC(inputs, functionName, true)
-			goRPC(outputs, functionName, false)
 		}
 	}
 }
@@ -377,11 +376,32 @@ var goMessages []GoMessage
 
 // GoMessage defines a Go RPC message.
 type GoMessage struct {
-	Type ipc.Type
-	Name string
+	Type    ipc.Type
+	Name    string
+	Inputs  []Field
+	Outputs []Field
 }
 
-func goRPC(fields []Field, functionName string, req bool) {
+func goRPC() error {
+	// Create RPC call argument and result types.
+	for _, msg := range goMessages {
+		goCallTypes(msg.Inputs, msg.Name, true)
+		goCallTypes(msg.Outputs, msg.Name, false)
+	}
+
+	// RPC message names.
+	fmt.Printf(`
+var msgTypeNames = map[Type]string{
+`)
+	for _, msg := range goMessages {
+		fmt.Printf("\t0x%08x: %q,\n", int(msg.Type), msg.Name)
+	}
+	fmt.Printf("}\n")
+
+	return nil
+}
+
+func goCallTypes(fields []Field, functionName string, req bool) {
 	// XXX change to print to output file.
 	if len(fields) == 0 {
 		return
@@ -423,18 +443,6 @@ type %s%s struct {
 		fmt.Printf(" %s\n", strings.Join(parts[1:], " "))
 	}
 	fmt.Printf("}\n")
-}
-
-func goMessageNames() error {
-	fmt.Printf(`
-var msgTypeNames = map[Type]string{
-`)
-	for _, msg := range goMessages {
-		fmt.Printf("\t0x%08x: %q,\n", int(msg.Type), msg.Name)
-	}
-	fmt.Printf("}\n")
-
-	return nil
 }
 
 func header(source string) {
