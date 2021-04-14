@@ -102,125 +102,216 @@ type CKVersion struct {
 	Minor CKByte
 }
 
-// CGetSlotListReq defines the arguments of C_GetSlotList.
-type CGetSlotListReq struct {
+// GetSlotListReq defines the arguments of C_GetSlotList.
+type GetSlotListReq struct {
 	TokenPresent CKBbool
 }
 
-// CGetSlotListResp defines the result of C_GetSlotList.
-type CGetSlotListResp struct {
+// GetSlotListResp defines the result of C_GetSlotList.
+type GetSlotListResp struct {
 	PSlotList []CKSlotID
 }
 
-// CGetSlotInfoReq defines the arguments of C_GetSlotInfo.
-type CGetSlotInfoReq struct {
+// GetSlotInfoReq defines the arguments of C_GetSlotInfo.
+type GetSlotInfoReq struct {
 	SlotID CKSlotID
 }
 
-// CGetSlotInfoResp defines the result of C_GetSlotInfo.
-type CGetSlotInfoResp struct {
+// GetSlotInfoResp defines the result of C_GetSlotInfo.
+type GetSlotInfoResp struct {
 	PInfo CKSlotInfo
 }
 
-// CInitTokenReq defines the arguments of C_InitToken.
-type CInitTokenReq struct {
+// InitTokenReq defines the arguments of C_InitToken.
+type InitTokenReq struct {
 	SlotID CKSlotID
 	PPin   []CKUTF8Char
 	PLabel [32]CKUTF8Char
 }
 
-// CInitPINReq defines the arguments of C_InitPIN.
-type CInitPINReq struct {
+// InitPINReq defines the arguments of C_InitPIN.
+type InitPINReq struct {
 	PPin []CKUTF8Char
 }
 
-// CSetPINReq defines the arguments of C_SetPIN.
-type CSetPINReq struct {
+// SetPINReq defines the arguments of C_SetPIN.
+type SetPINReq struct {
 	POldPin []CKUTF8Char
 	PNewPin []CKUTF8Char
 }
 
-// CCreateObjectReq defines the arguments of C_CreateObject.
-type CCreateObjectReq struct {
+// CreateObjectReq defines the arguments of C_CreateObject.
+type CreateObjectReq struct {
 	PTemplate []CKAttribute
 }
 
-// CCreateObjectResp defines the result of C_CreateObject.
-type CCreateObjectResp struct {
+// CreateObjectResp defines the result of C_CreateObject.
+type CreateObjectResp struct {
 	PhObject CKObjectHandle
 }
 
-// CCopyObjectReq defines the arguments of C_CopyObject.
-type CCopyObjectReq struct {
+// CopyObjectReq defines the arguments of C_CopyObject.
+type CopyObjectReq struct {
 	HObject   CKObjectHandle
 	PTemplate []CKAttribute
 }
 
-// CCopyObjectResp defines the result of C_CopyObject.
-type CCopyObjectResp struct {
+// CopyObjectResp defines the result of C_CopyObject.
+type CopyObjectResp struct {
 	PhNewObject CKObjectHandle
 }
 
-// CDestroyObjectReq defines the arguments of C_DestroyObject.
-type CDestroyObjectReq struct {
+// DestroyObjectReq defines the arguments of C_DestroyObject.
+type DestroyObjectReq struct {
 	HObject CKObjectHandle
 }
 
-// CGetObjectSizeReq defines the arguments of C_GetObjectSize.
-type CGetObjectSizeReq struct {
+// GetObjectSizeReq defines the arguments of C_GetObjectSize.
+type GetObjectSizeReq struct {
 	HObject CKObjectHandle
 }
 
-// CGetObjectSizeResp defines the result of C_GetObjectSize.
-type CGetObjectSizeResp struct {
+// GetObjectSizeResp defines the result of C_GetObjectSize.
+type GetObjectSizeResp struct {
 	PulSize CKUlong
 }
 
-// CGetAttributeValueReq defines the arguments of C_GetAttributeValue.
-type CGetAttributeValueReq struct {
+// GetAttributeValueReq defines the arguments of C_GetAttributeValue.
+type GetAttributeValueReq struct {
 	HObject   CKObjectHandle
 	PTemplate []CKAttribute
 }
 
-// CGetAttributeValueResp defines the result of C_GetAttributeValue.
-type CGetAttributeValueResp struct {
+// GetAttributeValueResp defines the result of C_GetAttributeValue.
+type GetAttributeValueResp struct {
 	PTemplate []CKAttribute
 }
 
-// CSetAttributeValueReq defines the arguments of C_SetAttributeValue.
-type CSetAttributeValueReq struct {
+// SetAttributeValueReq defines the arguments of C_SetAttributeValue.
+type SetAttributeValueReq struct {
 	HObject   CKObjectHandle
 	PTemplate []CKAttribute
 }
 
-// CFindObjectsInitReq defines the arguments of C_FindObjectsInit.
-type CFindObjectsInitReq struct {
+// FindObjectsInitReq defines the arguments of C_FindObjectsInit.
+type FindObjectsInitReq struct {
 	PTemplate []CKAttribute
 }
 
-// CFindObjectsReq defines the arguments of C_FindObjects.
-type CFindObjectsReq struct {
+// FindObjectsReq defines the arguments of C_FindObjects.
+type FindObjectsReq struct {
 	UlMaxObjectCount CKUlong
 }
 
-// CFindObjectsResp defines the result of C_FindObjects.
-type CFindObjectsResp struct {
+// FindObjectsResp defines the result of C_FindObjects.
+type FindObjectsResp struct {
 	PhObject []CKObjectHandle
 }
 
+// Provider defines the PKCS #11 provider interface.
+type Provider interface {
+	GetSlotList(req *GetSlotListReq) (*GetSlotListResp, error)
+	GetSlotInfo(req *GetSlotInfoReq) (*GetSlotInfoResp, error)
+	InitToken(req *InitTokenReq) error
+	InitPIN(req *InitPINReq) error
+	SetPIN(req *SetPINReq) error
+	CreateObject(req *CreateObjectReq) (*CreateObjectResp, error)
+	CopyObject(req *CopyObjectReq) (*CopyObjectResp, error)
+	DestroyObject(req *DestroyObjectReq) error
+	GetObjectSize(req *GetObjectSizeReq) (*GetObjectSizeResp, error)
+	GetAttributeValue(req *GetAttributeValueReq) (*GetAttributeValueResp, error)
+	SetAttributeValue(req *SetAttributeValueReq) error
+	FindObjectsInit(req *FindObjectsInitReq) error
+	FindObjects(req *FindObjectsReq) (*FindObjectsResp, error)
+	FindObjectsFinal() error
+}
+
+// Base provides a dummy implementation of the Provider interface.
+type Base struct{}
+
+// GetSlotList implements the Provider.GetSlotList().
+func (b *Base) GetSlotList(req *GetSlotListReq) (*GetSlotListResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
+// GetSlotInfo implements the Provider.GetSlotInfo().
+func (b *Base) GetSlotInfo(req *GetSlotInfoReq) (*GetSlotInfoResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
+// InitToken implements the Provider.InitToken().
+func (b *Base) InitToken(req *InitTokenReq) error {
+	return ErrFunctionNotSupported
+}
+
+// InitPIN implements the Provider.InitPIN().
+func (b *Base) InitPIN(req *InitPINReq) error {
+	return ErrFunctionNotSupported
+}
+
+// SetPIN implements the Provider.SetPIN().
+func (b *Base) SetPIN(req *SetPINReq) error {
+	return ErrFunctionNotSupported
+}
+
+// CreateObject implements the Provider.CreateObject().
+func (b *Base) CreateObject(req *CreateObjectReq) (*CreateObjectResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
+// CopyObject implements the Provider.CopyObject().
+func (b *Base) CopyObject(req *CopyObjectReq) (*CopyObjectResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
+// DestroyObject implements the Provider.DestroyObject().
+func (b *Base) DestroyObject(req *DestroyObjectReq) error {
+	return ErrFunctionNotSupported
+}
+
+// GetObjectSize implements the Provider.GetObjectSize().
+func (b *Base) GetObjectSize(req *GetObjectSizeReq) (*GetObjectSizeResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
+// GetAttributeValue implements the Provider.GetAttributeValue().
+func (b *Base) GetAttributeValue(req *GetAttributeValueReq) (*GetAttributeValueResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
+// SetAttributeValue implements the Provider.SetAttributeValue().
+func (b *Base) SetAttributeValue(req *SetAttributeValueReq) error {
+	return ErrFunctionNotSupported
+}
+
+// FindObjectsInit implements the Provider.FindObjectsInit().
+func (b *Base) FindObjectsInit(req *FindObjectsInitReq) error {
+	return ErrFunctionNotSupported
+}
+
+// FindObjects implements the Provider.FindObjects().
+func (b *Base) FindObjects(req *FindObjectsReq) (*FindObjectsResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
+// FindObjectsFinal implements the Provider.FindObjectsFinal().
+func (b *Base) FindObjectsFinal() error {
+	return ErrFunctionNotSupported
+}
+
 var msgTypeNames = map[Type]string{
-	0xc0050501: "C_GetSlotList",
-	0xc0050502: "C_GetSlotInfo",
-	0xc0050507: "C_InitToken",
-	0xc0050508: "C_InitPIN",
-	0xc0050509: "C_SetPIN",
-	0xc0050701: "C_CreateObject",
-	0xc0050702: "C_CopyObject",
-	0xc0050703: "C_DestroyObject",
-	0xc0050704: "C_GetObjectSize",
-	0xc0050705: "C_GetAttributeValue",
-	0xc0050706: "C_SetAttributeValue",
-	0xc0050707: "C_FindObjectsInit",
-	0xc0050708: "C_FindObjects",
-	0xc0050709: "C_FindObjectsFinal",
+	0xc0050501: "GetSlotList",
+	0xc0050502: "GetSlotInfo",
+	0xc0050507: "InitToken",
+	0xc0050508: "InitPIN",
+	0xc0050509: "SetPIN",
+	0xc0050701: "CreateObject",
+	0xc0050702: "CopyObject",
+	0xc0050703: "DestroyObject",
+	0xc0050704: "GetObjectSize",
+	0xc0050705: "GetAttributeValue",
+	0xc0050706: "SetAttributeValue",
+	0xc0050707: "FindObjectsInit",
+	0xc0050708: "FindObjects",
+	0xc0050709: "FindObjectsFinal",
 }

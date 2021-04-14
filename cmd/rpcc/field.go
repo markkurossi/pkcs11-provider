@@ -86,6 +86,11 @@ func GoTypeName(name string) string {
 	return strings.Join(parts, "")
 }
 
+// GoFuncName converts the name to Go function name.
+func GoFuncName(name string) string {
+	return strings.ReplaceAll(name, "C_", "")
+}
+
 // GoType returns the Go type name for the type.
 func GoType(native string) string {
 	return native

@@ -389,12 +389,68 @@ func goRPC() error {
 		goCallTypes(msg.Outputs, msg.Name, false)
 	}
 
+	// Provider interface.
+	fmt.Printf(`
+// Provider defines the PKCS #11 provider interface.
+type Provider interface {
+`)
+	for _, msg := range goMessages {
+		goFunc := GoFuncName(msg.Name)
+		fmt.Printf("\t%s(", goFunc)
+
+		if len(msg.Inputs) > 0 {
+			fmt.Printf("req *%sReq", goFunc)
+		}
+
+		fmt.Printf(") ")
+
+		if len(msg.Outputs) > 0 {
+			fmt.Printf("(*%sResp, error)", goFunc)
+		} else {
+			fmt.Printf("error")
+		}
+		fmt.Println()
+	}
+	fmt.Println("}")
+
+	// Base provider.
+	fmt.Printf(`
+// Base provides a dummy implementation of the Provider interface.
+type Base struct{}
+`)
+	for _, msg := range goMessages {
+		goFunc := GoFuncName(msg.Name)
+		fmt.Printf(`
+// %s implements the Provider.%s().
+func (b *Base) %s(`, goFunc, goFunc, goFunc)
+
+		if len(msg.Inputs) > 0 {
+			fmt.Printf("req *%sReq", goFunc)
+		}
+
+		fmt.Printf(") ")
+
+		var result string
+		if len(msg.Outputs) > 0 {
+			fmt.Printf("(*%sResp, error)", goFunc)
+			result = "nil, ErrFunctionNotSupported"
+		} else {
+			fmt.Printf("error")
+			result = "ErrFunctionNotSupported"
+		}
+		fmt.Printf(` {
+	return %s
+}
+`,
+			result)
+	}
+
 	// RPC message names.
 	fmt.Printf(`
 var msgTypeNames = map[Type]string{
 `)
 	for _, msg := range goMessages {
-		fmt.Printf("\t0x%08x: %q,\n", int(msg.Type), msg.Name)
+		fmt.Printf("\t0x%08x: %q,\n", int(msg.Type), GoFuncName(msg.Name))
 	}
 	fmt.Printf("}\n")
 
@@ -415,7 +471,7 @@ func goCallTypes(fields []Field, functionName string, req bool) {
 		}
 	}
 
-	goFunc := strings.ReplaceAll(functionName, "_", "")
+	goFunc := GoFuncName(functionName)
 
 	var suffix string
 	var comment string
