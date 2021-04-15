@@ -316,8 +316,6 @@ var msgTypeNames = map[Type]string{
 	0xc0050709: "FindObjectsFinal",
 }
 
-// Dispatch dispatches the message to provider and returns the PKCS
-// #11 API return values.
 func Dispatch(p Provider, msgType Type, req []byte) (CKRV, []byte) {
 	resp, err := call(p, msgType, req)
 	if err != nil {
@@ -331,16 +329,13 @@ func Dispatch(p Provider, msgType Type, req []byte) (CKRV, []byte) {
 }
 
 func call(p Provider, msgType Type, data []byte) ([]byte, error) {
-	var err error
-	var resp interface{}
-
 	switch msgType {
 	case 0xc0050501: // GetSlotList
 		var req GetSlotListReq
-		if err = Unmarshal(data, &req); err != nil {
+		if err := Unmarshal(data, &req); err != nil {
 			return nil, err
 		}
-		resp, err = p.GetSlotList(&req)
+		resp, err := p.GetSlotList(&req)
 		if err != nil {
 			return nil, err
 		}
@@ -348,10 +343,10 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 
 	case 0xc0050502: // GetSlotInfo
 		var req GetSlotInfoReq
-		if err = Unmarshal(data, &req); err != nil {
+		if err := Unmarshal(data, &req); err != nil {
 			return nil, err
 		}
-		resp, err = p.GetSlotInfo(&req)
+		resp, err := p.GetSlotInfo(&req)
 		if err != nil {
 			return nil, err
 		}
@@ -359,31 +354,31 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 
 	case 0xc0050507: // InitToken
 		var req InitTokenReq
-		if err = Unmarshal(data, &req); err != nil {
+		if err := Unmarshal(data, &req); err != nil {
 			return nil, err
 		}
 		return nil, p.InitToken(&req)
 
 	case 0xc0050508: // InitPIN
 		var req InitPINReq
-		if err = Unmarshal(data, &req); err != nil {
+		if err := Unmarshal(data, &req); err != nil {
 			return nil, err
 		}
 		return nil, p.InitPIN(&req)
 
 	case 0xc0050509: // SetPIN
 		var req SetPINReq
-		if err = Unmarshal(data, &req); err != nil {
+		if err := Unmarshal(data, &req); err != nil {
 			return nil, err
 		}
 		return nil, p.SetPIN(&req)
 
 	case 0xc0050701: // CreateObject
 		var req CreateObjectReq
-		if err = Unmarshal(data, &req); err != nil {
+		if err := Unmarshal(data, &req); err != nil {
 			return nil, err
 		}
-		resp, err = p.CreateObject(&req)
+		resp, err := p.CreateObject(&req)
 		if err != nil {
 			return nil, err
 		}
@@ -391,10 +386,10 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 
 	case 0xc0050702: // CopyObject
 		var req CopyObjectReq
-		if err = Unmarshal(data, &req); err != nil {
+		if err := Unmarshal(data, &req); err != nil {
 			return nil, err
 		}
-		resp, err = p.CopyObject(&req)
+		resp, err := p.CopyObject(&req)
 		if err != nil {
 			return nil, err
 		}
@@ -402,17 +397,17 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 
 	case 0xc0050703: // DestroyObject
 		var req DestroyObjectReq
-		if err = Unmarshal(data, &req); err != nil {
+		if err := Unmarshal(data, &req); err != nil {
 			return nil, err
 		}
 		return nil, p.DestroyObject(&req)
 
 	case 0xc0050704: // GetObjectSize
 		var req GetObjectSizeReq
-		if err = Unmarshal(data, &req); err != nil {
+		if err := Unmarshal(data, &req); err != nil {
 			return nil, err
 		}
-		resp, err = p.GetObjectSize(&req)
+		resp, err := p.GetObjectSize(&req)
 		if err != nil {
 			return nil, err
 		}
@@ -420,10 +415,10 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 
 	case 0xc0050705: // GetAttributeValue
 		var req GetAttributeValueReq
-		if err = Unmarshal(data, &req); err != nil {
+		if err := Unmarshal(data, &req); err != nil {
 			return nil, err
 		}
-		resp, err = p.GetAttributeValue(&req)
+		resp, err := p.GetAttributeValue(&req)
 		if err != nil {
 			return nil, err
 		}
@@ -431,24 +426,24 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 
 	case 0xc0050706: // SetAttributeValue
 		var req SetAttributeValueReq
-		if err = Unmarshal(data, &req); err != nil {
+		if err := Unmarshal(data, &req); err != nil {
 			return nil, err
 		}
 		return nil, p.SetAttributeValue(&req)
 
 	case 0xc0050707: // FindObjectsInit
 		var req FindObjectsInitReq
-		if err = Unmarshal(data, &req); err != nil {
+		if err := Unmarshal(data, &req); err != nil {
 			return nil, err
 		}
 		return nil, p.FindObjectsInit(&req)
 
 	case 0xc0050708: // FindObjects
 		var req FindObjectsReq
-		if err = Unmarshal(data, &req); err != nil {
+		if err := Unmarshal(data, &req); err != nil {
 			return nil, err
 		}
-		resp, err = p.FindObjects(&req)
+		resp, err := p.FindObjects(&req)
 		if err != nil {
 			return nil, err
 		}

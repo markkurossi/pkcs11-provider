@@ -469,9 +469,6 @@ func Dispatch(p Provider, msgType Type, req []byte) (CKRV, []byte) {
 }
 
 func call(p Provider, msgType Type, data []byte) ([]byte, error) {
-	var err error
-	var resp interface{}
-
 	switch msgType {
 `)
 
@@ -485,13 +482,13 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 		if len(msg.Inputs) > 0 {
 			fmt.Printf(`
 		var req %sReq
-		if err = Unmarshal(data, &req); err != nil {
+		if err := Unmarshal(data, &req); err != nil {
 			return nil, err
 		}`,
 				goFunc)
 			if len(msg.Outputs) > 0 {
 				fmt.Printf(`
-		resp, err = p.%s(&req)
+		resp, err := p.%s(&req)
 		if err != nil {
 			return nil, err
 		}
@@ -507,7 +504,7 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 		} else {
 			if len(msg.Outputs) > 0 {
 				fmt.Printf(`
-		resp, err = p.%s()
+		resp, err := p.%s()
 		if err != nil {
 			return nil, err
 		}
