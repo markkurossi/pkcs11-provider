@@ -454,6 +454,82 @@ var msgTypeNames = map[Type]string{
 	}
 	fmt.Printf("}\n")
 
+	// Message dispatcher.
+	fmt.Printf(`
+func Dispatch(p Provider, msgType Type, req []byte) (CKRV, []byte) {
+	resp, err := call(p, msgType, req)
+	if err != nil {
+		ckrv, ok := err.(CKRV)
+		if ok {
+			return ckrv, nil
+		}
+		return ErrFunctionNotSupported, nil
+	}
+	return ErrOk, resp
+}
+
+func call(p Provider, msgType Type, data []byte) ([]byte, error) {
+	var err error
+	var resp interface{}
+
+	switch msgType {
+`)
+
+	for idx, msg := range goMessages {
+		goFunc := GoFuncName(msg.Name)
+		if idx > 0 {
+			fmt.Println()
+		}
+		fmt.Printf("\tcase 0x%08x: // %s", int(msg.Type), goFunc)
+
+		if len(msg.Inputs) > 0 {
+			fmt.Printf(`
+		var req %sReq
+		if err = Unmarshal(data, &req); err != nil {
+			return nil, err
+		}`,
+				goFunc)
+			if len(msg.Outputs) > 0 {
+				fmt.Printf(`
+		resp, err = p.%s(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
+`,
+					goFunc)
+			} else {
+				fmt.Printf(`
+		return nil, p.%s(&req)
+`,
+					goFunc)
+			}
+		} else {
+			if len(msg.Outputs) > 0 {
+				fmt.Printf(`
+		resp, err = p.%s()
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
+`,
+					goFunc)
+			} else {
+				fmt.Printf(`
+		return nil, p.%s()
+`,
+					goFunc)
+			}
+		}
+	}
+
+	fmt.Printf(`
+	default:
+		return nil, ErrFunctionNotSupported
+	}
+}
+`)
+
 	return nil
 }
 
