@@ -11,6 +11,21 @@
 /** Version: 3.0 */
 /** Section: 5.4 General-purpose functions */
 
+#define CK_PKCS11_FUNCTION_INFO(name) name,
+
+static struct CK_FUNCTION_LIST_3_0 function_list =
+  {
+    {
+      CRYPTOKI_VERSION_MAJOR,
+      CRYPTOKI_VERSION_MINOR,
+    },
+
+#include "pkcs11f.h"
+
+  };
+
+static CK_C_INITIALIZE_ARGS init_args;
+
 /* C_Initialize initializes the Cryptoki library. */
 CK_RV
 C_Initialize
@@ -21,7 +36,10 @@ C_Initialize
                             */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  if (pInitArgs != NULL)
+    memcpy(&init_args, pInitArgs, sizeof(CK_C_INITIALIZE_ARGS));
+
+  return CKR_OK;
 }
 
 /* C_Finalize indicates that an application is done with the
@@ -33,7 +51,7 @@ C_Finalize
   CK_VOID_PTR   pReserved  /* reserved.  Should be NULL_PTR */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  return CKR_OK;
 }
 
 /* C_GetInfo returns general information about Cryptoki. */
@@ -55,7 +73,12 @@ C_GetFunctionList
                                             */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  if (ppFunctionList == NULL)
+    return CKR_ARGUMENTS_BAD;
+
+  *ppFunctionList = (CK_FUNCTION_LIST_PTR) &function_list;
+
+  return CKR_OK;
 }
 
 /* C_GetInterfaceList returns all the interfaces supported by the module*/
