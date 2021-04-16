@@ -25,6 +25,67 @@ static struct CK_FUNCTION_LIST_3_0 function_list =
 
 static CK_C_INITIALIZE_ARGS init_args;
 
+static CK_RV
+mutex_create(void **ret)
+{
+  pthread_mutex_t *mutex;
+
+  if (ret == NULL)
+    return CKR_ARGUMENTS_BAD;
+
+  mutex = calloc(1, sizeof(*mutex));
+  if (mutex == NULL)
+    return CKR_HOST_MEMORY;
+
+  pthread_mutex_init(mutex, NULL);
+
+  *ret = mutex;
+
+  return CKR_OK;
+}
+
+static CK_RV
+mutex_destroy(void *ptr)
+{
+  if (ptr != NULL)
+    {
+      pthread_mutex_t *mutex = (pthread_mutex_t *) ptr;
+
+      pthread_mutex_destroy(mutex);
+      free(mutex);
+    }
+
+  return CKR_OK;
+}
+
+static CK_RV
+mutex_lock(void *ptr)
+{
+  pthread_mutex_t *mutex = (pthread_mutex_t *) ptr;
+
+  if (mutex == NULL)
+    return CKR_ARGUMENTS_BAD;
+
+  if (pthread_mutex_lock(mutex) != 0)
+    return CKR_CANT_LOCK;
+
+  return CKR_OK;
+}
+
+static CK_RV
+mutex_unlock(void *ptr)
+{
+  pthread_mutex_t *mutex = (pthread_mutex_t *) ptr;
+
+  if (mutex == NULL)
+    return CKR_ARGUMENTS_BAD;
+
+  if (pthread_mutex_unlock(mutex) != 0)
+    return CKR_ARGUMENTS_BAD;
+
+  return CKR_OK;
+}
+
 /* C_Initialize initializes the Cryptoki library. */
 CK_RV
 C_Initialize
@@ -36,7 +97,17 @@ C_Initialize
 )
 {
   if (pInitArgs != NULL)
-    memcpy(&init_args, pInitArgs, sizeof(CK_C_INITIALIZE_ARGS));
+    {
+      memcpy(&init_args, pInitArgs, sizeof(init_args));
+    }
+  else
+    {
+      memset(&init_args, 0, sizeof(init_args));
+      init_args.CreateMutex = mutex_create;
+      init_args.DestroyMutex = mutex_destroy;
+      init_args.LockMutex = mutex_lock;
+      init_args.UnlockMutex = mutex_unlock;
+    }
 
   return CKR_OK;
 }

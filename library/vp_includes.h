@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <pthread.h>
 
 #define CK_PTR *
 #define CK_BOOL bool
