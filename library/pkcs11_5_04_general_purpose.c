@@ -158,6 +158,25 @@ C_GetInfo
   CK_INFO_PTR   pInfo  /* location that receives information */
 )
 {
+  VPBuffer buf;
+  unsigned char *data;
+  size_t len;
+
+  /* XXX use global session */
+
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0050403);
+  vp_buffer_add_space(&buf, 4);
+
+  data = vp_buffer_ptr(&buf);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+  len = vp_buffer_len(&buf);
+  VP_PUT_UINT32(data + 4, len - 8);
+
   VP_FUNCTION_NOT_SUPPORTED;
 }
 

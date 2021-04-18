@@ -107,6 +107,11 @@ type InitializeResp struct {
 	NumSlots CKUlong
 }
 
+// GetInfoResp defines the result of C_GetInfo.
+type GetInfoResp struct {
+	PInfo CKInfo
+}
+
 // GetSlotListReq defines the arguments of C_GetSlotList.
 type GetSlotListReq struct {
 	TokenPresent CKBbool
@@ -216,6 +221,7 @@ type FindObjectsResp struct {
 // Provider defines the PKCS #11 provider interface.
 type Provider interface {
 	Initialize() (*InitializeResp, error)
+	GetInfo() (*GetInfoResp, error)
 	GetSlotList(req *GetSlotListReq) (*GetSlotListResp, error)
 	GetSlotInfo(req *GetSlotInfoReq) (*GetSlotInfoResp, error)
 	InitToken(req *InitTokenReq) error
@@ -237,6 +243,11 @@ type Base struct{}
 
 // Initialize implements the Provider.Initialize().
 func (b *Base) Initialize() (*InitializeResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
+// GetInfo implements the Provider.GetInfo().
+func (b *Base) GetInfo() (*GetInfoResp, error) {
 	return nil, ErrFunctionNotSupported
 }
 
@@ -312,6 +323,7 @@ func (b *Base) FindObjectsFinal() error {
 
 var msgTypeNames = map[Type]string{
 	0xc0050401: "Initialize",
+	0xc0050403: "GetInfo",
 	0xc0050501: "GetSlotList",
 	0xc0050502: "GetSlotInfo",
 	0xc0050507: "InitToken",
@@ -346,6 +358,13 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 	switch msgType {
 	case 0xc0050401: // Initialize
 		resp, err := p.Initialize()
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
+
+	case 0xc0050403: // GetInfo
+		resp, err := p.GetInfo()
 		if err != nil {
 			return nil, err
 		}

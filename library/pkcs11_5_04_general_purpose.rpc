@@ -144,7 +144,10 @@ C_GetInfo
   CK_INFO_PTR   pInfo  /* location that receives information */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Outputs:
+   *   CK_INFO pInfo
+   */
 }
 
 /* C_GetFunctionList returns the function list. */
