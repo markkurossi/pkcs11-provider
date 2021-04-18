@@ -37,7 +37,11 @@ mutex_create(void **ret)
   if (mutex == NULL)
     return CKR_HOST_MEMORY;
 
-  pthread_mutex_init(mutex, NULL);
+  if (pthread_mutex_init(mutex, NULL) != 0)
+    {
+      free(mutex);
+      return CKR_HOST_MEMORY;
+    }
 
   *ret = mutex;
 
@@ -96,6 +100,12 @@ C_Initialize
                             */
 )
 {
+  /** Header
+   *
+   * Outputs:
+   *   CK_ULONG numSlots
+   */
+
   if (pInitArgs != NULL)
     {
       memcpy(&init_args, pInitArgs, sizeof(init_args));
@@ -109,6 +119,8 @@ C_Initialize
       init_args.UnlockMutex = mutex_unlock;
     }
 
+  /** Call */
+
   return CKR_OK;
 }
 
@@ -121,6 +133,7 @@ C_Finalize
   CK_VOID_PTR   pReserved  /* reserved.  Should be NULL_PTR */
 )
 {
+  VP_FUNCTION_ENTER;
   return CKR_OK;
 }
 
@@ -143,6 +156,8 @@ C_GetFunctionList
                                             */
 )
 {
+  VP_FUNCTION_ENTER;
+
   if (ppFunctionList == NULL)
     return CKR_ARGUMENTS_BAD;
 

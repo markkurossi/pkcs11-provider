@@ -24,6 +24,8 @@ C_GetSlotList
   unsigned char *data;
   size_t len;
 
+  /* XXX use global session */
+
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050501);
   vp_buffer_add_space(&buf, 4);
@@ -55,6 +57,8 @@ C_GetSlotInfo
   VPBuffer buf;
   unsigned char *data;
   size_t len;
+
+  /* XXX use global session */
 
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050502);
@@ -142,6 +146,8 @@ C_InitToken
   VPBuffer buf;
   unsigned char *data;
   size_t len;
+
+  /* XXX use global session */
 
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050507);

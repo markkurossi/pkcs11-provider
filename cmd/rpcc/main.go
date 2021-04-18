@@ -25,7 +25,7 @@ var (
 	reVersion      = regexp.MustCompilePOSIX(`/\*\*[[:space:]]+Version:[[:space:]]+([[:digit:]]+)\.([[:digit:]]+)`)
 	reSection      = regexp.MustCompilePOSIX(`/\*\*[[:space:]]+Section:[[:space:]]+([[:digit:]]+)\.([[:digit:]]+)[[:space:]]*([^\*]+)`)
 	reFunction     = regexp.MustCompilePOSIX(`^(C_[a-zA-Z0-9_]+)`)
-	reSigStart     = regexp.MustCompilePOSIX(`^[[:space:]]*/\*\*[[:space:]]*$`)
+	reSigStart     = regexp.MustCompilePOSIX(`^[[:space:]]*/\*\*[[:space:]]*([[:^space:]]+)?[[:space:]]*(\*/)?$`)
 	reSigEnd       = regexp.MustCompilePOSIX(`^[[:space:]]*\*/[[:space:]]*$`)
 	reFieldSection = regexp.MustCompilePOSIX(`^[[:space:]]*\*[[:space:]]*([[:alnum:]]+):[[:space:]]*$`)
 	reField        = regexp.MustCompilePOSIX(`\*[[:space:]]+([[:^space:]]+)[[:space:]]+([[:^space:]]+)`)
@@ -182,6 +182,12 @@ func processFile(in *Input) error {
 	info("** %d.%d %s\n", s0, s1, title)
 
 	// Process all functions
+
+	var session []Field
+	var inputs []Field
+	var outputs []Field
+	var fieldSection *[]Field
+
 	for {
 		line, err := in.ReadLine()
 		if err != nil {
@@ -196,64 +202,87 @@ func processFile(in *Input) error {
 			s2++
 			functionName = m[1]
 			info(" - %d.%d.%d %s\n", s0, s1, s2, functionName)
+
+			session = nil
+			inputs = nil
+			outputs = nil
+			fieldSection = nil
+
 			continue
 		}
+
 		m = reSigStart.FindStringSubmatch(line)
 		if m == nil {
 			print(line)
 			continue
 		}
-		// Process signature
 
-		var session []Field
-		var inputs []Field
-		var outputs []Field
-		var fieldSection *[]Field
-
-		for {
-			line, err = in.ReadLine()
-			if err != nil {
-				return err
-			}
-			if reSigEnd.FindStringSubmatch(line) != nil {
-				// Signature processed
-				break
-			}
-			m = reFieldSection.FindStringSubmatch(line)
-			if m != nil {
-				switch m[1] {
-				case "Session":
-					fieldSection = &session
-
-				case "Inputs":
-					fieldSection = &inputs
-
-				case "Outputs":
-					fieldSection = &outputs
-
+		var fHeader, fCall, fTrailer bool
+		if len(m[1]) > 0 {
+			for _, flag := range strings.Split(m[1], ",") {
+				switch flag {
+				case "Header":
+					fHeader = true
+				case "Call":
+					fCall = true
+				case "Trailer":
+					fTrailer = true
 				default:
-					return fmt.Errorf("unknown field section: %s", m[1])
+					return fmt.Errorf("unknown flag: %s", flag)
 				}
-				continue
 			}
-
-			m = reField.FindStringSubmatch(line)
-			if m != nil {
-				field, err := parseField(m[1], m[2])
+		} else {
+			fHeader = true
+			fCall = true
+			fTrailer = true
+		}
+		if len(m[2]) == 0 {
+			// Process signature
+			for {
+				line, err = in.ReadLine()
 				if err != nil {
 					return err
 				}
-				if fieldSection == nil {
-					return fmt.Errorf("field declaration without section")
+				if reSigEnd.FindStringSubmatch(line) != nil {
+					// Signature processed
+					break
 				}
-				*fieldSection = append(*fieldSection, field)
-				continue
+				m = reFieldSection.FindStringSubmatch(line)
+				if m != nil {
+					switch m[1] {
+					case "Session":
+						fieldSection = &session
+
+					case "Inputs":
+						fieldSection = &inputs
+
+					case "Outputs":
+						fieldSection = &outputs
+
+					default:
+						return fmt.Errorf("unknown field section: %s", m[1])
+					}
+					continue
+				}
+
+				m = reField.FindStringSubmatch(line)
+				if m != nil {
+					field, err := parseField(m[1], m[2])
+					if err != nil {
+						return err
+					}
+					if fieldSection == nil {
+						return fmt.Errorf("field declaration without section")
+					}
+					*fieldSection = append(*fieldSection, field)
+					continue
+				}
 			}
 		}
 
 		msgType := ipc.NewType(vMajor, vMinor, s0, s1, s2)
 
-		if outputC {
+		if outputC && fHeader {
 			print(`  VPBuffer buf;
   unsigned char *data;
   size_t len;
@@ -280,9 +309,14 @@ func processFile(in *Input) error {
 				}
 				print(";\n")
 			}
+		}
 
+		if outputC && fCall {
 			switch len(session) {
 			case 0:
+				printf(`
+  /* XXX use global session */
+`)
 
 			case 1:
 				printf(`
@@ -298,11 +332,13 @@ func processFile(in *Input) error {
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0x%08x);
   vp_buffer_add_space(&buf, 4);
-
 `,
 				int(msgType))
 
-			for _, input := range inputs {
+			for idx, input := range inputs {
+				if idx == 0 {
+					printf("\n")
+				}
 				err = input.Input(0)
 				if err != nil {
 					return err
@@ -323,10 +359,13 @@ func processFile(in *Input) error {
 			for idx, o := range outputs {
 				info("  // Output %d: %#v\n", idx, o)
 			}
+		}
+
+		if outputC && fTrailer {
 			print("  VP_FUNCTION_NOT_SUPPORTED;\n")
 		}
 
-		if outputGo {
+		if outputGo && fHeader {
 			goMessages = append(goMessages, GoMessage{
 				Type:    msgType,
 				Name:    functionName,
@@ -456,6 +495,8 @@ var msgTypeNames = map[Type]string{
 
 	// Message dispatcher.
 	fmt.Printf(`
+// Dispatch dispatches the message to provider and returns the message
+// response.
 func Dispatch(p Provider, msgType Type, req []byte) (CKRV, []byte) {
 	resp, err := call(p, msgType, req)
 	if err != nil {

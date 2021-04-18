@@ -40,4 +40,6 @@ do {		       					\
   return CKR_FUNCTION_NOT_SUPPORTED;			\
 } while (0)
 
+#define VP_FUNCTION_ENTER vp_log(LOG_DEBUG, "%s: enter", __FUNCTION__)
+
 #endif /* not VP_INCLUDES_H */

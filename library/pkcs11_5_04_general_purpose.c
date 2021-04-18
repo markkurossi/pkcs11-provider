@@ -38,7 +38,11 @@ mutex_create(void **ret)
   if (mutex == NULL)
     return CKR_HOST_MEMORY;
 
-  pthread_mutex_init(mutex, NULL);
+  if (pthread_mutex_init(mutex, NULL) != 0)
+    {
+      free(mutex);
+      return CKR_HOST_MEMORY;
+    }
 
   *ret = mutex;
 
@@ -97,6 +101,10 @@ C_Initialize
                             */
 )
 {
+  VPBuffer buf;
+  unsigned char *data;
+  size_t len;
+
   if (pInitArgs != NULL)
     {
       memcpy(&init_args, pInitArgs, sizeof(init_args));
@@ -110,6 +118,23 @@ C_Initialize
       init_args.UnlockMutex = mutex_unlock;
     }
 
+
+  /* XXX use global session */
+
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0050401);
+  vp_buffer_add_space(&buf, 4);
+
+  data = vp_buffer_ptr(&buf);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+  len = vp_buffer_len(&buf);
+  VP_PUT_UINT32(data + 4, len - 8);
+
+
   return CKR_OK;
 }
 
@@ -122,6 +147,7 @@ C_Finalize
   CK_VOID_PTR   pReserved  /* reserved.  Should be NULL_PTR */
 )
 {
+  VP_FUNCTION_ENTER;
   return CKR_OK;
 }
 
@@ -144,6 +170,8 @@ C_GetFunctionList
                                             */
 )
 {
+  VP_FUNCTION_ENTER;
+
   if (ppFunctionList == NULL)
     return CKR_ARGUMENTS_BAD;
 

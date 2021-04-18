@@ -353,7 +353,6 @@ C_FindObjectsFinal
   vp_buffer_add_uint32(&buf, 0xc0050709);
   vp_buffer_add_space(&buf, 4);
 
-
   data = vp_buffer_ptr(&buf);
   if (data == NULL)
     {

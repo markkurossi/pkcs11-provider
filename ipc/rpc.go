@@ -102,6 +102,11 @@ type CKVersion struct {
 	Minor CKByte
 }
 
+// InitializeResp defines the result of C_Initialize.
+type InitializeResp struct {
+	NumSlots CKUlong
+}
+
 // GetSlotListReq defines the arguments of C_GetSlotList.
 type GetSlotListReq struct {
 	TokenPresent CKBbool
@@ -210,6 +215,7 @@ type FindObjectsResp struct {
 
 // Provider defines the PKCS #11 provider interface.
 type Provider interface {
+	Initialize() (*InitializeResp, error)
 	GetSlotList(req *GetSlotListReq) (*GetSlotListResp, error)
 	GetSlotInfo(req *GetSlotInfoReq) (*GetSlotInfoResp, error)
 	InitToken(req *InitTokenReq) error
@@ -228,6 +234,11 @@ type Provider interface {
 
 // Base provides a dummy implementation of the Provider interface.
 type Base struct{}
+
+// Initialize implements the Provider.Initialize().
+func (b *Base) Initialize() (*InitializeResp, error) {
+	return nil, ErrFunctionNotSupported
+}
 
 // GetSlotList implements the Provider.GetSlotList().
 func (b *Base) GetSlotList(req *GetSlotListReq) (*GetSlotListResp, error) {
@@ -300,6 +311,7 @@ func (b *Base) FindObjectsFinal() error {
 }
 
 var msgTypeNames = map[Type]string{
+	0xc0050401: "Initialize",
 	0xc0050501: "GetSlotList",
 	0xc0050502: "GetSlotInfo",
 	0xc0050507: "InitToken",
@@ -316,6 +328,8 @@ var msgTypeNames = map[Type]string{
 	0xc0050709: "FindObjectsFinal",
 }
 
+// Dispatch dispatches the message to provider and returns the message
+// response.
 func Dispatch(p Provider, msgType Type, req []byte) (CKRV, []byte) {
 	resp, err := call(p, msgType, req)
 	if err != nil {
@@ -330,6 +344,13 @@ func Dispatch(p Provider, msgType Type, req []byte) (CKRV, []byte) {
 
 func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 	switch msgType {
+	case 0xc0050401: // Initialize
+		resp, err := p.Initialize()
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
+
 	case 0xc0050501: // GetSlotList
 		var req GetSlotListReq
 		if err := Unmarshal(data, &req); err != nil {
