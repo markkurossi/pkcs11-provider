@@ -52,7 +52,7 @@ vp_ipc_read(VPIPCConn *conn, void *buf, size_t nbyte)
   while (nbyte > 0)
     {
       got = read(conn->socket, ucp, nbyte);
-      if (got == -1)
+      if (got <= 0)
         return false;
 
       ucp += got;
@@ -71,7 +71,7 @@ vp_ipc_write(VPIPCConn *conn, const void *buf, size_t nbyte)
   while (nbyte > 0)
     {
       wrote = write(conn->socket, ucp, nbyte);
-      if (wrote == -1)
+      if (wrote <= 0)
         return false;
 
       ucp += wrote;

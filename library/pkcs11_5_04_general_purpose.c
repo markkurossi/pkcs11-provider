@@ -169,7 +169,9 @@ C_Initialize
       return CKR_DEVICE_ERROR;
     }
 
-  return CKR_OK;
+  vp_log(LOG_INFO, "*** here");
+
+  return CKR_FUNCTION_NOT_SUPPORTED;
 }
 
 /* C_Finalize indicates that an application is done with the

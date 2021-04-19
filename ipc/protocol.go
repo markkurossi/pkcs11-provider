@@ -18,6 +18,15 @@ func (t Type) String() string {
 		t.Major(), t.Minor(), t.S0(), t.S1(), t.S2())
 }
 
+// Name returns the type's PKCS #11 function name.
+func (t Type) Name() string {
+	name, ok := msgTypeNames[t]
+	if ok {
+		return name
+	}
+	return t.String()
+}
+
 // NewType constructs an IPC message type from the components.
 func NewType(vMajor, vMinor, s0, s1, s2 int) Type {
 	return Type(uint32((vMajor-2)<<6|vMinor)<<24 |
