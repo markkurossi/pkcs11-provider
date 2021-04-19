@@ -309,13 +309,19 @@ func processFile(in *Input) error {
 				}
 				print(";\n")
 			}
+
+			print(`  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
+`)
 		}
 
 		if outputC && fCall {
 			switch len(session) {
 			case 0:
 				printf(`
-  /* XXX use global session */
+  /* Use global session. */
+  conn = global_conn;
 `)
 
 			case 1:
@@ -354,6 +360,25 @@ func processFile(in *Input) error {
   len = vp_buffer_len(&buf);
   VP_PUT_UINT32(data + 4, len - 8);
 
+  if (!vp_ipc_write(conn, data, len))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
+
+  vp_buffer_reset(&buf);
+  data = vp_buffer_add_space(&buf, 8);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+
+  if (!vp_ipc_read(conn, data, 8))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
 `)
 
 			for idx, o := range outputs {

@@ -24,7 +24,10 @@ static struct CK_FUNCTION_LIST_3_0 function_list =
 
   };
 
-static CK_C_INITIALIZE_ARGS init_args;
+#define SOCKET_PATH "/tmp/vp.sock"
+
+CK_C_INITIALIZE_ARGS init_args = {0};
+VPIPCConn *global_conn = NULL;
 
 static CK_RV
 mutex_create(void **ret)
@@ -104,6 +107,9 @@ C_Initialize
   VPBuffer buf;
   unsigned char *data;
   size_t len;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
 
   if (pInitArgs != NULL)
     {
@@ -118,8 +124,17 @@ C_Initialize
       init_args.UnlockMutex = mutex_unlock;
     }
 
+  global_conn = vp_ipc_connect(SOCKET_PATH);
+  if (global_conn == NULL)
+    {
+      vp_log(LOG_ERR, "%s: failed to connect: '%s'", __FUNCTION__, SOCKET_PATH);
+      C_Finalize(NULL);
+      return CKR_DEVICE_REMOVED;
+    }
 
-  /* XXX use global session */
+
+  /* Use global session. */
+  conn = global_conn;
 
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050401);
@@ -134,6 +149,25 @@ C_Initialize
   len = vp_buffer_len(&buf);
   VP_PUT_UINT32(data + 4, len - 8);
 
+  if (!vp_ipc_write(conn, data, len))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
+
+  vp_buffer_reset(&buf);
+  data = vp_buffer_add_space(&buf, 8);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+
+  if (!vp_ipc_read(conn, data, 8))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
 
   return CKR_OK;
 }
@@ -161,8 +195,12 @@ C_GetInfo
   VPBuffer buf;
   unsigned char *data;
   size_t len;
+  VPIPCConn *conn = NULL;
 
-  /* XXX use global session */
+  VP_FUNCTION_ENTER;
+
+  /* Use global session. */
+  conn = global_conn;
 
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050403);
@@ -177,6 +215,25 @@ C_GetInfo
   len = vp_buffer_len(&buf);
   VP_PUT_UINT32(data + 4, len - 8);
 
+  if (!vp_ipc_write(conn, data, len))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
+
+  vp_buffer_reset(&buf);
+  data = vp_buffer_add_space(&buf, 8);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+
+  if (!vp_ipc_read(conn, data, 8))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
   VP_FUNCTION_NOT_SUPPORTED;
 }
 

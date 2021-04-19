@@ -48,6 +48,8 @@ vp_buffer_len(VPBuffer *buf)
 unsigned char *
 vp_buffer_add_space(VPBuffer *buf, size_t len)
 {
+  unsigned char *ucp;
+
   if (buf->used + len > buf->allocated)
     {
       size_t size;
@@ -65,9 +67,13 @@ vp_buffer_add_space(VPBuffer *buf, size_t len)
       buf->data = n;
       buf->allocated = size;
     }
+
+  ucp = buf->data + buf->used;
   buf->used += len;
 
-  return &buf->data[buf->used - len];
+  memset(ucp, 0, len);
+
+  return ucp;
 }
 
 bool

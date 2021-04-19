@@ -25,6 +25,9 @@ C_CreateObject
   unsigned char *data;
   size_t len;
   int i;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
 
   /* XXX lookup session by hSession */
 
@@ -50,6 +53,25 @@ C_CreateObject
   len = vp_buffer_len(&buf);
   VP_PUT_UINT32(data + 4, len - 8);
 
+  if (!vp_ipc_write(conn, data, len))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
+
+  vp_buffer_reset(&buf);
+  data = vp_buffer_add_space(&buf, 8);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+
+  if (!vp_ipc_read(conn, data, 8))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -70,6 +92,9 @@ C_CopyObject
   unsigned char *data;
   size_t len;
   int i;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
 
   /* XXX lookup session by hSession */
 
@@ -96,6 +121,25 @@ C_CopyObject
   len = vp_buffer_len(&buf);
   VP_PUT_UINT32(data + 4, len - 8);
 
+  if (!vp_ipc_write(conn, data, len))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
+
+  vp_buffer_reset(&buf);
+  data = vp_buffer_add_space(&buf, 8);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+
+  if (!vp_ipc_read(conn, data, 8))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -110,6 +154,9 @@ C_DestroyObject
   VPBuffer buf;
   unsigned char *data;
   size_t len;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
 
   /* XXX lookup session by hSession */
 
@@ -128,6 +175,25 @@ C_DestroyObject
   len = vp_buffer_len(&buf);
   VP_PUT_UINT32(data + 4, len - 8);
 
+  if (!vp_ipc_write(conn, data, len))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
+
+  vp_buffer_reset(&buf);
+  data = vp_buffer_add_space(&buf, 8);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+
+  if (!vp_ipc_read(conn, data, 8))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -143,6 +209,9 @@ C_GetObjectSize
   VPBuffer buf;
   unsigned char *data;
   size_t len;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
 
   /* XXX lookup session by hSession */
 
@@ -161,6 +230,25 @@ C_GetObjectSize
   len = vp_buffer_len(&buf);
   VP_PUT_UINT32(data + 4, len - 8);
 
+  if (!vp_ipc_write(conn, data, len))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
+
+  vp_buffer_reset(&buf);
+  data = vp_buffer_add_space(&buf, 8);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+
+  if (!vp_ipc_read(conn, data, 8))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -180,6 +268,9 @@ C_GetAttributeValue
   unsigned char *data;
   size_t len;
   int i;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
 
   /* XXX lookup session by hSession */
 
@@ -206,6 +297,25 @@ C_GetAttributeValue
   len = vp_buffer_len(&buf);
   VP_PUT_UINT32(data + 4, len - 8);
 
+  if (!vp_ipc_write(conn, data, len))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
+
+  vp_buffer_reset(&buf);
+  data = vp_buffer_add_space(&buf, 8);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+
+  if (!vp_ipc_read(conn, data, 8))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -225,6 +335,9 @@ C_SetAttributeValue
   unsigned char *data;
   size_t len;
   int i;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
 
   /* XXX lookup session by hSession */
 
@@ -251,6 +364,25 @@ C_SetAttributeValue
   len = vp_buffer_len(&buf);
   VP_PUT_UINT32(data + 4, len - 8);
 
+  if (!vp_ipc_write(conn, data, len))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
+
+  vp_buffer_reset(&buf);
+  data = vp_buffer_add_space(&buf, 8);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+
+  if (!vp_ipc_read(conn, data, 8))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -269,6 +401,9 @@ C_FindObjectsInit
   unsigned char *data;
   size_t len;
   int i;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
 
   /* XXX lookup session by hSession */
 
@@ -294,6 +429,25 @@ C_FindObjectsInit
   len = vp_buffer_len(&buf);
   VP_PUT_UINT32(data + 4, len - 8);
 
+  if (!vp_ipc_write(conn, data, len))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
+
+  vp_buffer_reset(&buf);
+  data = vp_buffer_add_space(&buf, 8);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+
+  if (!vp_ipc_read(conn, data, 8))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -313,6 +467,9 @@ C_FindObjects
   VPBuffer buf;
   unsigned char *data;
   size_t len;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
 
   /* XXX lookup session by hSession */
 
@@ -331,6 +488,25 @@ C_FindObjects
   len = vp_buffer_len(&buf);
   VP_PUT_UINT32(data + 4, len - 8);
 
+  if (!vp_ipc_write(conn, data, len))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
+
+  vp_buffer_reset(&buf);
+  data = vp_buffer_add_space(&buf, 8);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+
+  if (!vp_ipc_read(conn, data, 8))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -346,6 +522,9 @@ C_FindObjectsFinal
   VPBuffer buf;
   unsigned char *data;
   size_t len;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
 
   /* XXX lookup session by hSession */
 
@@ -362,5 +541,24 @@ C_FindObjectsFinal
   len = vp_buffer_len(&buf);
   VP_PUT_UINT32(data + 4, len - 8);
 
+  if (!vp_ipc_write(conn, data, len))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
+
+  vp_buffer_reset(&buf);
+  data = vp_buffer_add_space(&buf, 8);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+
+  if (!vp_ipc_read(conn, data, 8))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
   VP_FUNCTION_NOT_SUPPORTED;
 }

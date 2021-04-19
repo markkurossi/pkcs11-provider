@@ -23,8 +23,12 @@ C_GetSlotList
   VPBuffer buf;
   unsigned char *data;
   size_t len;
+  VPIPCConn *conn = NULL;
 
-  /* XXX use global session */
+  VP_FUNCTION_ENTER;
+
+  /* Use global session. */
+  conn = global_conn;
 
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050501);
@@ -41,6 +45,25 @@ C_GetSlotList
   len = vp_buffer_len(&buf);
   VP_PUT_UINT32(data + 4, len - 8);
 
+  if (!vp_ipc_write(conn, data, len))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
+
+  vp_buffer_reset(&buf);
+  data = vp_buffer_add_space(&buf, 8);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+
+  if (!vp_ipc_read(conn, data, 8))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -57,8 +80,12 @@ C_GetSlotInfo
   VPBuffer buf;
   unsigned char *data;
   size_t len;
+  VPIPCConn *conn = NULL;
 
-  /* XXX use global session */
+  VP_FUNCTION_ENTER;
+
+  /* Use global session. */
+  conn = global_conn;
 
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050502);
@@ -75,6 +102,25 @@ C_GetSlotInfo
   len = vp_buffer_len(&buf);
   VP_PUT_UINT32(data + 4, len - 8);
 
+  if (!vp_ipc_write(conn, data, len))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
+
+  vp_buffer_reset(&buf);
+  data = vp_buffer_add_space(&buf, 8);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+
+  if (!vp_ipc_read(conn, data, 8))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -146,8 +192,12 @@ C_InitToken
   VPBuffer buf;
   unsigned char *data;
   size_t len;
+  VPIPCConn *conn = NULL;
 
-  /* XXX use global session */
+  VP_FUNCTION_ENTER;
+
+  /* Use global session. */
+  conn = global_conn;
 
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050507);
@@ -166,6 +216,25 @@ C_InitToken
   len = vp_buffer_len(&buf);
   VP_PUT_UINT32(data + 4, len - 8);
 
+  if (!vp_ipc_write(conn, data, len))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
+
+  vp_buffer_reset(&buf);
+  data = vp_buffer_add_space(&buf, 8);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+
+  if (!vp_ipc_read(conn, data, 8))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -181,6 +250,9 @@ C_InitPIN
   VPBuffer buf;
   unsigned char *data;
   size_t len;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
 
   /* XXX lookup session by hSession */
 
@@ -199,6 +271,25 @@ C_InitPIN
   len = vp_buffer_len(&buf);
   VP_PUT_UINT32(data + 4, len - 8);
 
+  if (!vp_ipc_write(conn, data, len))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
+
+  vp_buffer_reset(&buf);
+  data = vp_buffer_add_space(&buf, 8);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+
+  if (!vp_ipc_read(conn, data, 8))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -216,6 +307,9 @@ C_SetPIN
   VPBuffer buf;
   unsigned char *data;
   size_t len;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
 
   /* XXX lookup session by hSession */
 
@@ -235,5 +329,24 @@ C_SetPIN
   len = vp_buffer_len(&buf);
   VP_PUT_UINT32(data + 4, len - 8);
 
+  if (!vp_ipc_write(conn, data, len))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
+
+  vp_buffer_reset(&buf);
+  data = vp_buffer_add_space(&buf, 8);
+  if (data == NULL)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_HOST_MEMORY;
+    }
+
+  if (!vp_ipc_read(conn, data, 8))
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
   VP_FUNCTION_NOT_SUPPORTED;
 }

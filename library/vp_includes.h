@@ -15,6 +15,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <unistd.h>
+#include <errno.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 
 #define CK_PTR *
 #define CK_BOOL bool
@@ -29,10 +33,20 @@ typedef unsigned long int CK_HANDLE;
 
 #include <pkcs11.h>
 
-void vp_log(int priority, char *msg, ...);
-
 #include "vp_buffer.h"
 #include "vp_getput.h"
+#include "vp_ipc.h"
+
+
+/*************************** Global library state ***************************/
+
+extern CK_C_INITIALIZE_ARGS init_args;
+extern VPIPCConn *global_conn;
+
+
+/********************************* Logging **********************************/
+
+void vp_log(int priority, char *msg, ...);
 
 #define VP_FUNCTION_NOT_SUPPORTED			\
 do {		       					\

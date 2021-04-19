@@ -23,7 +23,10 @@ static struct CK_FUNCTION_LIST_3_0 function_list =
 
   };
 
-static CK_C_INITIALIZE_ARGS init_args;
+#define SOCKET_PATH "/tmp/vp.sock"
+
+CK_C_INITIALIZE_ARGS init_args = {0};
+VPIPCConn *global_conn = NULL;
 
 static CK_RV
 mutex_create(void **ret)
@@ -117,6 +120,14 @@ C_Initialize
       init_args.DestroyMutex = mutex_destroy;
       init_args.LockMutex = mutex_lock;
       init_args.UnlockMutex = mutex_unlock;
+    }
+
+  global_conn = vp_ipc_connect(SOCKET_PATH);
+  if (global_conn == NULL)
+    {
+      vp_log(LOG_ERR, "%s: failed to connect: '%s'", __FUNCTION__, SOCKET_PATH);
+      C_Finalize(NULL);
+      return CKR_DEVICE_REMOVED;
     }
 
   /** Call */
