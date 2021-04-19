@@ -147,6 +147,10 @@ C_Finalize
 )
 {
   VP_FUNCTION_ENTER;
+
+  vp_ipc_close(global_conn);
+  global_conn = NULL;
+
   return CKR_OK;
 }
 
