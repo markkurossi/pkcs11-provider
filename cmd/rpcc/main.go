@@ -367,13 +367,15 @@ func processFile(in *Input) error {
 					return err
 				}
 			}
-			print(`
+			if len(outputs) > 0 {
+				print(`
   if (vp_buffer_error(&buf))
     {
       vp_buffer_uninit(&buf);
       return CKR_DEVICE_ERROR;
     }
 `)
+			}
 		}
 
 		if outputC && fTrailer {

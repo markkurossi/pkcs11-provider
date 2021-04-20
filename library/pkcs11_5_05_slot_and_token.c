@@ -137,12 +137,6 @@ C_InitToken
       return ret;
     }
 
-  if (vp_buffer_error(&buf))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
-
   vp_buffer_uninit(&buf);
 
   return ret;
@@ -176,12 +170,6 @@ C_InitPIN
     {
       vp_buffer_uninit(&buf);
       return ret;
-    }
-
-  if (vp_buffer_error(&buf))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
     }
 
   vp_buffer_uninit(&buf);
@@ -220,12 +208,6 @@ C_SetPIN
     {
       vp_buffer_uninit(&buf);
       return ret;
-    }
-
-  if (vp_buffer_error(&buf))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
     }
 
   vp_buffer_uninit(&buf);

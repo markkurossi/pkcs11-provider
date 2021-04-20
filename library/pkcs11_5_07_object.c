@@ -148,12 +148,6 @@ C_DestroyObject
       return ret;
     }
 
-  if (vp_buffer_error(&buf))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
-
   vp_buffer_uninit(&buf);
 
   return ret;
@@ -268,12 +262,6 @@ C_SetAttributeValue
       return ret;
     }
 
-  if (vp_buffer_error(&buf))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
-
   vp_buffer_uninit(&buf);
 
   return ret;
@@ -349,12 +337,6 @@ C_FindObjectsFinal
     {
       vp_buffer_uninit(&buf);
       return ret;
-    }
-
-  if (vp_buffer_error(&buf))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
     }
 
   vp_buffer_uninit(&buf);
