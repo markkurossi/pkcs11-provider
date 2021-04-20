@@ -27,6 +27,7 @@ static struct CK_FUNCTION_LIST_3_0 function_list =
 
 CK_C_INITIALIZE_ARGS init_args = {0};
 VPIPCConn *global_conn = NULL;
+CK_ULONG num_slots;
 
 static CK_RV
 mutex_create(void **ret)
@@ -103,10 +104,12 @@ C_Initialize
                             */
 )
 {
+  CK_ULONG *pulNumSlots = &num_slots;
+
   /** Header
    *
    * Outputs:
-   *   CK_ULONG numSlots
+   *   CK_ULONG pulNumSlots
    */
 
   if (pInitArgs != NULL)
@@ -132,9 +135,9 @@ C_Initialize
 
   /** Call */
 
-  vp_log(LOG_INFO, "*** here");
+  vp_log(LOG_DEBUG, "#slots: %d", num_slots);
 
-  return CKR_FUNCTION_NOT_SUPPORTED;
+  /** Trailer */
 }
 
 /* C_Finalize indicates that an application is done with the

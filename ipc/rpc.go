@@ -104,32 +104,12 @@ type CKVersion struct {
 
 // InitializeResp defines the result of C_Initialize.
 type InitializeResp struct {
-	NumSlots CKUlong
+	PulNumSlots CKUlong
 }
 
 // GetInfoResp defines the result of C_GetInfo.
 type GetInfoResp struct {
 	PInfo CKInfo
-}
-
-// GetSlotListReq defines the arguments of C_GetSlotList.
-type GetSlotListReq struct {
-	TokenPresent CKBbool
-}
-
-// GetSlotListResp defines the result of C_GetSlotList.
-type GetSlotListResp struct {
-	PSlotList []CKSlotID
-}
-
-// GetSlotInfoReq defines the arguments of C_GetSlotInfo.
-type GetSlotInfoReq struct {
-	SlotID CKSlotID
-}
-
-// GetSlotInfoResp defines the result of C_GetSlotInfo.
-type GetSlotInfoResp struct {
-	PInfo CKSlotInfo
 }
 
 // InitTokenReq defines the arguments of C_InitToken.
@@ -186,44 +166,16 @@ type GetObjectSizeResp struct {
 	PulSize CKUlong
 }
 
-// GetAttributeValueReq defines the arguments of C_GetAttributeValue.
-type GetAttributeValueReq struct {
-	HObject   CKObjectHandle
-	PTemplate []CKAttribute
-}
-
-// GetAttributeValueResp defines the result of C_GetAttributeValue.
-type GetAttributeValueResp struct {
-	PTemplate []CKAttribute
-}
-
 // SetAttributeValueReq defines the arguments of C_SetAttributeValue.
 type SetAttributeValueReq struct {
 	HObject   CKObjectHandle
 	PTemplate []CKAttribute
 }
 
-// FindObjectsInitReq defines the arguments of C_FindObjectsInit.
-type FindObjectsInitReq struct {
-	PTemplate []CKAttribute
-}
-
-// FindObjectsReq defines the arguments of C_FindObjects.
-type FindObjectsReq struct {
-	UlMaxObjectCount CKUlong
-}
-
-// FindObjectsResp defines the result of C_FindObjects.
-type FindObjectsResp struct {
-	PhObject []CKObjectHandle
-}
-
 // Provider defines the PKCS #11 provider interface.
 type Provider interface {
 	Initialize() (*InitializeResp, error)
 	GetInfo() (*GetInfoResp, error)
-	GetSlotList(req *GetSlotListReq) (*GetSlotListResp, error)
-	GetSlotInfo(req *GetSlotInfoReq) (*GetSlotInfoResp, error)
 	InitToken(req *InitTokenReq) error
 	InitPIN(req *InitPINReq) error
 	SetPIN(req *SetPINReq) error
@@ -231,10 +183,7 @@ type Provider interface {
 	CopyObject(req *CopyObjectReq) (*CopyObjectResp, error)
 	DestroyObject(req *DestroyObjectReq) error
 	GetObjectSize(req *GetObjectSizeReq) (*GetObjectSizeResp, error)
-	GetAttributeValue(req *GetAttributeValueReq) (*GetAttributeValueResp, error)
 	SetAttributeValue(req *SetAttributeValueReq) error
-	FindObjectsInit(req *FindObjectsInitReq) error
-	FindObjects(req *FindObjectsReq) (*FindObjectsResp, error)
 	FindObjectsFinal() error
 }
 
@@ -248,16 +197,6 @@ func (b *Base) Initialize() (*InitializeResp, error) {
 
 // GetInfo implements the Provider.GetInfo().
 func (b *Base) GetInfo() (*GetInfoResp, error) {
-	return nil, ErrFunctionNotSupported
-}
-
-// GetSlotList implements the Provider.GetSlotList().
-func (b *Base) GetSlotList(req *GetSlotListReq) (*GetSlotListResp, error) {
-	return nil, ErrFunctionNotSupported
-}
-
-// GetSlotInfo implements the Provider.GetSlotInfo().
-func (b *Base) GetSlotInfo(req *GetSlotInfoReq) (*GetSlotInfoResp, error) {
 	return nil, ErrFunctionNotSupported
 }
 
@@ -296,24 +235,9 @@ func (b *Base) GetObjectSize(req *GetObjectSizeReq) (*GetObjectSizeResp, error) 
 	return nil, ErrFunctionNotSupported
 }
 
-// GetAttributeValue implements the Provider.GetAttributeValue().
-func (b *Base) GetAttributeValue(req *GetAttributeValueReq) (*GetAttributeValueResp, error) {
-	return nil, ErrFunctionNotSupported
-}
-
 // SetAttributeValue implements the Provider.SetAttributeValue().
 func (b *Base) SetAttributeValue(req *SetAttributeValueReq) error {
 	return ErrFunctionNotSupported
-}
-
-// FindObjectsInit implements the Provider.FindObjectsInit().
-func (b *Base) FindObjectsInit(req *FindObjectsInitReq) error {
-	return ErrFunctionNotSupported
-}
-
-// FindObjects implements the Provider.FindObjects().
-func (b *Base) FindObjects(req *FindObjectsReq) (*FindObjectsResp, error) {
-	return nil, ErrFunctionNotSupported
 }
 
 // FindObjectsFinal implements the Provider.FindObjectsFinal().
@@ -324,8 +248,6 @@ func (b *Base) FindObjectsFinal() error {
 var msgTypeNames = map[Type]string{
 	0xc0050401: "Initialize",
 	0xc0050403: "GetInfo",
-	0xc0050501: "GetSlotList",
-	0xc0050502: "GetSlotInfo",
 	0xc0050507: "InitToken",
 	0xc0050508: "InitPIN",
 	0xc0050509: "SetPIN",
@@ -333,10 +255,7 @@ var msgTypeNames = map[Type]string{
 	0xc0050702: "CopyObject",
 	0xc0050703: "DestroyObject",
 	0xc0050704: "GetObjectSize",
-	0xc0050705: "GetAttributeValue",
 	0xc0050706: "SetAttributeValue",
-	0xc0050707: "FindObjectsInit",
-	0xc0050708: "FindObjects",
 	0xc0050709: "FindObjectsFinal",
 }
 
@@ -365,28 +284,6 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 
 	case 0xc0050403: // GetInfo
 		resp, err := p.GetInfo()
-		if err != nil {
-			return nil, err
-		}
-		return Marshal(resp)
-
-	case 0xc0050501: // GetSlotList
-		var req GetSlotListReq
-		if err := Unmarshal(data, &req); err != nil {
-			return nil, err
-		}
-		resp, err := p.GetSlotList(&req)
-		if err != nil {
-			return nil, err
-		}
-		return Marshal(resp)
-
-	case 0xc0050502: // GetSlotInfo
-		var req GetSlotInfoReq
-		if err := Unmarshal(data, &req); err != nil {
-			return nil, err
-		}
-		resp, err := p.GetSlotInfo(&req)
 		if err != nil {
 			return nil, err
 		}
@@ -453,41 +350,12 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 		}
 		return Marshal(resp)
 
-	case 0xc0050705: // GetAttributeValue
-		var req GetAttributeValueReq
-		if err := Unmarshal(data, &req); err != nil {
-			return nil, err
-		}
-		resp, err := p.GetAttributeValue(&req)
-		if err != nil {
-			return nil, err
-		}
-		return Marshal(resp)
-
 	case 0xc0050706: // SetAttributeValue
 		var req SetAttributeValueReq
 		if err := Unmarshal(data, &req); err != nil {
 			return nil, err
 		}
 		return nil, p.SetAttributeValue(&req)
-
-	case 0xc0050707: // FindObjectsInit
-		var req FindObjectsInitReq
-		if err := Unmarshal(data, &req); err != nil {
-			return nil, err
-		}
-		return nil, p.FindObjectsInit(&req)
-
-	case 0xc0050708: // FindObjects
-		var req FindObjectsReq
-		if err := Unmarshal(data, &req); err != nil {
-			return nil, err
-		}
-		resp, err := p.FindObjects(&req)
-		if err != nil {
-			return nil, err
-		}
-		return Marshal(resp)
 
 	case 0xc0050709: // FindObjectsFinal
 		return nil, p.FindObjectsFinal()

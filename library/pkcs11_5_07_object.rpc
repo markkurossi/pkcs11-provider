@@ -101,7 +101,7 @@ C_GetAttributeValue
   CK_ULONG          ulCount     /* attributes in template */
 )
 {
-  /**
+  /*
    * Session:
    *            CK_SESSION_HANDLE hSession
    * Inputs:
@@ -110,6 +110,7 @@ C_GetAttributeValue
    * Outputs:
    *   [ulCount]CK_ATTRIBUTE      pTemplate
    */
+  VP_FUNCTION_NOT_SUPPORTED;
 }
 
 /* C_SetAttributeValue modifies the value of one or more object
@@ -144,12 +145,13 @@ C_FindObjectsInit
   CK_ULONG          ulCount     /* attrs in search template */
 )
 {
-  /**
+  /*
    * Session:
    *            CK_SESSION_HANDLE hSession
    * Inputs:
    *   [ulCount]CK_ATTRIBUTE      pTemplate
    */
+  VP_FUNCTION_NOT_SUPPORTED;
 }
 
 /* C_FindObjects continues a search for token and session
@@ -165,7 +167,7 @@ C_FindObjects
  CK_ULONG_PTR         pulObjectCount     /* actual # returned */
 )
 {
-  /**
+  /*
    * Session:
    *                   CK_SESSION_HANDLE hSession
    * Inputs:
@@ -173,6 +175,7 @@ C_FindObjects
    * Outputs:
    *   [pulObjectCount]CK_OBJECT_HANDLE  phObject
    */
+  VP_FUNCTION_NOT_SUPPORTED;
 }
 
 /* C_FindObjectsFinal finishes a search for token and session

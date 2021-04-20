@@ -11,6 +11,7 @@ struct VPBufferStruct
 {
   unsigned char *data;
   size_t allocated;
+  size_t offset;
   size_t used;
   bool error;
 };
@@ -22,6 +23,8 @@ void vp_buffer_init(VPBuffer *buf);
 void vp_buffer_uninit(VPBuffer *buf);
 
 void vp_buffer_reset(VPBuffer *buf);
+
+bool vp_buffer_error(VPBuffer *buf);
 
 unsigned char *vp_buffer_ptr(VPBuffer *buf);
 
@@ -36,5 +39,7 @@ bool vp_buffer_add_bool(VPBuffer *buf, uint8_t v);
 bool vp_buffer_add_uint32(VPBuffer *buf, uint32_t v);
 
 bool vp_buffer_add_byte_arr(VPBuffer *buf, const void *data, size_t len);
+
+uint32_t vp_buffer_get_uint32(VPBuffer *buf);
 
 #endif /* not VP_BUFFER_H */

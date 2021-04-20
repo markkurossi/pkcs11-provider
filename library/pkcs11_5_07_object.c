@@ -21,9 +21,8 @@ C_CreateObject
   CK_OBJECT_HANDLE_PTR phObject  /* gets new object's handle. */
 )
 {
+  CK_RV ret;
   VPBuffer buf;
-  unsigned char *data;
-  size_t len;
   int i;
   VPIPCConn *conn = NULL;
 
@@ -44,35 +43,24 @@ C_CreateObject
       vp_buffer_add_byte_arr(&buf, iel->pValue, iel->ulValueLen);
     }
 
-  data = vp_buffer_ptr(&buf);
-  if (data == NULL)
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
     {
       vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
+      return ret;
     }
-  len = vp_buffer_len(&buf);
-  VP_PUT_UINT32(data + 4, len - 8);
 
-  if (!vp_ipc_write(conn, data, len))
+  *phObject = vp_buffer_get_uint32(&buf);
+
+  if (vp_buffer_error(&buf))
     {
       vp_buffer_uninit(&buf);
       return CKR_DEVICE_ERROR;
     }
 
-  vp_buffer_reset(&buf);
-  data = vp_buffer_add_space(&buf, 8);
-  if (data == NULL)
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
-    }
+  vp_buffer_uninit(&buf);
 
-  if (!vp_ipc_read(conn, data, 8))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
-  VP_FUNCTION_NOT_SUPPORTED;
+  return ret;
 }
 
 /* C_CopyObject copies an object, creating a new object for the
@@ -88,9 +76,8 @@ C_CopyObject
   CK_OBJECT_HANDLE_PTR phNewObject  /* receives handle of copy */
 )
 {
+  CK_RV ret;
   VPBuffer buf;
-  unsigned char *data;
-  size_t len;
   int i;
   VPIPCConn *conn = NULL;
 
@@ -112,35 +99,24 @@ C_CopyObject
       vp_buffer_add_byte_arr(&buf, iel->pValue, iel->ulValueLen);
     }
 
-  data = vp_buffer_ptr(&buf);
-  if (data == NULL)
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
     {
       vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
+      return ret;
     }
-  len = vp_buffer_len(&buf);
-  VP_PUT_UINT32(data + 4, len - 8);
 
-  if (!vp_ipc_write(conn, data, len))
+  *phNewObject = vp_buffer_get_uint32(&buf);
+
+  if (vp_buffer_error(&buf))
     {
       vp_buffer_uninit(&buf);
       return CKR_DEVICE_ERROR;
     }
 
-  vp_buffer_reset(&buf);
-  data = vp_buffer_add_space(&buf, 8);
-  if (data == NULL)
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
-    }
+  vp_buffer_uninit(&buf);
 
-  if (!vp_ipc_read(conn, data, 8))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
-  VP_FUNCTION_NOT_SUPPORTED;
+  return ret;
 }
 
 /* C_DestroyObject destroys an object. */
@@ -151,9 +127,8 @@ C_DestroyObject
   CK_OBJECT_HANDLE  hObject    /* the object's handle */
 )
 {
+  CK_RV ret;
   VPBuffer buf;
-  unsigned char *data;
-  size_t len;
   VPIPCConn *conn = NULL;
 
   VP_FUNCTION_ENTER;
@@ -166,35 +141,22 @@ C_DestroyObject
 
   vp_buffer_add_uint32(&buf, hObject);
 
-  data = vp_buffer_ptr(&buf);
-  if (data == NULL)
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
     {
       vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
+      return ret;
     }
-  len = vp_buffer_len(&buf);
-  VP_PUT_UINT32(data + 4, len - 8);
 
-  if (!vp_ipc_write(conn, data, len))
+  if (vp_buffer_error(&buf))
     {
       vp_buffer_uninit(&buf);
       return CKR_DEVICE_ERROR;
     }
 
-  vp_buffer_reset(&buf);
-  data = vp_buffer_add_space(&buf, 8);
-  if (data == NULL)
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
-    }
+  vp_buffer_uninit(&buf);
 
-  if (!vp_ipc_read(conn, data, 8))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
-  VP_FUNCTION_NOT_SUPPORTED;
+  return ret;
 }
 
 /* C_GetObjectSize gets the size of an object in bytes. */
@@ -206,9 +168,8 @@ C_GetObjectSize
   CK_ULONG_PTR      pulSize    /* receives size of object */
 )
 {
+  CK_RV ret;
   VPBuffer buf;
-  unsigned char *data;
-  size_t len;
   VPIPCConn *conn = NULL;
 
   VP_FUNCTION_ENTER;
@@ -221,35 +182,24 @@ C_GetObjectSize
 
   vp_buffer_add_uint32(&buf, hObject);
 
-  data = vp_buffer_ptr(&buf);
-  if (data == NULL)
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
     {
       vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
+      return ret;
     }
-  len = vp_buffer_len(&buf);
-  VP_PUT_UINT32(data + 4, len - 8);
 
-  if (!vp_ipc_write(conn, data, len))
+  *pulSize = vp_buffer_get_uint32(&buf);
+
+  if (vp_buffer_error(&buf))
     {
       vp_buffer_uninit(&buf);
       return CKR_DEVICE_ERROR;
     }
 
-  vp_buffer_reset(&buf);
-  data = vp_buffer_add_space(&buf, 8);
-  if (data == NULL)
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
-    }
+  vp_buffer_uninit(&buf);
 
-  if (!vp_ipc_read(conn, data, 8))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
-  VP_FUNCTION_NOT_SUPPORTED;
+  return ret;
 }
 
 /* C_GetAttributeValue obtains the value of one or more object
@@ -264,58 +214,15 @@ C_GetAttributeValue
   CK_ULONG          ulCount     /* attributes in template */
 )
 {
-  VPBuffer buf;
-  unsigned char *data;
-  size_t len;
-  int i;
-  VPIPCConn *conn = NULL;
-
-  VP_FUNCTION_ENTER;
-
-  /* XXX lookup session by hSession */
-
-  vp_buffer_init(&buf);
-  vp_buffer_add_uint32(&buf, 0xc0050705);
-  vp_buffer_add_space(&buf, 4);
-
-  vp_buffer_add_uint32(&buf, hObject);
-  vp_buffer_add_uint32(&buf, ulCount);
-  for (i = 0; i < ulCount; i++)
-    {
-      CK_ATTRIBUTE *iel = &pTemplate[i];
-
-      vp_buffer_add_uint32(&buf, iel->type);
-      vp_buffer_add_byte_arr(&buf, iel->pValue, iel->ulValueLen);
-    }
-
-  data = vp_buffer_ptr(&buf);
-  if (data == NULL)
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
-    }
-  len = vp_buffer_len(&buf);
-  VP_PUT_UINT32(data + 4, len - 8);
-
-  if (!vp_ipc_write(conn, data, len))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
-
-  vp_buffer_reset(&buf);
-  data = vp_buffer_add_space(&buf, 8);
-  if (data == NULL)
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
-    }
-
-  if (!vp_ipc_read(conn, data, 8))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
+  /*
+   * Session:
+   *            CK_SESSION_HANDLE hSession
+   * Inputs:
+   *            CK_OBJECT_HANDLE  hObject
+   *   [ulCount]CK_ATTRIBUTE      pTemplate
+   * Outputs:
+   *   [ulCount]CK_ATTRIBUTE      pTemplate
+   */
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -331,9 +238,8 @@ C_SetAttributeValue
   CK_ULONG          ulCount     /* attributes in template */
 )
 {
+  CK_RV ret;
   VPBuffer buf;
-  unsigned char *data;
-  size_t len;
   int i;
   VPIPCConn *conn = NULL;
 
@@ -355,35 +261,22 @@ C_SetAttributeValue
       vp_buffer_add_byte_arr(&buf, iel->pValue, iel->ulValueLen);
     }
 
-  data = vp_buffer_ptr(&buf);
-  if (data == NULL)
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
     {
       vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
+      return ret;
     }
-  len = vp_buffer_len(&buf);
-  VP_PUT_UINT32(data + 4, len - 8);
 
-  if (!vp_ipc_write(conn, data, len))
+  if (vp_buffer_error(&buf))
     {
       vp_buffer_uninit(&buf);
       return CKR_DEVICE_ERROR;
     }
 
-  vp_buffer_reset(&buf);
-  data = vp_buffer_add_space(&buf, 8);
-  if (data == NULL)
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
-    }
+  vp_buffer_uninit(&buf);
 
-  if (!vp_ipc_read(conn, data, 8))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
-  VP_FUNCTION_NOT_SUPPORTED;
+  return ret;
 }
 
 /* C_FindObjectsInit initializes a search for token and session
@@ -397,57 +290,12 @@ C_FindObjectsInit
   CK_ULONG          ulCount     /* attrs in search template */
 )
 {
-  VPBuffer buf;
-  unsigned char *data;
-  size_t len;
-  int i;
-  VPIPCConn *conn = NULL;
-
-  VP_FUNCTION_ENTER;
-
-  /* XXX lookup session by hSession */
-
-  vp_buffer_init(&buf);
-  vp_buffer_add_uint32(&buf, 0xc0050707);
-  vp_buffer_add_space(&buf, 4);
-
-  vp_buffer_add_uint32(&buf, ulCount);
-  for (i = 0; i < ulCount; i++)
-    {
-      CK_ATTRIBUTE *iel = &pTemplate[i];
-
-      vp_buffer_add_uint32(&buf, iel->type);
-      vp_buffer_add_byte_arr(&buf, iel->pValue, iel->ulValueLen);
-    }
-
-  data = vp_buffer_ptr(&buf);
-  if (data == NULL)
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
-    }
-  len = vp_buffer_len(&buf);
-  VP_PUT_UINT32(data + 4, len - 8);
-
-  if (!vp_ipc_write(conn, data, len))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
-
-  vp_buffer_reset(&buf);
-  data = vp_buffer_add_space(&buf, 8);
-  if (data == NULL)
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
-    }
-
-  if (!vp_ipc_read(conn, data, 8))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
+  /*
+   * Session:
+   *            CK_SESSION_HANDLE hSession
+   * Inputs:
+   *   [ulCount]CK_ATTRIBUTE      pTemplate
+   */
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -464,49 +312,14 @@ C_FindObjects
  CK_ULONG_PTR         pulObjectCount     /* actual # returned */
 )
 {
-  VPBuffer buf;
-  unsigned char *data;
-  size_t len;
-  VPIPCConn *conn = NULL;
-
-  VP_FUNCTION_ENTER;
-
-  /* XXX lookup session by hSession */
-
-  vp_buffer_init(&buf);
-  vp_buffer_add_uint32(&buf, 0xc0050708);
-  vp_buffer_add_space(&buf, 4);
-
-  vp_buffer_add_uint32(&buf, ulMaxObjectCount);
-
-  data = vp_buffer_ptr(&buf);
-  if (data == NULL)
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
-    }
-  len = vp_buffer_len(&buf);
-  VP_PUT_UINT32(data + 4, len - 8);
-
-  if (!vp_ipc_write(conn, data, len))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
-
-  vp_buffer_reset(&buf);
-  data = vp_buffer_add_space(&buf, 8);
-  if (data == NULL)
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
-    }
-
-  if (!vp_ipc_read(conn, data, 8))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
+  /*
+   * Session:
+   *                   CK_SESSION_HANDLE hSession
+   * Inputs:
+   *                   CK_ULONG          ulMaxObjectCount
+   * Outputs:
+   *   [pulObjectCount]CK_OBJECT_HANDLE  phObject
+   */
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -519,9 +332,8 @@ C_FindObjectsFinal
   CK_SESSION_HANDLE hSession  /* the session's handle */
 )
 {
+  CK_RV ret;
   VPBuffer buf;
-  unsigned char *data;
-  size_t len;
   VPIPCConn *conn = NULL;
 
   VP_FUNCTION_ENTER;
@@ -532,33 +344,20 @@ C_FindObjectsFinal
   vp_buffer_add_uint32(&buf, 0xc0050709);
   vp_buffer_add_space(&buf, 4);
 
-  data = vp_buffer_ptr(&buf);
-  if (data == NULL)
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
     {
       vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
+      return ret;
     }
-  len = vp_buffer_len(&buf);
-  VP_PUT_UINT32(data + 4, len - 8);
 
-  if (!vp_ipc_write(conn, data, len))
+  if (vp_buffer_error(&buf))
     {
       vp_buffer_uninit(&buf);
       return CKR_DEVICE_ERROR;
     }
 
-  vp_buffer_reset(&buf);
-  data = vp_buffer_add_space(&buf, 8);
-  if (data == NULL)
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
-    }
+  vp_buffer_uninit(&buf);
 
-  if (!vp_ipc_read(conn, data, 8))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
-  VP_FUNCTION_NOT_SUPPORTED;
+  return ret;
 }

@@ -283,9 +283,8 @@ func processFile(in *Input) error {
 		msgType := ipc.NewType(vMajor, vMinor, s0, s1, s2)
 
 		if outputC && fHeader {
-			print(`  VPBuffer buf;
-  unsigned char *data;
-  size_t len;
+			print(`  CK_RV ret;
+  VPBuffer buf;
 `)
 			var depth int
 			for _, input := range inputs {
@@ -351,43 +350,38 @@ func processFile(in *Input) error {
 				}
 			}
 			print(`
-  data = vp_buffer_ptr(&buf);
-  if (data == NULL)
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
     {
       vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
+      return ret;
     }
-  len = vp_buffer_len(&buf);
-  VP_PUT_UINT32(data + 4, len - 8);
+`)
 
-  if (!vp_ipc_write(conn, data, len))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
-
-  vp_buffer_reset(&buf);
-  data = vp_buffer_add_space(&buf, 8);
-  if (data == NULL)
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
-    }
-
-  if (!vp_ipc_read(conn, data, 8))
+			for idx, output := range outputs {
+				if idx == 0 {
+					printf("\n")
+				}
+				err = output.Output(0)
+				if err != nil {
+					return err
+				}
+			}
+			print(`
+  if (vp_buffer_error(&buf))
     {
       vp_buffer_uninit(&buf);
       return CKR_DEVICE_ERROR;
     }
 `)
-
-			for idx, o := range outputs {
-				info("  // Output %d: %#v\n", idx, o)
-			}
 		}
 
 		if outputC && fTrailer {
-			print("  VP_FUNCTION_NOT_SUPPORTED;\n")
+			print(`
+  vp_buffer_uninit(&buf);
+
+  return ret;
+`)
 		}
 
 		if outputGo && fHeader {

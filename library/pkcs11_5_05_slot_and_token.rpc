@@ -19,12 +19,13 @@ C_GetSlotList
   CK_ULONG_PTR   pulCount       /* receives number of slots */
 )
 {
-  /**
+  /*
    * Inputs:
    *             CK_BBOOL   tokenPresent
    * Outputs:
    *   [pulCount]CK_SLOT_ID pSlotList
    */
+  VP_FUNCTION_NOT_SUPPORTED;
 }
 
 /* C_GetSlotInfo obtains information about a particular slot in
@@ -37,12 +38,13 @@ C_GetSlotInfo
   CK_SLOT_INFO_PTR pInfo    /* receives the slot information */
 )
 {
-  /**
+  /*
    * Inputs:
    *     CK_SLOT_ID slotID
    * Outputs:
    *   CK_SLOT_INFO pInfo
    */
+  VP_FUNCTION_NOT_SUPPORTED;
 }
 
 /* C_GetTokenInfo obtains information about a particular token

@@ -28,6 +28,7 @@ static struct CK_FUNCTION_LIST_3_0 function_list =
 
 CK_C_INITIALIZE_ARGS init_args = {0};
 VPIPCConn *global_conn = NULL;
+CK_ULONG num_slots;
 
 static CK_RV
 mutex_create(void **ret)
@@ -104,9 +105,10 @@ C_Initialize
                             */
 )
 {
+  CK_ULONG *pulNumSlots = &num_slots;
+
+  CK_RV ret;
   VPBuffer buf;
-  unsigned char *data;
-  size_t len;
   VPIPCConn *conn = NULL;
 
   VP_FUNCTION_ENTER;
@@ -140,38 +142,27 @@ C_Initialize
   vp_buffer_add_uint32(&buf, 0xc0050401);
   vp_buffer_add_space(&buf, 4);
 
-  data = vp_buffer_ptr(&buf);
-  if (data == NULL)
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
     {
       vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
-    }
-  len = vp_buffer_len(&buf);
-  VP_PUT_UINT32(data + 4, len - 8);
-
-  if (!vp_ipc_write(conn, data, len))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
+      return ret;
     }
 
-  vp_buffer_reset(&buf);
-  data = vp_buffer_add_space(&buf, 8);
-  if (data == NULL)
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
-    }
+  *pulNumSlots = vp_buffer_get_uint32(&buf);
 
-  if (!vp_ipc_read(conn, data, 8))
+  if (vp_buffer_error(&buf))
     {
       vp_buffer_uninit(&buf);
       return CKR_DEVICE_ERROR;
     }
 
-  vp_log(LOG_INFO, "*** here");
+  vp_log(LOG_DEBUG, "#slots: %d", num_slots);
 
-  return CKR_FUNCTION_NOT_SUPPORTED;
+
+  vp_buffer_uninit(&buf);
+
+  return ret;
 }
 
 /* C_Finalize indicates that an application is done with the
@@ -198,9 +189,8 @@ C_GetInfo
   CK_INFO_PTR   pInfo  /* location that receives information */
 )
 {
+  CK_RV ret;
   VPBuffer buf;
-  unsigned char *data;
-  size_t len;
   VPIPCConn *conn = NULL;
 
   VP_FUNCTION_ENTER;
@@ -212,35 +202,24 @@ C_GetInfo
   vp_buffer_add_uint32(&buf, 0xc0050403);
   vp_buffer_add_space(&buf, 4);
 
-  data = vp_buffer_ptr(&buf);
-  if (data == NULL)
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
     {
       vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
+      return ret;
     }
-  len = vp_buffer_len(&buf);
-  VP_PUT_UINT32(data + 4, len - 8);
 
-  if (!vp_ipc_write(conn, data, len))
+  // single not basic
+
+  if (vp_buffer_error(&buf))
     {
       vp_buffer_uninit(&buf);
       return CKR_DEVICE_ERROR;
     }
 
-  vp_buffer_reset(&buf);
-  data = vp_buffer_add_space(&buf, 8);
-  if (data == NULL)
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
-    }
+  vp_buffer_uninit(&buf);
 
-  if (!vp_ipc_read(conn, data, 8))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
-  VP_FUNCTION_NOT_SUPPORTED;
+  return ret;
 }
 
 /* C_GetFunctionList returns the function list. */

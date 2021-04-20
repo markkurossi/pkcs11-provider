@@ -20,50 +20,12 @@ C_GetSlotList
   CK_ULONG_PTR   pulCount       /* receives number of slots */
 )
 {
-  VPBuffer buf;
-  unsigned char *data;
-  size_t len;
-  VPIPCConn *conn = NULL;
-
-  VP_FUNCTION_ENTER;
-
-  /* Use global session. */
-  conn = global_conn;
-
-  vp_buffer_init(&buf);
-  vp_buffer_add_uint32(&buf, 0xc0050501);
-  vp_buffer_add_space(&buf, 4);
-
-  vp_buffer_add_bool(&buf, tokenPresent);
-
-  data = vp_buffer_ptr(&buf);
-  if (data == NULL)
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
-    }
-  len = vp_buffer_len(&buf);
-  VP_PUT_UINT32(data + 4, len - 8);
-
-  if (!vp_ipc_write(conn, data, len))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
-
-  vp_buffer_reset(&buf);
-  data = vp_buffer_add_space(&buf, 8);
-  if (data == NULL)
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
-    }
-
-  if (!vp_ipc_read(conn, data, 8))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
+  /*
+   * Inputs:
+   *             CK_BBOOL   tokenPresent
+   * Outputs:
+   *   [pulCount]CK_SLOT_ID pSlotList
+   */
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -77,50 +39,12 @@ C_GetSlotInfo
   CK_SLOT_INFO_PTR pInfo    /* receives the slot information */
 )
 {
-  VPBuffer buf;
-  unsigned char *data;
-  size_t len;
-  VPIPCConn *conn = NULL;
-
-  VP_FUNCTION_ENTER;
-
-  /* Use global session. */
-  conn = global_conn;
-
-  vp_buffer_init(&buf);
-  vp_buffer_add_uint32(&buf, 0xc0050502);
-  vp_buffer_add_space(&buf, 4);
-
-  vp_buffer_add_uint32(&buf, slotID);
-
-  data = vp_buffer_ptr(&buf);
-  if (data == NULL)
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
-    }
-  len = vp_buffer_len(&buf);
-  VP_PUT_UINT32(data + 4, len - 8);
-
-  if (!vp_ipc_write(conn, data, len))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
-
-  vp_buffer_reset(&buf);
-  data = vp_buffer_add_space(&buf, 8);
-  if (data == NULL)
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
-    }
-
-  if (!vp_ipc_read(conn, data, 8))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
+  /*
+   * Inputs:
+   *     CK_SLOT_ID slotID
+   * Outputs:
+   *   CK_SLOT_INFO pInfo
+   */
   VP_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -189,9 +113,8 @@ C_InitToken
   CK_UTF8CHAR_PTR pLabel     /* 32-byte token label (blank padded) */
 )
 {
+  CK_RV ret;
   VPBuffer buf;
-  unsigned char *data;
-  size_t len;
   VPIPCConn *conn = NULL;
 
   VP_FUNCTION_ENTER;
@@ -207,35 +130,22 @@ C_InitToken
   vp_buffer_add_byte_arr(&buf, pPin, ulPinLen);
   vp_buffer_add_byte_arr(&buf, pLabel, 32);
 
-  data = vp_buffer_ptr(&buf);
-  if (data == NULL)
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
     {
       vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
+      return ret;
     }
-  len = vp_buffer_len(&buf);
-  VP_PUT_UINT32(data + 4, len - 8);
 
-  if (!vp_ipc_write(conn, data, len))
+  if (vp_buffer_error(&buf))
     {
       vp_buffer_uninit(&buf);
       return CKR_DEVICE_ERROR;
     }
 
-  vp_buffer_reset(&buf);
-  data = vp_buffer_add_space(&buf, 8);
-  if (data == NULL)
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
-    }
+  vp_buffer_uninit(&buf);
 
-  if (!vp_ipc_read(conn, data, 8))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
-  VP_FUNCTION_NOT_SUPPORTED;
+  return ret;
 }
 
 /* C_InitPIN initializes the normal user's PIN. */
@@ -247,9 +157,8 @@ C_InitPIN
   CK_ULONG          ulPinLen   /* length in bytes of the PIN */
 )
 {
+  CK_RV ret;
   VPBuffer buf;
-  unsigned char *data;
-  size_t len;
   VPIPCConn *conn = NULL;
 
   VP_FUNCTION_ENTER;
@@ -262,35 +171,22 @@ C_InitPIN
 
   vp_buffer_add_byte_arr(&buf, pPin, ulPinLen);
 
-  data = vp_buffer_ptr(&buf);
-  if (data == NULL)
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
     {
       vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
+      return ret;
     }
-  len = vp_buffer_len(&buf);
-  VP_PUT_UINT32(data + 4, len - 8);
 
-  if (!vp_ipc_write(conn, data, len))
+  if (vp_buffer_error(&buf))
     {
       vp_buffer_uninit(&buf);
       return CKR_DEVICE_ERROR;
     }
 
-  vp_buffer_reset(&buf);
-  data = vp_buffer_add_space(&buf, 8);
-  if (data == NULL)
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
-    }
+  vp_buffer_uninit(&buf);
 
-  if (!vp_ipc_read(conn, data, 8))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
-  VP_FUNCTION_NOT_SUPPORTED;
+  return ret;
 }
 
 /* C_SetPIN modifies the PIN of the user who is logged in. */
@@ -304,9 +200,8 @@ C_SetPIN
   CK_ULONG          ulNewLen   /* length of the new PIN */
 )
 {
+  CK_RV ret;
   VPBuffer buf;
-  unsigned char *data;
-  size_t len;
   VPIPCConn *conn = NULL;
 
   VP_FUNCTION_ENTER;
@@ -320,33 +215,20 @@ C_SetPIN
   vp_buffer_add_byte_arr(&buf, pOldPin, ulOldLen);
   vp_buffer_add_byte_arr(&buf, pNewPin, ulNewLen);
 
-  data = vp_buffer_ptr(&buf);
-  if (data == NULL)
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
     {
       vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
+      return ret;
     }
-  len = vp_buffer_len(&buf);
-  VP_PUT_UINT32(data + 4, len - 8);
 
-  if (!vp_ipc_write(conn, data, len))
+  if (vp_buffer_error(&buf))
     {
       vp_buffer_uninit(&buf);
       return CKR_DEVICE_ERROR;
     }
 
-  vp_buffer_reset(&buf);
-  data = vp_buffer_add_space(&buf, 8);
-  if (data == NULL)
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_HOST_MEMORY;
-    }
+  vp_buffer_uninit(&buf);
 
-  if (!vp_ipc_read(conn, data, 8))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
-  VP_FUNCTION_NOT_SUPPORTED;
+  return ret;
 }

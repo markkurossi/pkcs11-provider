@@ -310,6 +310,66 @@ func (f *Field) Input(level int) error {
 	return nil
 }
 
+// Output generates the output unmarshalling code for the field.
+func (f *Field) Output(level int) error {
+	var indent = "  "
+	for i := 0; i < level; i++ {
+		indent += "    "
+	}
+
+	debug("%s// %s\n", indent, f)
+
+	idxName := fmt.Sprintf("%c", 'i'+level)
+	idxElName := fmt.Sprintf("%cel", 'i'+level)
+
+	var ctx string
+	if level > 0 {
+		ctx = fmt.Sprintf("%cel->", 'i'+level-1)
+	}
+
+	typeInfo, ok := types[f.ElementType]
+	if !ok {
+		return fmt.Errorf("input: unknown type: %s", f.ElementType)
+	}
+	if len(f.SizeName) == 0 {
+		// Single instance.
+		if typeInfo.Basic {
+			printf("%s*%s%s = vp_buffer_get_%s(&buf);\n",
+				indent, ctx, f.ElementName, typeInfo.Native)
+		} else {
+			printf("%s// single not basic\n", indent)
+		}
+	} else {
+		// Array
+		if typeInfo.Basic {
+			// Array of basic types.
+			printf("%svp_buffer_get_%s_arr(&buf, %s%s, &%s%s);\n",
+				indent, typeInfo.Native,
+				ctx, f.ElementName,
+				ctx, f.SizeName)
+		} else {
+			// Array of compound type.
+			printf("%s*%s%s = vp_buffer_get_uint32(&buf);\n",
+				indent, ctx, f.SizeName)
+			printf("%sfor (%s = 0; %s < %s; %s++)\n", indent,
+				idxName, idxName, f.SizeName, idxName)
+			printf("%s  {\n", indent)
+			printf("%s    %s *%s = &%s%s[%s];\n\n",
+				indent, f.ElementType, idxElName, ctx, f.ElementName, idxName)
+
+			for _, c := range typeInfo.Compound {
+				err := c.Input(level + 1)
+				if err != nil {
+					return err
+				}
+			}
+
+			printf("%s  }\n", indent)
+		}
+	}
+	return nil
+}
+
 func parseField(t, v string) (f Field, err error) {
 	m := reType.FindStringSubmatch(t)
 	if m == nil {

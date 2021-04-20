@@ -53,6 +53,7 @@ func main() {
 
 func messageLoop(conn net.Conn) error {
 	var hdr [8]byte
+	provider := &Provider{}
 
 	for {
 		_, err := conn.Read(hdr[:])
@@ -73,7 +74,7 @@ func messageLoop(conn net.Conn) error {
 			}
 		}
 
-		ret, data := ipc.Dispatch(&ipc.Base{}, msgType, msg)
+		ret, data := ipc.Dispatch(provider, msgType, msg)
 		log.Printf("ret: %s, data=%d", ret, len(data))
 
 		bo.PutUint32(hdr[0:4], uint32(ret))
