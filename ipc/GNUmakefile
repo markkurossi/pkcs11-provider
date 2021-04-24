@@ -5,7 +5,7 @@ RPCS := $(wildcard ../library/*.rpc)
 
 all: rpc.go
 
-rpc.go: ../cmd/rpcc/main.go $(RPC_TYPES) $(RPCS)
+rpc.go: ../cmd/rpcc/main.go ../cmd/rpcc/field.go $(RPC_TYPES) $(RPCS)
 	if test -x "$(RPCC)"; then \
 	  $(RPCC) -go -t $(RPC_TYPES) $(RPCS) > $@; \
 	else \

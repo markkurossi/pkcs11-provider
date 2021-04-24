@@ -18,13 +18,13 @@ type Provider struct {
 // Initialize implements ipc.Provider.Initialize().
 func (p *Provider) Initialize() (*ipc.InitializeResp, error) {
 	return &ipc.InitializeResp{
-		PulNumSlots: 1,
+		NumSlots: 1,
 	}, nil
 }
 
 // GetSlotList implements the Provider.GetSlotList().
 func (p *Provider) GetSlotList(req *ipc.GetSlotListReq) (*ipc.GetSlotListResp, error) {
 	return &ipc.GetSlotListResp{
-		PSlotList: []ipc.CKSlotID{0},
+		SlotList: []ipc.CKSlotID{0},
 	}, nil
 }

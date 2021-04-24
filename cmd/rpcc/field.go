@@ -14,6 +14,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 var (
@@ -107,6 +108,25 @@ func GoTypeName(name string) string {
 		}
 	}
 	return strings.Join(parts, "")
+}
+
+var trimPrefixes = []string{
+	"p", "ul", "pul", "h",
+}
+
+// GoFieldName converts the name to Go field name.
+func GoFieldName(name string) string {
+	for _, prefix := range trimPrefixes {
+		if len(name) <= len(prefix) {
+			continue
+		}
+		if strings.HasPrefix(name, prefix) &&
+			unicode.IsUpper(rune(name[len(prefix)])) {
+			name = name[len(prefix):]
+			break
+		}
+	}
+	return strings.Title(name)
 }
 
 // GoFuncName converts the name to Go function name.
@@ -246,9 +266,9 @@ func (f Field) GoType() string {
 			sizeType = f.SizeType
 		}
 		return fmt.Sprintf("%s [%s]%s",
-			strings.Title(f.Name), sizeType, f.Type.GoTypeName())
+			GoFieldName(f.Name), sizeType, f.Type.GoTypeName())
 	}
-	return fmt.Sprintf("%s %s", strings.Title(f.Name), f.Type.GoTypeName())
+	return fmt.Sprintf("%s %s", GoFieldName(f.Name), f.Type.GoTypeName())
 }
 
 // Depth computes the depth of nested array types.

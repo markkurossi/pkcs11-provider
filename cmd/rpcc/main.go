@@ -425,7 +425,7 @@ func goTypes() error {
 		arr = append(arr, t)
 	}
 	sort.Slice(arr, func(i, j int) bool {
-		if arr[i].Basic == arr[j].Basic {
+		if arr[i].IsBasic == arr[j].IsBasic {
 			return arr[i].Name < arr[j].Name
 		} else if arr[i].IsBasic {
 			return true

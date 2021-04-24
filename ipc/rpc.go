@@ -14,6 +14,15 @@ import (
 // CKAttributeType defines basic protocol type CK_ATTRIBUTE_TYPE.
 type CKAttributeType uint32
 
+// CKBbool defines basic protocol type CK_BBOOL.
+type CKBbool bool
+
+// CKByte defines basic protocol type CK_BYTE.
+type CKByte byte
+
+// CKChar defines basic protocol type CK_CHAR.
+type CKChar byte
+
 // CKFlags defines basic protocol type CK_FLAGS.
 type CKFlags uint32
 
@@ -38,15 +47,6 @@ type CKUlong uint32
 // CKUlongPtr defines basic protocol type CK_ULONG_PTR.
 type CKUlongPtr uint32
 
-// CKBbool defines basic protocol type CK_BBOOL.
-type CKBbool bool
-
-// CKByte defines basic protocol type CK_BYTE.
-type CKByte byte
-
-// CKChar defines basic protocol type CK_CHAR.
-type CKChar byte
-
 // CKUTF8Char defines basic protocol type CK_UTF8CHAR.
 type CKUTF8Char byte
 
@@ -55,8 +55,8 @@ type CKVoidPtr byte
 
 // CKAttribute defines compound protocol type CK_ATTRIBUTE.
 type CKAttribute struct {
-	Type   CKAttributeType
-	PValue []CKVoidPtr
+	Type  CKAttributeType
+	Value []CKVoidPtr
 }
 
 // CKInfo defines compound protocol type CK_INFO.
@@ -70,9 +70,9 @@ type CKInfo struct {
 
 // CKMechanismInfo defines compound protocol type CK_MECHANISM_INFO.
 type CKMechanismInfo struct {
-	UlMinKeySize CKUlong
-	UlMaxKeySize CKUlong
-	Flags        CKFlags
+	MinKeySize CKUlong
+	MaxKeySize CKUlong
+	Flags      CKFlags
 }
 
 // CKSlotInfo defines compound protocol type CK_SLOT_INFO.
@@ -86,24 +86,24 @@ type CKSlotInfo struct {
 
 // CKTokenInfo defines compound protocol type CK_TOKEN_INFO.
 type CKTokenInfo struct {
-	Label                [32]CKUTF8Char
-	ManufacturerID       [32]CKUTF8Char
-	Model                [16]CKUTF8Char
-	SerialNumber         [16]CKChar
-	Flags                CKFlags
-	UlMaxSessionCount    CKUlong
-	UlSessionCount       CKUlong
-	UlMaxRwSessionCount  CKUlong
-	UlRwSessionCount     CKUlong
-	UlMaxPinLen          CKUlong
-	UlMinPinLen          CKUlong
-	UlTotalPublicMemory  CKUlong
-	UlFreePublicMemory   CKUlong
-	UlTotalPrivateMemory CKUlong
-	UlFreePrivateMemory  CKUlong
-	HardwareVersion      CKVersion
-	FirmwareVersion      CKVersion
-	UtcTime              [16]CKChar
+	Label              [32]CKUTF8Char
+	ManufacturerID     [32]CKUTF8Char
+	Model              [16]CKUTF8Char
+	SerialNumber       [16]CKChar
+	Flags              CKFlags
+	MaxSessionCount    CKUlong
+	SessionCount       CKUlong
+	MaxRwSessionCount  CKUlong
+	RwSessionCount     CKUlong
+	MaxPinLen          CKUlong
+	MinPinLen          CKUlong
+	TotalPublicMemory  CKUlong
+	FreePublicMemory   CKUlong
+	TotalPrivateMemory CKUlong
+	FreePrivateMemory  CKUlong
+	HardwareVersion    CKVersion
+	FirmwareVersion    CKVersion
+	UtcTime            [16]CKChar
 }
 
 // CKVersion defines compound protocol type CK_VERSION.
@@ -114,56 +114,56 @@ type CKVersion struct {
 
 // InitializeResp defines the result of C_Initialize.
 type InitializeResp struct {
-	PulNumSlots CKUlong
+	NumSlots CKUlong
 }
 
 // GetInfoResp defines the result of C_GetInfo.
 type GetInfoResp struct {
-	PInfo CKInfo
+	Info CKInfo
 }
 
 // GetSlotListReq defines the arguments of C_GetSlotList.
 type GetSlotListReq struct {
 	TokenPresent CKBbool
-	PSlotList    []CKSlotID
+	SlotList     []CKSlotID
 }
 
 // GetSlotListResp defines the result of C_GetSlotList.
 type GetSlotListResp struct {
-	PSlotList []CKSlotID
+	SlotList []CKSlotID
 }
 
 // InitTokenReq defines the arguments of C_InitToken.
 type InitTokenReq struct {
 	SlotID CKSlotID
-	PPin   []CKUTF8Char
-	PLabel [32]CKUTF8Char
+	Pin    []CKUTF8Char
+	Label  [32]CKUTF8Char
 }
 
 // InitPINReq defines the arguments of C_InitPIN.
 type InitPINReq struct {
-	PPin []CKUTF8Char
+	Pin []CKUTF8Char
 }
 
 // SetPINReq defines the arguments of C_SetPIN.
 type SetPINReq struct {
-	POldPin []CKUTF8Char
-	PNewPin []CKUTF8Char
+	OldPin []CKUTF8Char
+	NewPin []CKUTF8Char
 }
 
 // DestroyObjectReq defines the arguments of C_DestroyObject.
 type DestroyObjectReq struct {
-	HObject CKObjectHandle
+	Object CKObjectHandle
 }
 
 // GetObjectSizeReq defines the arguments of C_GetObjectSize.
 type GetObjectSizeReq struct {
-	HObject CKObjectHandle
+	Object CKObjectHandle
 }
 
 // GetObjectSizeResp defines the result of C_GetObjectSize.
 type GetObjectSizeResp struct {
-	PulSize CKUlong
+	Size CKUlong
 }
 
 // Provider defines the PKCS #11 provider interface.
