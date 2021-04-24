@@ -7,6 +7,10 @@
 
 package ipc
 
+import (
+	"log"
+)
+
 // CKAttributeType defines basic protocol type CK_ATTRIBUTE_TYPE.
 type CKAttributeType uint32
 
@@ -22,12 +26,6 @@ type CKObjectHandle uint32
 // CKSessionHandle defines basic protocol type CK_SESSION_HANDLE.
 type CKSessionHandle uint32
 
-// CKBbool defines basic protocol type CK_BBOOL.
-type CKBbool bool
-
-// CKVoidPtr defines basic protocol type CK_VOID_PTR.
-type CKVoidPtr byte
-
 // CKSlotID defines basic protocol type CK_SLOT_ID.
 type CKSlotID uint32
 
@@ -40,6 +38,9 @@ type CKUlong uint32
 // CKUlongPtr defines basic protocol type CK_ULONG_PTR.
 type CKUlongPtr uint32
 
+// CKBbool defines basic protocol type CK_BBOOL.
+type CKBbool bool
+
 // CKByte defines basic protocol type CK_BYTE.
 type CKByte byte
 
@@ -48,6 +49,9 @@ type CKChar byte
 
 // CKUTF8Char defines basic protocol type CK_UTF8CHAR.
 type CKUTF8Char byte
+
+// CKVoidPtr defines basic protocol type CK_VOID_PTR.
+type CKVoidPtr byte
 
 // CKAttribute defines compound protocol type CK_ATTRIBUTE.
 type CKAttribute struct {
@@ -121,12 +125,12 @@ type GetInfoResp struct {
 // GetSlotListReq defines the arguments of C_GetSlotList.
 type GetSlotListReq struct {
 	TokenPresent CKBbool
-	PSlotList    []CKSlotIDPtr
+	PSlotList    []CKSlotID
 }
 
 // GetSlotListResp defines the result of C_GetSlotList.
 type GetSlotListResp struct {
-	PSlotList []CKSlotIDPtr
+	PSlotList []CKSlotID
 }
 
 // InitTokenReq defines the arguments of C_InitToken.
@@ -244,7 +248,8 @@ func Dispatch(p Provider, msgType Type, req []byte) (CKRV, []byte) {
 		if ok {
 			return ckrv, nil
 		}
-		return ErrFunctionNotSupported, nil
+		log.Printf("dispatch error: %s", err)
+		return ErrDataInvalid, nil
 	}
 	return ErrOk, resp
 }

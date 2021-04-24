@@ -77,6 +77,10 @@ func main() {
 
 package ipc
 
+import (
+	"log"
+)
+
 `)
 		err = goTypes()
 		if err != nil {
@@ -542,7 +546,8 @@ func Dispatch(p Provider, msgType Type, req []byte) (CKRV, []byte) {
 		if ok {
 			return ckrv, nil
 		}
-		return ErrFunctionNotSupported, nil
+		log.Printf("dispatch error: %%s", err)
+		return ErrDataInvalid, nil
 	}
 	return ErrOk, resp
 }

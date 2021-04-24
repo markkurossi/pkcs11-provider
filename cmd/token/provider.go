@@ -24,5 +24,7 @@ func (p *Provider) Initialize() (*ipc.InitializeResp, error) {
 
 // GetSlotList implements the Provider.GetSlotList().
 func (p *Provider) GetSlotList(req *ipc.GetSlotListReq) (*ipc.GetSlotListResp, error) {
-	return nil, ipc.ErrFunctionNotSupported
+	return &ipc.GetSlotListResp{
+		PSlotList: []ipc.CKSlotID{0},
+	}, nil
 }
