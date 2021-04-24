@@ -157,7 +157,7 @@ C_Initialize
       return CKR_DEVICE_ERROR;
     }
 
-  vp_log(LOG_DEBUG, "#slots: %d", num_slots);
+  vp_log(LOG_DEBUG, "#slots: %lu", (unsigned long) num_slots);
 
 
   vp_buffer_uninit(&buf);
