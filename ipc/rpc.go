@@ -10,15 +10,6 @@ package ipc
 // CKAttributeType defines basic protocol type CK_ATTRIBUTE_TYPE.
 type CKAttributeType uint32
 
-// CKBbool defines basic protocol type CK_BBOOL.
-type CKBbool bool
-
-// CKByte defines basic protocol type CK_BYTE.
-type CKByte byte
-
-// CKChar defines basic protocol type CK_CHAR.
-type CKChar byte
-
 // CKFlags defines basic protocol type CK_FLAGS.
 type CKFlags uint32
 
@@ -31,17 +22,32 @@ type CKObjectHandle uint32
 // CKSessionHandle defines basic protocol type CK_SESSION_HANDLE.
 type CKSessionHandle uint32
 
+// CKBbool defines basic protocol type CK_BBOOL.
+type CKBbool bool
+
+// CKVoidPtr defines basic protocol type CK_VOID_PTR.
+type CKVoidPtr byte
+
 // CKSlotID defines basic protocol type CK_SLOT_ID.
 type CKSlotID uint32
+
+// CKSlotIDPtr defines basic protocol type CK_SLOT_ID_PTR.
+type CKSlotIDPtr uint32
 
 // CKUlong defines basic protocol type CK_ULONG.
 type CKUlong uint32
 
+// CKUlongPtr defines basic protocol type CK_ULONG_PTR.
+type CKUlongPtr uint32
+
+// CKByte defines basic protocol type CK_BYTE.
+type CKByte byte
+
+// CKChar defines basic protocol type CK_CHAR.
+type CKChar byte
+
 // CKUTF8Char defines basic protocol type CK_UTF8CHAR.
 type CKUTF8Char byte
-
-// CKVoidPtr defines basic protocol type CK_VOID_PTR.
-type CKVoidPtr byte
 
 // CKAttribute defines compound protocol type CK_ATTRIBUTE.
 type CKAttribute struct {
@@ -112,6 +118,17 @@ type GetInfoResp struct {
 	PInfo CKInfo
 }
 
+// GetSlotListReq defines the arguments of C_GetSlotList.
+type GetSlotListReq struct {
+	TokenPresent CKBbool
+	PSlotList    []CKSlotIDPtr
+}
+
+// GetSlotListResp defines the result of C_GetSlotList.
+type GetSlotListResp struct {
+	PSlotList []CKSlotIDPtr
+}
+
 // InitTokenReq defines the arguments of C_InitToken.
 type InitTokenReq struct {
 	SlotID CKSlotID
@@ -130,27 +147,6 @@ type SetPINReq struct {
 	PNewPin []CKUTF8Char
 }
 
-// CreateObjectReq defines the arguments of C_CreateObject.
-type CreateObjectReq struct {
-	PTemplate []CKAttribute
-}
-
-// CreateObjectResp defines the result of C_CreateObject.
-type CreateObjectResp struct {
-	PhObject CKObjectHandle
-}
-
-// CopyObjectReq defines the arguments of C_CopyObject.
-type CopyObjectReq struct {
-	HObject   CKObjectHandle
-	PTemplate []CKAttribute
-}
-
-// CopyObjectResp defines the result of C_CopyObject.
-type CopyObjectResp struct {
-	PhNewObject CKObjectHandle
-}
-
 // DestroyObjectReq defines the arguments of C_DestroyObject.
 type DestroyObjectReq struct {
 	HObject CKObjectHandle
@@ -166,24 +162,16 @@ type GetObjectSizeResp struct {
 	PulSize CKUlong
 }
 
-// SetAttributeValueReq defines the arguments of C_SetAttributeValue.
-type SetAttributeValueReq struct {
-	HObject   CKObjectHandle
-	PTemplate []CKAttribute
-}
-
 // Provider defines the PKCS #11 provider interface.
 type Provider interface {
 	Initialize() (*InitializeResp, error)
 	GetInfo() (*GetInfoResp, error)
+	GetSlotList(req *GetSlotListReq) (*GetSlotListResp, error)
 	InitToken(req *InitTokenReq) error
 	InitPIN(req *InitPINReq) error
 	SetPIN(req *SetPINReq) error
-	CreateObject(req *CreateObjectReq) (*CreateObjectResp, error)
-	CopyObject(req *CopyObjectReq) (*CopyObjectResp, error)
 	DestroyObject(req *DestroyObjectReq) error
 	GetObjectSize(req *GetObjectSizeReq) (*GetObjectSizeResp, error)
-	SetAttributeValue(req *SetAttributeValueReq) error
 	FindObjectsFinal() error
 }
 
@@ -197,6 +185,11 @@ func (b *Base) Initialize() (*InitializeResp, error) {
 
 // GetInfo implements the Provider.GetInfo().
 func (b *Base) GetInfo() (*GetInfoResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
+// GetSlotList implements the Provider.GetSlotList().
+func (b *Base) GetSlotList(req *GetSlotListReq) (*GetSlotListResp, error) {
 	return nil, ErrFunctionNotSupported
 }
 
@@ -215,16 +208,6 @@ func (b *Base) SetPIN(req *SetPINReq) error {
 	return ErrFunctionNotSupported
 }
 
-// CreateObject implements the Provider.CreateObject().
-func (b *Base) CreateObject(req *CreateObjectReq) (*CreateObjectResp, error) {
-	return nil, ErrFunctionNotSupported
-}
-
-// CopyObject implements the Provider.CopyObject().
-func (b *Base) CopyObject(req *CopyObjectReq) (*CopyObjectResp, error) {
-	return nil, ErrFunctionNotSupported
-}
-
 // DestroyObject implements the Provider.DestroyObject().
 func (b *Base) DestroyObject(req *DestroyObjectReq) error {
 	return ErrFunctionNotSupported
@@ -235,11 +218,6 @@ func (b *Base) GetObjectSize(req *GetObjectSizeReq) (*GetObjectSizeResp, error) 
 	return nil, ErrFunctionNotSupported
 }
 
-// SetAttributeValue implements the Provider.SetAttributeValue().
-func (b *Base) SetAttributeValue(req *SetAttributeValueReq) error {
-	return ErrFunctionNotSupported
-}
-
 // FindObjectsFinal implements the Provider.FindObjectsFinal().
 func (b *Base) FindObjectsFinal() error {
 	return ErrFunctionNotSupported
@@ -248,14 +226,12 @@ func (b *Base) FindObjectsFinal() error {
 var msgTypeNames = map[Type]string{
 	0xc0050401: "Initialize",
 	0xc0050403: "GetInfo",
+	0xc0050501: "GetSlotList",
 	0xc0050507: "InitToken",
 	0xc0050508: "InitPIN",
 	0xc0050509: "SetPIN",
-	0xc0050701: "CreateObject",
-	0xc0050702: "CopyObject",
 	0xc0050703: "DestroyObject",
 	0xc0050704: "GetObjectSize",
-	0xc0050706: "SetAttributeValue",
 	0xc0050709: "FindObjectsFinal",
 }
 
@@ -289,6 +265,17 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 		}
 		return Marshal(resp)
 
+	case 0xc0050501: // GetSlotList
+		var req GetSlotListReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		resp, err := p.GetSlotList(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
+
 	case 0xc0050507: // InitToken
 		var req InitTokenReq
 		if err := Unmarshal(data, &req); err != nil {
@@ -310,28 +297,6 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 		}
 		return nil, p.SetPIN(&req)
 
-	case 0xc0050701: // CreateObject
-		var req CreateObjectReq
-		if err := Unmarshal(data, &req); err != nil {
-			return nil, err
-		}
-		resp, err := p.CreateObject(&req)
-		if err != nil {
-			return nil, err
-		}
-		return Marshal(resp)
-
-	case 0xc0050702: // CopyObject
-		var req CopyObjectReq
-		if err := Unmarshal(data, &req); err != nil {
-			return nil, err
-		}
-		resp, err := p.CopyObject(&req)
-		if err != nil {
-			return nil, err
-		}
-		return Marshal(resp)
-
 	case 0xc0050703: // DestroyObject
 		var req DestroyObjectReq
 		if err := Unmarshal(data, &req); err != nil {
@@ -349,13 +314,6 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 			return nil, err
 		}
 		return Marshal(resp)
-
-	case 0xc0050706: // SetAttributeValue
-		var req SetAttributeValueReq
-		if err := Unmarshal(data, &req); err != nil {
-			return nil, err
-		}
-		return nil, p.SetAttributeValue(&req)
 
 	case 0xc0050709: // FindObjectsFinal
 		return nil, p.FindObjectsFinal()

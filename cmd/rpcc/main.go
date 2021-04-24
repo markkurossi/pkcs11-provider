@@ -28,8 +28,7 @@ var (
 	reSigStart     = regexp.MustCompilePOSIX(`^[[:space:]]*/\*\*[[:space:]]*([[:^space:]]+)?[[:space:]]*(\*/)?$`)
 	reSigEnd       = regexp.MustCompilePOSIX(`^[[:space:]]*\*/[[:space:]]*$`)
 	reFieldSection = regexp.MustCompilePOSIX(`^[[:space:]]*\*[[:space:]]*([[:alnum:]]+):[[:space:]]*$`)
-	reField        = regexp.MustCompilePOSIX(`\*[[:space:]]+([[:^space:]]+)[[:space:]]+([[:^space:]]+)`)
-	reType         = regexp.MustCompilePOSIX(`^(\[([A-Za-z_0-9]+)\])?([A-Za-z_0-9]+)$`)
+	reField        = regexp.MustCompilePOSIX(`\*[[:space:]]*(.+)[[:space:]]+([[:^space:]]+)`)
 
 	vMajorLast int
 	vMinorLast int
@@ -128,6 +127,13 @@ func (i *Input) ReadLine() (string, error) {
 	return line, nil
 }
 
+// Argument sections.
+const (
+	SectSession int = 1 << iota
+	SectInputs
+	SectOutputs
+)
+
 func processFile(in *Input) error {
 	var vMajor, vMinor, s0, s1, s2 int
 	var functionName string
@@ -186,7 +192,7 @@ func processFile(in *Input) error {
 	var session []Field
 	var inputs []Field
 	var outputs []Field
-	var fieldSection *[]Field
+	var section int
 
 	for {
 		line, err := in.ReadLine()
@@ -206,7 +212,6 @@ func processFile(in *Input) error {
 			session = nil
 			inputs = nil
 			outputs = nil
-			fieldSection = nil
 
 			continue
 		}
@@ -251,13 +256,16 @@ func processFile(in *Input) error {
 				if m != nil {
 					switch m[1] {
 					case "Session":
-						fieldSection = &session
+						section = SectSession
 
 					case "Inputs":
-						fieldSection = &inputs
+						section = SectInputs
+
+					case "InOutputs":
+						section = SectInputs | SectOutputs
 
 					case "Outputs":
-						fieldSection = &outputs
+						section = SectOutputs
 
 					default:
 						return fmt.Errorf("unknown field section: %s", m[1])
@@ -267,14 +275,23 @@ func processFile(in *Input) error {
 
 				m = reField.FindStringSubmatch(line)
 				if m != nil {
-					field, err := parseField(m[1], m[2])
+					field, err := parseField(strings.TrimSpace(m[1]),
+						strings.TrimSpace(m[2]))
 					if err != nil {
 						return err
 					}
-					if fieldSection == nil {
+					if section == 0 {
 						return fmt.Errorf("field declaration without section")
 					}
-					*fieldSection = append(*fieldSection, field)
+					if section&SectSession != 0 {
+						session = append(session, field)
+					}
+					if section&SectInputs != 0 {
+						inputs = append(inputs, field)
+					}
+					if section&SectOutputs != 0 {
+						outputs = append(outputs, field)
+					}
 					continue
 				}
 			}
@@ -327,7 +344,7 @@ func processFile(in *Input) error {
 				printf(`
   /* XXX lookup session by %s */
 `,
-					session[0].ElementName)
+					session[0].Name)
 
 			default:
 				return fmt.Errorf("multiple session variables")
@@ -406,7 +423,7 @@ func goTypes() error {
 	sort.Slice(arr, func(i, j int) bool {
 		if arr[i].Basic == arr[j].Basic {
 			return arr[i].Name < arr[j].Name
-		} else if arr[i].Basic {
+		} else if arr[i].IsBasic {
 			return true
 		} else {
 			return false
@@ -416,7 +433,7 @@ func goTypes() error {
 		if idx > 0 {
 			fmt.Println()
 		}
-		if t.Basic {
+		if t.IsBasic {
 			fmt.Printf(`// %s defines basic protocol type %s.
 %s
 `,

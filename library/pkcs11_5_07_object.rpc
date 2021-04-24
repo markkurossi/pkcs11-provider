@@ -20,14 +20,15 @@ C_CreateObject
   CK_OBJECT_HANDLE_PTR phObject  /* gets new object's handle. */
 )
 {
-  /**
+  /*
    * Session:
-   *            CK_SESSION_HANDLE hSession
+   *                     CK_SESSION_HANDLE hSession
    * Inputs:
-   *   [ulCount]CK_ATTRIBUTE      pTemplate
+   *   [CK_ULONG ulCount]CK_ATTRIBUTE      pTemplate
    * Outputs:
-   *            CK_OBJECT_HANDLE  phObject
+   *                     CK_OBJECT_HANDLE  phObject
    */
+  VP_FUNCTION_NOT_SUPPORTED;
 }
 
 /* C_CopyObject copies an object, creating a new object for the
@@ -43,7 +44,7 @@ C_CopyObject
   CK_OBJECT_HANDLE_PTR phNewObject  /* receives handle of copy */
 )
 {
-  /**
+  /*
    * Session:
    *            CK_SESSION_HANDLE hSession
    * Inputs:
@@ -52,6 +53,7 @@ C_CopyObject
    * Outputs:
    *            CK_OBJECT_HANDLE  phNewObject
    */
+  VP_FUNCTION_NOT_SUPPORTED;
 }
 
 /* C_DestroyObject destroys an object. */
@@ -125,13 +127,14 @@ C_SetAttributeValue
   CK_ULONG          ulCount     /* attributes in template */
 )
 {
-  /**
+  /*
    * Session:
    *            CK_SESSION_HANDLE hSession
    * Inputs:
    *            CK_OBJECT_HANDLE  hObject
    *   [ulCount]CK_ATTRIBUTE      pTemplate
    */
+  VP_FUNCTION_NOT_SUPPORTED;
 }
 
 /* C_FindObjectsInit initializes a search for token and session

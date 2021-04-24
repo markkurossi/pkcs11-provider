@@ -19,11 +19,11 @@ C_GetSlotList
   CK_ULONG_PTR   pulCount       /* receives number of slots */
 )
 {
-  /*
+  /**
    * Inputs:
-   *             CK_BBOOL   tokenPresent
-   * Outputs:
-   *   [pulCount]CK_SLOT_ID pSlotList
+   *                          CK_BBOOL       tokenPresent
+   * InOutputs:
+   *   [CK_ULONG_PTR pulCount]CK_SLOT_ID_PTR pSlotList?
    */
   VP_FUNCTION_NOT_SUPPORTED;
 }
@@ -114,9 +114,9 @@ C_InitToken
 {
   /**
    * Inputs:
-   *             CK_SLOT_ID  slotID
-   *   [ulPinLen]CK_UTF8CHAR pPin
-   *         [32]CK_UTF8CHAR pLabel
+   *                      CK_SLOT_ID  slotID
+   *   [CK_ULONG ulPinLen]CK_UTF8CHAR pPin
+   *                  [32]CK_UTF8CHAR pLabel
    */
 }
 
@@ -131,9 +131,9 @@ C_InitPIN
 {
   /**
    * Session:
-   *            CK_SESSION_HANDLE hSession
+   *                      CK_SESSION_HANDLE hSession
    * Inputs:
-   *   [ulPinLen]CK_UTF8CHAR      pPin
+   *   [CK_ULONG ulPinLen]CK_UTF8CHAR       pPin
    */
 }
 
@@ -150,9 +150,9 @@ C_SetPIN
 {
   /**
    * Session:
-   *            CK_SESSION_HANDLE hSession
+   *                      CK_SESSION_HANDLE hSession
    * Inputs:
-   *   [ulOldLen]CK_UTF8CHAR      pOldPin
-   *   [ulNewLen]CK_UTF8CHAR      pNewPin
+   *   [CK_ULONG ulOldLen]CK_UTF8CHAR       pOldPin
+   *   [CK_ULONG ulNewLen]CK_UTF8CHAR       pNewPin
    */
 }

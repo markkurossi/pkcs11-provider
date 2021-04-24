@@ -21,46 +21,15 @@ C_CreateObject
   CK_OBJECT_HANDLE_PTR phObject  /* gets new object's handle. */
 )
 {
-  CK_RV ret;
-  VPBuffer buf;
-  int i;
-  VPIPCConn *conn = NULL;
-
-  VP_FUNCTION_ENTER;
-
-  /* XXX lookup session by hSession */
-
-  vp_buffer_init(&buf);
-  vp_buffer_add_uint32(&buf, 0xc0050701);
-  vp_buffer_add_space(&buf, 4);
-
-  vp_buffer_add_uint32(&buf, ulCount);
-  for (i = 0; i < ulCount; i++)
-    {
-      CK_ATTRIBUTE *iel = &pTemplate[i];
-
-      vp_buffer_add_uint32(&buf, iel->type);
-      vp_buffer_add_byte_arr(&buf, iel->pValue, iel->ulValueLen);
-    }
-
-  ret = vp_ipc_tx(conn, &buf);
-  if (ret != CKR_OK)
-    {
-      vp_buffer_uninit(&buf);
-      return ret;
-    }
-
-  *phObject = vp_buffer_get_uint32(&buf);
-
-  if (vp_buffer_error(&buf))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
-
-  vp_buffer_uninit(&buf);
-
-  return ret;
+  /*
+   * Session:
+   *                     CK_SESSION_HANDLE hSession
+   * Inputs:
+   *   [CK_ULONG ulCount]CK_ATTRIBUTE      pTemplate
+   * Outputs:
+   *                     CK_OBJECT_HANDLE  phObject
+   */
+  VP_FUNCTION_NOT_SUPPORTED;
 }
 
 /* C_CopyObject copies an object, creating a new object for the
@@ -76,47 +45,16 @@ C_CopyObject
   CK_OBJECT_HANDLE_PTR phNewObject  /* receives handle of copy */
 )
 {
-  CK_RV ret;
-  VPBuffer buf;
-  int i;
-  VPIPCConn *conn = NULL;
-
-  VP_FUNCTION_ENTER;
-
-  /* XXX lookup session by hSession */
-
-  vp_buffer_init(&buf);
-  vp_buffer_add_uint32(&buf, 0xc0050702);
-  vp_buffer_add_space(&buf, 4);
-
-  vp_buffer_add_uint32(&buf, hObject);
-  vp_buffer_add_uint32(&buf, ulCount);
-  for (i = 0; i < ulCount; i++)
-    {
-      CK_ATTRIBUTE *iel = &pTemplate[i];
-
-      vp_buffer_add_uint32(&buf, iel->type);
-      vp_buffer_add_byte_arr(&buf, iel->pValue, iel->ulValueLen);
-    }
-
-  ret = vp_ipc_tx(conn, &buf);
-  if (ret != CKR_OK)
-    {
-      vp_buffer_uninit(&buf);
-      return ret;
-    }
-
-  *phNewObject = vp_buffer_get_uint32(&buf);
-
-  if (vp_buffer_error(&buf))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
-
-  vp_buffer_uninit(&buf);
-
-  return ret;
+  /*
+   * Session:
+   *            CK_SESSION_HANDLE hSession
+   * Inputs:
+   *            CK_OBJECT_HANDLE  hObject
+   *   [ulCount]CK_ATTRIBUTE      pTemplate
+   * Outputs:
+   *            CK_OBJECT_HANDLE  phNewObject
+   */
+  VP_FUNCTION_NOT_SUPPORTED;
 }
 
 /* C_DestroyObject destroys an object. */
@@ -232,39 +170,14 @@ C_SetAttributeValue
   CK_ULONG          ulCount     /* attributes in template */
 )
 {
-  CK_RV ret;
-  VPBuffer buf;
-  int i;
-  VPIPCConn *conn = NULL;
-
-  VP_FUNCTION_ENTER;
-
-  /* XXX lookup session by hSession */
-
-  vp_buffer_init(&buf);
-  vp_buffer_add_uint32(&buf, 0xc0050706);
-  vp_buffer_add_space(&buf, 4);
-
-  vp_buffer_add_uint32(&buf, hObject);
-  vp_buffer_add_uint32(&buf, ulCount);
-  for (i = 0; i < ulCount; i++)
-    {
-      CK_ATTRIBUTE *iel = &pTemplate[i];
-
-      vp_buffer_add_uint32(&buf, iel->type);
-      vp_buffer_add_byte_arr(&buf, iel->pValue, iel->ulValueLen);
-    }
-
-  ret = vp_ipc_tx(conn, &buf);
-  if (ret != CKR_OK)
-    {
-      vp_buffer_uninit(&buf);
-      return ret;
-    }
-
-  vp_buffer_uninit(&buf);
-
-  return ret;
+  /*
+   * Session:
+   *            CK_SESSION_HANDLE hSession
+   * Inputs:
+   *            CK_OBJECT_HANDLE  hObject
+   *   [ulCount]CK_ATTRIBUTE      pTemplate
+   */
+  VP_FUNCTION_NOT_SUPPORTED;
 }
 
 /* C_FindObjectsInit initializes a search for token and session

@@ -16,17 +16,32 @@ import (
 	"strings"
 )
 
+var (
+	types         = make(map[string]TypeInfo)
+	reComment     = regexp.MustCompilePOSIX(`^[[:space:]]*//`)
+	reBasic       = regexp.MustCompilePOSIX(`^[[:space:]]*type[[:space:]]+([[:^space:]]+)[[:space:]]+([[:^space:]]+)[[:space:]]*$`)
+	reStructStart = regexp.MustCompilePOSIX(`^[[:space:]]*type[[:space:]]+([[:^space:]]+)[[:space:]]+struct[[:space:]]*{[[:space:]]*$`)
+	reStructField = regexp.MustCompilePOSIX(`^[[:space:]]*(.+)[[:space:]]+([[:^space:]]+)[[:space:]]*$`)
+	reStructEnd   = regexp.MustCompilePOSIX(`^[[:space:]]*}[[:space:]]*$`)
+	reType        = regexp.MustCompilePOSIX(`^(\[([[:^space:]]+)([[:space:]]+([[:^space:]]+))?\])?([A-Za-z_0-9]+)$`)
+)
+
 // TypeInfo provides information about a PKCS #11 API type.
 type TypeInfo struct {
-	Name     string
-	Basic    bool
-	Native   string
-	Compound []Field
+	Name      string
+	IsBasic   bool
+	IsPointer bool
+	Basic     string
+	Compound  []Field
 }
 
 func (t TypeInfo) String() string {
-	if t.Basic {
-		return fmt.Sprintf("type %s %s", t.Name, t.Native)
+	if t.IsBasic {
+		var ptr string
+		if t.IsPointer {
+			ptr = "*"
+		}
+		return fmt.Sprintf("type %s %s%s", t.Name, ptr, t.Basic)
 	}
 	result := fmt.Sprintf("type %s struct {\n", t.Name)
 	for _, c := range t.Compound {
@@ -37,10 +52,18 @@ func (t TypeInfo) String() string {
 	return result
 }
 
-// GoType returns the Go type name for the type.
+// GoTypeName returns the Go type name for the type.
+func (t TypeInfo) GoTypeName() string {
+	if t.IsBasic {
+		return GoTypeName(t.Name)
+	}
+	return GoTypeName(t.Name)
+}
+
+// GoType returns the Go type definition for the type.
 func (t TypeInfo) GoType() string {
-	if t.Basic {
-		return fmt.Sprintf("type %s %s", GoTypeName(t.Name), GoType(t.Native))
+	if t.IsBasic {
+		return fmt.Sprintf("type %s %s", GoTypeName(t.Name), GoType(t.Basic))
 	}
 	result := fmt.Sprintf("type %s struct {\n", GoTypeName(t.Name))
 
@@ -96,15 +119,6 @@ func GoType(native string) string {
 	return native
 }
 
-var (
-	types         = make(map[string]TypeInfo)
-	reComment     = regexp.MustCompilePOSIX(`^[[:space:]]*//`)
-	reBasic       = regexp.MustCompilePOSIX(`^[[:space:]]*type[[:space:]]+([[:^space:]]+)[[:space:]]+([[:^space:]]+)[[:space:]]*$`)
-	reStructStart = regexp.MustCompilePOSIX(`^[[:space:]]*type[[:space:]]+([[:^space:]]+)[[:space:]]+struct[[:space:]]*{[[:space:]]*$`)
-	reStructField = regexp.MustCompilePOSIX(`^[[:space:]]*([[:^space:]]+)[[:space:]]+([[:^space:]]+)`)
-	reStructEnd   = regexp.MustCompilePOSIX(`^[[:space:]]*}[[:space:]]*$`)
-)
-
 func readTypes(file string) error {
 	f, err := os.Open(file)
 	if err != nil {
@@ -130,10 +144,17 @@ func readTypes(file string) error {
 		}
 		m := reBasic.FindStringSubmatch(line)
 		if m != nil {
+			var ptr bool
+			basic := m[2]
+			if strings.HasPrefix(basic, "*") {
+				basic = basic[1:]
+				ptr = true
+			}
 			types[m[1]] = TypeInfo{
-				Basic:  true,
-				Name:   m[1],
-				Native: m[2],
+				IsBasic:   true,
+				IsPointer: ptr,
+				Name:      m[1],
+				Basic:     basic,
 			}
 			continue
 		}
@@ -159,18 +180,23 @@ func readTypes(file string) error {
 				}
 				m = reStructField.FindStringSubmatch(line)
 				if m != nil {
-					elType := m[1]
-					elName := m[2]
+					elType := strings.TrimSpace(m[1])
+					elName := strings.TrimSpace(m[2])
 
 					m = reType.FindStringSubmatch(elType)
 					if m == nil {
-						return fmt.Errorf("invalid type: %s", elType)
+						return fmt.Errorf("invalid type: '%s'", elType)
+					}
+					typeInfo, ok := types[m[5]]
+					if !ok {
+						return fmt.Errorf("unknown type: '%s'", m[5])
 					}
 
 					fields = append(fields, Field{
-						SizeName:    m[2],
-						ElementType: m[3],
-						ElementName: elName,
+						SizeType: m[2],
+						SizeName: m[4],
+						Type:     typeInfo,
+						Name:     elName,
 					})
 					continue
 				}
@@ -192,53 +218,49 @@ func readTypes(file string) error {
 
 // Field defines a function argument or type field.
 type Field struct {
-	SizeName    string
-	ElementType string
-	ElementName string
+	Name     string
+	Type     TypeInfo
+	Optional bool
+	SizeType string
+	SizeName string
 }
 
 func (f Field) String() string {
-	if len(f.SizeName) > 0 {
-		var sizeName string
-		_, err := strconv.Atoi(f.SizeName)
+	if len(f.SizeType) > 0 {
+		var sizeType string
+		_, err := strconv.Atoi(f.SizeType)
 		if err == nil {
-			sizeName = f.SizeName
+			sizeType = f.SizeType
 		}
-		return fmt.Sprintf("[%s]%s %s",
-			sizeName, f.ElementType, f.ElementName)
+		return fmt.Sprintf("[%s]%s %s", sizeType, f.Type, f.Name)
 	}
-	return fmt.Sprintf("%s %s", f.ElementType, f.ElementName)
+	return fmt.Sprintf("%s %s", f.Type, f.Name)
 }
 
 // GoType returns the Go type name for the field.
 func (f Field) GoType() string {
-	if len(f.SizeName) > 0 {
-		var sizeName string
-		_, err := strconv.Atoi(f.SizeName)
+	if len(f.SizeType) > 0 {
+		var sizeType string
+		_, err := strconv.Atoi(f.SizeType)
 		if err == nil {
-			sizeName = f.SizeName
+			sizeType = f.SizeType
 		}
 		return fmt.Sprintf("%s [%s]%s",
-			strings.Title(f.ElementName), sizeName, GoTypeName(f.ElementType))
+			strings.Title(f.Name), sizeType, f.Type.GoTypeName())
 	}
-	return fmt.Sprintf("%s %s", strings.Title(f.ElementName),
-		GoTypeName(f.ElementType))
+	return fmt.Sprintf("%s %s", strings.Title(f.Name), f.Type.GoTypeName())
 }
 
 // Depth computes the depth of nested array types.
 func (f *Field) Depth() (int, error) {
-	if len(f.SizeName) == 0 {
+	if len(f.SizeType) == 0 {
 		return 0, nil
 	}
-	typeInfo, ok := types[f.ElementType]
-	if !ok {
-		return 0, fmt.Errorf("depth: unknown type: %s", f.ElementType)
-	}
-	if typeInfo.Basic {
+	if f.Type.IsBasic {
 		return 0, nil
 	}
 	depth := 0
-	for _, field := range typeInfo.Compound {
+	for _, field := range f.Type.Compound {
 		d, err := field.Depth()
 		if err != nil {
 			return 0, err
@@ -267,26 +289,35 @@ func (f *Field) Input(level int) error {
 		ctx = fmt.Sprintf("%cel->", 'i'+level-1)
 	}
 
-	typeInfo, ok := types[f.ElementType]
-	if !ok {
-		return fmt.Errorf("input: unknown type: %s", f.ElementType)
-	}
-	if len(f.SizeName) == 0 {
+	if len(f.SizeType) == 0 {
 		// Single instance.
-		if typeInfo.Basic {
+		if f.Type.IsBasic {
 			printf("%svp_buffer_add_%s(&buf, %s%s);\n",
-				indent, typeInfo.Native, ctx, f.ElementName)
+				indent, f.Type.Basic, ctx, f.Name)
 		} else {
 			printf("%s// single not basic\n", indent)
 		}
 	} else {
 		// Array
-		if typeInfo.Basic {
+		if f.Optional {
+			printf(`
+  if (%s == NULL)
+    vp_buffer_add_uint32(&buf, 0);
+  else
+    vp_buffer_add_uint32(&buf, *%s);
+`,
+				f.Name,
+				f.SizeName)
+		} else if f.Type.IsBasic {
 			// Array of basic types.
+			size := f.SizeName
+			if len(size) == 0 {
+				size = f.SizeType
+			}
 			printf("%svp_buffer_add_%s_arr(&buf, %s%s, %s%s);\n",
-				indent, typeInfo.Native,
-				ctx, f.ElementName,
-				ctx, f.SizeName)
+				indent, f.Type.Basic,
+				ctx, f.Name,
+				ctx, size)
 		} else {
 			// Array of compound type.
 			printf("%svp_buffer_add_uint32(&buf, %s%s);\n",
@@ -295,9 +326,9 @@ func (f *Field) Input(level int) error {
 				idxName, idxName, f.SizeName, idxName)
 			printf("%s  {\n", indent)
 			printf("%s    %s *%s = &%s%s[%s];\n\n",
-				indent, f.ElementType, idxElName, ctx, f.ElementName, idxName)
+				indent, f.Type, idxElName, ctx, f.Name, idxName)
 
-			for _, c := range typeInfo.Compound {
+			for _, c := range f.Type.Compound {
 				err := c.Input(level + 1)
 				if err != nil {
 					return err
@@ -327,25 +358,49 @@ func (f *Field) Output(level int) error {
 		ctx = fmt.Sprintf("%cel->", 'i'+level-1)
 	}
 
-	typeInfo, ok := types[f.ElementType]
-	if !ok {
-		return fmt.Errorf("input: unknown type: %s", f.ElementType)
-	}
-	if len(f.SizeName) == 0 {
+	if len(f.SizeType) == 0 {
 		// Single instance.
-		if typeInfo.Basic {
+		if f.Type.IsBasic {
 			printf("%s*%s%s = vp_buffer_get_%s(&buf);\n",
-				indent, ctx, f.ElementName, typeInfo.Native)
+				indent, ctx, f.Name, f.Type.Basic)
 		} else {
 			printf("%s// single not basic\n", indent)
 		}
 	} else {
 		// Array
-		if typeInfo.Basic {
+		if f.Optional {
+			printf(`
+  {
+    uint32_t count = vp_buffer_get_uint32(&buf);
+    uint32_t i;
+
+    if (%s == NULL)
+      {
+        *%s = count;
+      }
+    else if (count > *%s)
+      {
+        vp_buffer_uninit(&buf);
+        return CKR_BUFFER_TOO_SMALL;
+      }
+    else
+      {
+        *%s = count;
+        for (i = 0; i < count; i++)
+          %s[i] = vp_buffer_get_uint32(&buf);
+      }
+  }
+`,
+				f.Name,
+				f.SizeName,
+				f.SizeName,
+				f.SizeName,
+				f.Name)
+		} else if f.Type.IsBasic {
 			// Array of basic types.
 			printf("%svp_buffer_get_%s_arr(&buf, %s%s, &%s%s);\n",
-				indent, typeInfo.Native,
-				ctx, f.ElementName,
+				indent, f.Type.Basic,
+				ctx, f.Name,
 				ctx, f.SizeName)
 		} else {
 			// Array of compound type.
@@ -355,9 +410,9 @@ func (f *Field) Output(level int) error {
 				idxName, idxName, f.SizeName, idxName)
 			printf("%s  {\n", indent)
 			printf("%s    %s *%s = &%s%s[%s];\n\n",
-				indent, f.ElementType, idxElName, ctx, f.ElementName, idxName)
+				indent, f.Type, idxElName, ctx, f.Name, idxName)
 
-			for _, c := range typeInfo.Compound {
+			for _, c := range f.Type.Compound {
 				err := c.Input(level + 1)
 				if err != nil {
 					return err
@@ -376,9 +431,21 @@ func parseField(t, v string) (f Field, err error) {
 		err = fmt.Errorf("invalid field type: '%s'", t)
 		return
 	}
+	typeInfo, ok := types[m[5]]
+	if !ok {
+		return Field{}, fmt.Errorf("unknown type: '%s'", m[5])
+	}
+	var optional bool
+	if strings.HasSuffix(v, "?") {
+		optional = true
+		v = v[:len(v)-1]
+	}
+
 	return Field{
-		SizeName:    m[2],
-		ElementType: m[3],
-		ElementName: v,
+		SizeType: m[2],
+		SizeName: m[4],
+		Type:     typeInfo,
+		Name:     v,
+		Optional: optional,
 	}, nil
 }

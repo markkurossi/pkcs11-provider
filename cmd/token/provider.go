@@ -21,3 +21,8 @@ func (p *Provider) Initialize() (*ipc.InitializeResp, error) {
 		PulNumSlots: 1,
 	}, nil
 }
+
+// GetSlotList implements the Provider.GetSlotList().
+func (p *Provider) GetSlotList(req *ipc.GetSlotListReq) (*ipc.GetSlotListResp, error) {
+	return nil, ipc.ErrFunctionNotSupported
+}

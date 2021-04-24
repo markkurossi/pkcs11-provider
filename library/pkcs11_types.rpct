@@ -4,22 +4,29 @@
 // All rights reserved.
 //
 
-type CK_BBOOL	       bool
-type CK_BYTE	       byte
-type CK_CHAR	       byte
-type CK_ULONG	       uint32
-type CK_UTF8CHAR       byte
-type CK_VOID_PTR       byte
-type CK_FLAGS	       uint32
-type CK_SESSION_HANDLE uint32
-type CK_OBJECT_HANDLE  uint32
-type CK_ATTRIBUTE_TYPE uint32
-type CK_SLOT_ID	       uint32
-type CK_MECHANISM_TYPE uint32
+type CK_BBOOL	        bool
+type CK_BYTE	        byte
+type CK_CHAR	        byte
+type CK_ULONG	        uint32
+type CK_ULONG_PTR      *uint32
+type CK_UTF8CHAR        byte
+type CK_VOID_PTR        byte
+type CK_FLAGS	        uint32
+type CK_SESSION_HANDLE  uint32
+type CK_OBJECT_HANDLE   uint32
+type CK_ATTRIBUTE_TYPE  uint32
+type CK_SLOT_ID	        uint32
+type CK_SLOT_ID_PTR    *uint32
+type CK_MECHANISM_TYPE  uint32
 
 type CK_ATTRIBUTE struct {
-              CK_ATTRIBUTE_TYPE type
-  [ulValueLen]CK_VOID_PTR       pValue
+                       CK_ATTRIBUTE_TYPE type
+  [CK_ULONG ulValueLen]CK_VOID_PTR       pValue
+}
+
+type CK_VERSION struct {
+  CK_BYTE major
+  CK_BYTE minor
 }
 
 type CK_INFO struct {
@@ -28,11 +35,6 @@ type CK_INFO struct {
       CK_FLAGS    flags
   [32]CK_UTF8CHAR libraryDescription
       CK_VERSION  libraryVersion
-}
-
-type CK_VERSION struct {
-  CK_BYTE major
-  CK_BYTE minor
 }
 
 type CK_SLOT_INFO struct {
