@@ -38,7 +38,7 @@ C_GetSlotInfo
   CK_SLOT_INFO_PTR pInfo    /* receives the slot information */
 )
 {
-  /*
+  /**
    * Inputs:
    *     CK_SLOT_ID slotID
    * Outputs:

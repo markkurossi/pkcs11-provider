@@ -133,6 +133,16 @@ type GetSlotListResp struct {
 	SlotList []CKSlotID
 }
 
+// GetSlotInfoReq defines the arguments of C_GetSlotInfo.
+type GetSlotInfoReq struct {
+	SlotID CKSlotID
+}
+
+// GetSlotInfoResp defines the result of C_GetSlotInfo.
+type GetSlotInfoResp struct {
+	Info CKSlotInfo
+}
+
 // InitTokenReq defines the arguments of C_InitToken.
 type InitTokenReq struct {
 	SlotID CKSlotID
@@ -171,6 +181,7 @@ type Provider interface {
 	Initialize() (*InitializeResp, error)
 	GetInfo() (*GetInfoResp, error)
 	GetSlotList(req *GetSlotListReq) (*GetSlotListResp, error)
+	GetSlotInfo(req *GetSlotInfoReq) (*GetSlotInfoResp, error)
 	InitToken(req *InitTokenReq) error
 	InitPIN(req *InitPINReq) error
 	SetPIN(req *SetPINReq) error
@@ -194,6 +205,11 @@ func (b *Base) GetInfo() (*GetInfoResp, error) {
 
 // GetSlotList implements the Provider.GetSlotList().
 func (b *Base) GetSlotList(req *GetSlotListReq) (*GetSlotListResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
+// GetSlotInfo implements the Provider.GetSlotInfo().
+func (b *Base) GetSlotInfo(req *GetSlotInfoReq) (*GetSlotInfoResp, error) {
 	return nil, ErrFunctionNotSupported
 }
 
@@ -231,6 +247,7 @@ var msgTypeNames = map[Type]string{
 	0xc0050401: "Initialize",
 	0xc0050403: "GetInfo",
 	0xc0050501: "GetSlotList",
+	0xc0050502: "GetSlotInfo",
 	0xc0050507: "InitToken",
 	0xc0050508: "InitPIN",
 	0xc0050509: "SetPIN",
@@ -276,6 +293,17 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 			return nil, err
 		}
 		resp, err := p.GetSlotList(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
+
+	case 0xc0050502: // GetSlotInfo
+		var req GetSlotInfoReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		resp, err := p.GetSlotInfo(&req)
 		if err != nil {
 			return nil, err
 		}

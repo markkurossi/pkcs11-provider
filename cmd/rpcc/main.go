@@ -325,7 +325,7 @@ func processFile(in *Input) error {
 					} else {
 						print(", ")
 					}
-					printf("%c", 'i'+i)
+					printf(0, "%c", 'i'+i)
 				}
 				print(";\n")
 			}
@@ -339,14 +339,14 @@ func processFile(in *Input) error {
 		if outputC && fCall {
 			switch len(session) {
 			case 0:
-				printf(`
-  /* Use global session. */
-  conn = global_conn;
+				printf(2, `
+/* Use global session. */
+conn = global_conn;
 `)
 
 			case 1:
-				printf(`
-  /* XXX lookup session by %s */
+				printf(2, `
+/* XXX lookup session by %s */
 `,
 					session[0].Name)
 
@@ -354,16 +354,16 @@ func processFile(in *Input) error {
 				return fmt.Errorf("multiple session variables")
 			}
 
-			printf(`
-  vp_buffer_init(&buf);
-  vp_buffer_add_uint32(&buf, 0x%08x);
-  vp_buffer_add_space(&buf, 4);
+			printf(2, `
+vp_buffer_init(&buf);
+vp_buffer_add_uint32(&buf, 0x%08x);
+vp_buffer_add_space(&buf, 4);
 `,
 				int(msgType))
 
 			for idx, input := range inputs {
 				if idx == 0 {
-					printf("\n")
+					printf(0, "\n")
 				}
 				err = input.Input(0)
 				if err != nil {
@@ -381,7 +381,7 @@ func processFile(in *Input) error {
 
 			for idx, output := range outputs {
 				if idx == 0 {
-					printf("\n")
+					printf(0, "\n")
 				}
 				err = output.Output(0)
 				if err != nil {
@@ -671,9 +671,12 @@ func info(format string, a ...interface{}) {
 	fmt.Printf(format, a...)
 }
 
-func debug(format string, a ...interface{}) {
+func debug(indent int, format string, a ...interface{}) {
 	if !printDebug {
 		return
+	}
+	for i := 0; i < indent; i++ {
+		fmt.Print(" ")
 	}
 	fmt.Printf(format, a...)
 }
@@ -688,9 +691,19 @@ func print(line string) {
 	}
 }
 
-func printf(format string, a ...interface{}) {
+func printf(indent int, format string, a ...interface{}) {
 	if !outputC {
 		return
 	}
-	fmt.Fprintf(output, format, a...)
+	for idx, line := range strings.Split(fmt.Sprintf(format, a...), "\n") {
+		if idx > 0 {
+			fmt.Fprintln(output)
+		}
+		if len(line) > 0 {
+			for i := 0; i < indent; i++ {
+				fmt.Fprint(output, " ")
+			}
+			fmt.Fprint(output, line)
+		}
+	}
 }

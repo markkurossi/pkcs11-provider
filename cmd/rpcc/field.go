@@ -299,12 +299,9 @@ func (f *Field) Depth() (int, error) {
 
 // Input generates the input marshalling code for the field.
 func (f *Field) Input(level int) error {
-	var indent = "  "
-	for i := 0; i < level; i++ {
-		indent += "    "
-	}
+	indent := 2 + level*4
 
-	debug("%s// %s\n", indent, f)
+	debug(indent, "// %s\n", f)
 
 	idxName := fmt.Sprintf("%c", 'i'+level)
 	idxElName := fmt.Sprintf("%cel", 'i'+level)
@@ -317,19 +314,19 @@ func (f *Field) Input(level int) error {
 	if len(f.SizeType) == 0 {
 		// Single instance.
 		if f.Type.IsBasic {
-			printf("%svp_buffer_add_%s(&buf, %s%s);\n",
-				indent, f.Type.Basic, ctx, f.Name)
+			printf(indent, "vp_buffer_add_%s(&buf, %s%s);\n",
+				f.Type.Basic, ctx, f.Name)
 		} else {
-			printf("%s// single not basic\n", indent)
+			printf(indent, "// single not basic\n")
 		}
 	} else {
 		// Array
 		if f.Optional {
-			printf(`
-  if (%s == NULL)
-    vp_buffer_add_uint32(&buf, 0);
-  else
-    vp_buffer_add_uint32(&buf, *%s);
+			printf(indent, `
+if (%s == NULL)
+  vp_buffer_add_uint32(&buf, 0);
+else
+  vp_buffer_add_uint32(&buf, *%s);
 `,
 				f.Name,
 				f.SizeName)
@@ -339,19 +336,19 @@ func (f *Field) Input(level int) error {
 			if len(size) == 0 {
 				size = f.SizeType
 			}
-			printf("%svp_buffer_add_%s_arr(&buf, %s%s, %s%s);\n",
-				indent, f.Type.Basic,
+			printf(indent, "vp_buffer_add_%s_arr(&buf, %s%s, %s%s);\n",
+				f.Type.Basic,
 				ctx, f.Name,
 				ctx, size)
 		} else {
 			// Array of compound type.
-			printf("%svp_buffer_add_uint32(&buf, %s%s);\n",
-				indent, ctx, f.SizeName)
-			printf("%sfor (%s = 0; %s < %s; %s++)\n", indent,
+			printf(indent, "vp_buffer_add_uint32(&buf, %s%s);\n",
+				ctx, f.SizeName)
+			printf(indent, "for (%s = 0; %s < %s; %s++)\n",
 				idxName, idxName, f.SizeName, idxName)
-			printf("%s  {\n", indent)
-			printf("%s    %s *%s = &%s%s[%s];\n\n",
-				indent, f.Type, idxElName, ctx, f.Name, idxName)
+			printf(indent, "  {\n")
+			printf(indent, "    %s *%s = &%s%s[%s];\n\n",
+				f.Type, idxElName, ctx, f.Name, idxName)
 
 			for _, c := range f.Type.Compound {
 				err := c.Input(level + 1)
@@ -360,7 +357,7 @@ func (f *Field) Input(level int) error {
 				}
 			}
 
-			printf("%s  }\n", indent)
+			printf(indent, "  }\n")
 		}
 	}
 	return nil
@@ -368,12 +365,9 @@ func (f *Field) Input(level int) error {
 
 // Output generates the output unmarshalling code for the field.
 func (f *Field) Output(level int) error {
-	var indent = "  "
-	for i := 0; i < level; i++ {
-		indent += "    "
-	}
+	indent := 2 + level*4
 
-	debug("%s// %s\n", indent, f)
+	debug(indent, "// %s\n", f)
 
 	idxName := fmt.Sprintf("%c", 'i'+level)
 	idxElName := fmt.Sprintf("%cel", 'i'+level)
@@ -386,35 +380,35 @@ func (f *Field) Output(level int) error {
 	if len(f.SizeType) == 0 {
 		// Single instance.
 		if f.Type.IsBasic {
-			printf("%s*%s%s = vp_buffer_get_%s(&buf);\n",
-				indent, ctx, f.Name, f.Type.Basic)
+			printf(indent, "*%s%s = vp_buffer_get_%s(&buf);\n",
+				ctx, f.Name, f.Type.Basic)
 		} else {
-			printf("%s// single not basic\n", indent)
+			printf(indent, "// single not basic\n")
 		}
 	} else {
 		// Array
 		if f.Optional {
-			printf(`
-  {
-    uint32_t count = vp_buffer_get_uint32(&buf);
-    uint32_t i;
+			printf(indent, `
+{
+  uint32_t count = vp_buffer_get_uint32(&buf);
+  uint32_t i;
 
-    if (%s == NULL)
-      {
-        *%s = count;
-      }
-    else if (count > *%s)
-      {
-        vp_buffer_uninit(&buf);
-        return CKR_BUFFER_TOO_SMALL;
-      }
-    else
-      {
-        *%s = count;
-        for (i = 0; i < count; i++)
-          %s[i] = vp_buffer_get_uint32(&buf);
-      }
-  }
+  if (%s == NULL)
+    {
+      *%s = count;
+    }
+  else if (count > *%s)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_BUFFER_TOO_SMALL;
+    }
+  else
+    {
+      *%s = count;
+      for (i = 0; i < count; i++)
+        %s[i] = vp_buffer_get_uint32(&buf);
+    }
+}
 `,
 				f.Name,
 				f.SizeName,
@@ -423,19 +417,19 @@ func (f *Field) Output(level int) error {
 				f.Name)
 		} else if f.Type.IsBasic {
 			// Array of basic types.
-			printf("%svp_buffer_get_%s_arr(&buf, %s%s, &%s%s);\n",
-				indent, f.Type.Basic,
+			printf(indent, "vp_buffer_get_%s_arr(&buf, %s%s, &%s%s);\n",
+				f.Type.Basic,
 				ctx, f.Name,
 				ctx, f.SizeName)
 		} else {
 			// Array of compound type.
-			printf("%s*%s%s = vp_buffer_get_uint32(&buf);\n",
-				indent, ctx, f.SizeName)
-			printf("%sfor (%s = 0; %s < %s; %s++)\n", indent,
+			printf(indent, "*%s%s = vp_buffer_get_uint32(&buf);\n",
+				ctx, f.SizeName)
+			printf(indent, "for (%s = 0; %s < %s; %s++)\n",
 				idxName, idxName, f.SizeName, idxName)
-			printf("%s  {\n", indent)
-			printf("%s    %s *%s = &%s%s[%s];\n\n",
-				indent, f.Type, idxElName, ctx, f.Name, idxName)
+			printf(indent, "  {\n")
+			printf(indent, "    %s *%s = &%s%s[%s];\n\n",
+				f.Type, idxElName, ctx, f.Name, idxName)
 
 			for _, c := range f.Type.Compound {
 				err := c.Input(level + 1)
@@ -444,7 +438,7 @@ func (f *Field) Output(level int) error {
 				}
 			}
 
-			printf("%s  }\n", indent)
+			printf(indent, "  }\n")
 		}
 	}
 	return nil
