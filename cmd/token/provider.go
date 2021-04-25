@@ -28,3 +28,16 @@ func (p *Provider) GetSlotList(req *ipc.GetSlotListReq) (*ipc.GetSlotListResp, e
 		SlotList: []ipc.CKSlotID{0},
 	}, nil
 }
+
+// GetSlotInfo implements the Provider.GetSlotInfo().
+func (p *Provider) GetSlotInfo(req *ipc.GetSlotInfoReq) (*ipc.GetSlotInfoResp, error) {
+	if req.SlotID != 0 {
+		return nil, ipc.ErrSlotIDInvalid
+	}
+
+	result := &ipc.GetSlotInfoResp{
+		Info: ipc.CKSlotInfo{},
+	}
+	copy(result.Info.SlotDescription[:], []ipc.CKUTF8Char("Go crypto library"))
+	return result, nil
+}

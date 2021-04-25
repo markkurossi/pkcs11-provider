@@ -88,6 +88,19 @@ func marshalValue(out io.Writer, value reflect.Value) error {
 		}
 		return nil
 
+	case reflect.Array:
+		binary.BigEndian.PutUint32(buf[:4], uint32(value.Len()))
+		_, err := out.Write(buf[:4])
+		if err != nil {
+			return err
+		}
+		for i := 0; i < value.Len(); i++ {
+			if err := marshalValue(out, value.Index(i)); err != nil {
+				return err
+			}
+		}
+		return nil
+
 	case reflect.String:
 		data := []byte(value.String())
 		binary.BigEndian.PutUint32(buf[:4], uint32(len(data)))
@@ -110,7 +123,7 @@ func marshalValue(out io.Writer, value reflect.Value) error {
 		}
 
 	default:
-		return fmt.Errorf("Unsupported type: %s", value.Type().Kind().String())
+		return fmt.Errorf("marshal: unsupported type: %s", value.Type().Kind())
 	}
 
 	return nil
@@ -193,6 +206,22 @@ func unmarshalValue(in io.Reader, value reflect.Value) (err error) {
 			value.Set(slice)
 		}
 
+	case reflect.Array:
+		_, err := io.ReadFull(in, buf[:4])
+		if err != nil {
+			return err
+		}
+		count := binary.BigEndian.Uint32(buf[:4])
+		array := reflect.New(value.Type())
+		for i := 0; uint32(i) < count; i++ {
+			el := reflect.New(value.Type().Elem())
+			if err := unmarshalValue(in, el); err != nil {
+				return err
+			}
+			array.Index(i).Set(reflect.Indirect(el))
+		}
+		value.Set(array)
+
 	case reflect.String:
 		_, err := io.ReadFull(in, buf[:4])
 		if err != nil {
@@ -223,7 +252,8 @@ func unmarshalValue(in io.Reader, value reflect.Value) (err error) {
 		}
 
 	default:
-		return fmt.Errorf("Unsupported type: %s", value.Type().Kind().String())
+		return fmt.Errorf("ummarshal: unsupported type: %s",
+			value.Type().Kind())
 	}
 
 	return
