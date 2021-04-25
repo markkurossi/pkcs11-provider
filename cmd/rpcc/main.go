@@ -622,7 +622,7 @@ func goCallTypes(fields []Field, functionName string, req bool) {
 
 	var max int
 	for _, field := range fields {
-		parts := strings.Split(field.GoType(), " ")
+		parts := strings.Split(field.GoType(req), " ")
 		if len(parts[0]) > max {
 			max = len(parts[0])
 		}
@@ -647,7 +647,7 @@ type %s%s struct {
 `,
 		goFunc, suffix, comment, functionName, goFunc, suffix)
 	for _, field := range fields {
-		parts := strings.Split(field.GoType(), " ")
+		parts := strings.Split(field.GoType(req), " ")
 		fmt.Printf("\t%s", parts[0])
 
 		for i := len(parts[0]); i < max; i++ {

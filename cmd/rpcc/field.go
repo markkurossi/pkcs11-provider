@@ -70,14 +70,14 @@ func (t TypeInfo) GoType() string {
 
 	var max int
 	for _, c := range t.Compound {
-		parts := strings.Split(c.GoType(), " ")
+		parts := strings.Split(c.GoType(false), " ")
 		if len(parts[0]) > max {
 			max = len(parts[0])
 		}
 	}
 
 	for _, c := range t.Compound {
-		parts := strings.Split(c.GoType(), " ")
+		parts := strings.Split(c.GoType(false), " ")
 		result += fmt.Sprintf("\t%s", parts[0])
 
 		for i := len(parts[0]); i < max; i++ {
@@ -258,8 +258,13 @@ func (f Field) String() string {
 }
 
 // GoType returns the Go type name for the field.
-func (f Field) GoType() string {
+func (f Field) GoType(req bool) string {
 	if len(f.SizeType) > 0 {
+		// Array.
+		if f.Optional && req {
+			return fmt.Sprintf("%sSize uint32", GoFieldName(f.Name))
+		}
+
 		var sizeType string
 		_, err := strconv.Atoi(f.SizeType)
 		if err == nil {

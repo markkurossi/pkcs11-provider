@@ -125,7 +125,7 @@ type GetInfoResp struct {
 // GetSlotListReq defines the arguments of C_GetSlotList.
 type GetSlotListReq struct {
 	TokenPresent CKBbool
-	SlotList     []CKSlotID
+	SlotListSize uint32
 }
 
 // GetSlotListResp defines the result of C_GetSlotList.
