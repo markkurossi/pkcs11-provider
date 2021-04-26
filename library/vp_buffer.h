@@ -13,7 +13,7 @@ struct VPBufferStruct
   size_t allocated;
   size_t offset;
   size_t used;
-  bool error;
+  CK_RV error;
 };
 
 typedef struct VPBufferStruct VPBuffer;
@@ -24,7 +24,7 @@ void vp_buffer_uninit(VPBuffer *buf);
 
 void vp_buffer_reset(VPBuffer *buf);
 
-bool vp_buffer_error(VPBuffer *buf);
+bool vp_buffer_error(VPBuffer *buf, CK_RV *error);
 
 unsigned char *vp_buffer_ptr(VPBuffer *buf);
 
@@ -40,6 +40,10 @@ bool vp_buffer_add_uint32(VPBuffer *buf, uint32_t v);
 
 bool vp_buffer_add_byte_arr(VPBuffer *buf, const void *data, size_t len);
 
+unsigned char vp_buffer_get_byte(VPBuffer *buf);
+
 uint32_t vp_buffer_get_uint32(VPBuffer *buf);
+
+bool vp_buffer_get_byte_arr(VPBuffer *buf, void *data, size_t data_len);
 
 #endif /* not VP_BUFFER_H */

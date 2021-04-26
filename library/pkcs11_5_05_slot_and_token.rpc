@@ -25,7 +25,6 @@ C_GetSlotList
    * InOutputs:
    *   [CK_ULONG_PTR pulCount]CK_SLOT_ID pSlotList?
    */
-  VP_FUNCTION_NOT_SUPPORTED;
 }
 
 /* C_GetSlotInfo obtains information about a particular slot in
@@ -40,11 +39,10 @@ C_GetSlotInfo
 {
   /**
    * Inputs:
-   *     CK_SLOT_ID slotID
+   *   CK_SLOT_ID   slotID
    * Outputs:
    *   CK_SLOT_INFO pInfo
    */
-  VP_FUNCTION_NOT_SUPPORTED;
 }
 
 /* C_GetTokenInfo obtains information about a particular token
@@ -57,7 +55,12 @@ C_GetTokenInfo
   CK_TOKEN_INFO_PTR pInfo    /* receives the token information */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Inputs:
+   *   CK_SLOT_ID    slotID
+   * Outputs:
+   *   CK_TOKEN_INFO pInfo
+   */
 }
 
 /* C_WaitForSlotEvent waits for a slot event (token insertion,

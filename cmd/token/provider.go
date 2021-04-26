@@ -36,8 +36,15 @@ func (p *Provider) GetSlotInfo(req *ipc.GetSlotInfoReq) (*ipc.GetSlotInfoResp, e
 	}
 
 	result := &ipc.GetSlotInfoResp{
-		Info: ipc.CKSlotInfo{},
+		Info: ipc.CKSlotInfo{
+			Flags: ipc.CkfTokenPresent,
+			FirmwareVersion: ipc.CKVersion{
+				Major: 0,
+				Minor: 1,
+			},
+		},
 	}
 	copy(result.Info.SlotDescription[:], []ipc.CKUTF8Char("Go crypto library"))
+	copy(result.Info.ManufacturerID[:], []ipc.CKUTF8Char("mtr@iki.fi"))
 	return result, nil
 }

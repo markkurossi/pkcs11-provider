@@ -383,17 +383,17 @@ vp_buffer_add_space(&buf, 4);
 				if idx == 0 {
 					printf(0, "\n")
 				}
-				err = output.Output(0)
+				err = output.Output(0, 2)
 				if err != nil {
 					return err
 				}
 			}
 			if len(outputs) > 0 {
 				print(`
-  if (vp_buffer_error(&buf))
+  if (vp_buffer_error(&buf, &ret))
     {
       vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
+      return ret;
     }
 `)
 			}

@@ -69,16 +69,15 @@ C_GetSlotList
       }
   }
 
-  if (vp_buffer_error(&buf))
+  if (vp_buffer_error(&buf, &ret))
     {
       vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
+      return ret;
     }
 
   vp_buffer_uninit(&buf);
 
   return ret;
-  VP_FUNCTION_NOT_SUPPORTED;
 }
 
 /* C_GetSlotInfo obtains information about a particular slot in
@@ -113,18 +112,35 @@ C_GetSlotInfo
       return ret;
     }
 
-  // single not basic
+  {
+    CK_SLOT_INFO *iel = pInfo;
 
-  if (vp_buffer_error(&buf))
+    vp_buffer_get_byte_arr(&buf, iel->slotDescription, 64);
+    vp_buffer_get_byte_arr(&buf, iel->manufacturerID, 32);
+    iel->flags = vp_buffer_get_uint32(&buf);
+    {
+      CK_VERSION *jel = &iel->hardwareVersion;
+
+      jel->major = vp_buffer_get_byte(&buf);
+      jel->minor = vp_buffer_get_byte(&buf);
+    }
+    {
+      CK_VERSION *jel = &iel->firmwareVersion;
+
+      jel->major = vp_buffer_get_byte(&buf);
+      jel->minor = vp_buffer_get_byte(&buf);
+    }
+  }
+
+  if (vp_buffer_error(&buf, &ret))
     {
       vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
+      return ret;
     }
 
   vp_buffer_uninit(&buf);
 
   return ret;
-  VP_FUNCTION_NOT_SUPPORTED;
 }
 
 /* C_GetTokenInfo obtains information about a particular token
@@ -137,7 +153,70 @@ C_GetTokenInfo
   CK_TOKEN_INFO_PTR pInfo    /* receives the token information */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  CK_RV ret;
+  VPBuffer buf;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
+
+  /* Use global session. */
+  conn = global_conn;
+
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0050503);
+  vp_buffer_add_space(&buf, 4);
+
+  vp_buffer_add_uint32(&buf, slotID);
+
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  {
+    CK_TOKEN_INFO *iel = pInfo;
+
+    vp_buffer_get_byte_arr(&buf, iel->label, 32);
+    vp_buffer_get_byte_arr(&buf, iel->manufacturerID, 32);
+    vp_buffer_get_byte_arr(&buf, iel->model, 16);
+    vp_buffer_get_byte_arr(&buf, iel->serialNumber, 16);
+    iel->flags = vp_buffer_get_uint32(&buf);
+    iel->ulMaxSessionCount = vp_buffer_get_uint32(&buf);
+    iel->ulSessionCount = vp_buffer_get_uint32(&buf);
+    iel->ulMaxRwSessionCount = vp_buffer_get_uint32(&buf);
+    iel->ulRwSessionCount = vp_buffer_get_uint32(&buf);
+    iel->ulMaxPinLen = vp_buffer_get_uint32(&buf);
+    iel->ulMinPinLen = vp_buffer_get_uint32(&buf);
+    iel->ulTotalPublicMemory = vp_buffer_get_uint32(&buf);
+    iel->ulFreePublicMemory = vp_buffer_get_uint32(&buf);
+    iel->ulTotalPrivateMemory = vp_buffer_get_uint32(&buf);
+    iel->ulFreePrivateMemory = vp_buffer_get_uint32(&buf);
+    {
+      CK_VERSION *jel = &iel->hardwareVersion;
+
+      jel->major = vp_buffer_get_byte(&buf);
+      jel->minor = vp_buffer_get_byte(&buf);
+    }
+    {
+      CK_VERSION *jel = &iel->firmwareVersion;
+
+      jel->major = vp_buffer_get_byte(&buf);
+      jel->minor = vp_buffer_get_byte(&buf);
+    }
+    vp_buffer_get_byte_arr(&buf, iel->utcTime, 16);
+  }
+
+  if (vp_buffer_error(&buf, &ret))
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  vp_buffer_uninit(&buf);
+
+  return ret;
 }
 
 /* C_WaitForSlotEvent waits for a slot event (token insertion,

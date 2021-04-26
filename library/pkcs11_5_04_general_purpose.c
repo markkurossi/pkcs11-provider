@@ -151,10 +151,10 @@ C_Initialize
 
   *pulNumSlots = vp_buffer_get_uint32(&buf);
 
-  if (vp_buffer_error(&buf))
+  if (vp_buffer_error(&buf, &ret))
     {
       vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
+      return ret;
     }
 
   vp_log(LOG_DEBUG, "#slots: %lu", (unsigned long) num_slots);
@@ -189,37 +189,11 @@ C_GetInfo
   CK_INFO_PTR   pInfo  /* location that receives information */
 )
 {
-  CK_RV ret;
-  VPBuffer buf;
-  VPIPCConn *conn = NULL;
-
-  VP_FUNCTION_ENTER;
-
-  /* Use global session. */
-  conn = global_conn;
-
-  vp_buffer_init(&buf);
-  vp_buffer_add_uint32(&buf, 0xc0050403);
-  vp_buffer_add_space(&buf, 4);
-
-  ret = vp_ipc_tx(conn, &buf);
-  if (ret != CKR_OK)
-    {
-      vp_buffer_uninit(&buf);
-      return ret;
-    }
-
-  // single not basic
-
-  if (vp_buffer_error(&buf))
-    {
-      vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
-    }
-
-  vp_buffer_uninit(&buf);
-
-  return ret;
+  /*
+   * Outputs:
+   *   CK_INFO pInfo
+   */
+  VP_FUNCTION_NOT_SUPPORTED;
 }
 
 /* C_GetFunctionList returns the function list. */

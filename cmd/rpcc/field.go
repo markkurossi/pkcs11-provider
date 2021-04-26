@@ -37,20 +37,7 @@ type TypeInfo struct {
 }
 
 func (t TypeInfo) String() string {
-	if t.IsBasic {
-		var ptr string
-		if t.IsPointer {
-			ptr = "*"
-		}
-		return fmt.Sprintf("type %s %s%s", t.Name, ptr, t.Basic)
-	}
-	result := fmt.Sprintf("type %s struct {\n", t.Name)
-	for _, c := range t.Compound {
-		result += fmt.Sprintf("  %s\n", c)
-	}
-	result += "}"
-
-	return result
+	return t.Name
 }
 
 // GoTypeName returns the Go type name for the type.
@@ -200,24 +187,12 @@ func readTypes(file string) error {
 				}
 				m = reStructField.FindStringSubmatch(line)
 				if m != nil {
-					elType := strings.TrimSpace(m[1])
-					elName := strings.TrimSpace(m[2])
-
-					m = reType.FindStringSubmatch(elType)
-					if m == nil {
-						return fmt.Errorf("invalid type: '%s'", elType)
+					field, err := parseField(strings.TrimSpace(m[1]),
+						strings.TrimSpace(m[2]))
+					if err != nil {
+						return err
 					}
-					typeInfo, ok := types[m[5]]
-					if !ok {
-						return fmt.Errorf("unknown type: '%s'", m[5])
-					}
-
-					fields = append(fields, Field{
-						SizeType: m[2],
-						SizeName: m[4],
-						Type:     typeInfo,
-						Name:     elName,
-					})
+					fields = append(fields, field)
 					continue
 				}
 				return fmt.Errorf("unexpected line: %s", line)
@@ -241,6 +216,7 @@ type Field struct {
 	Name     string
 	Type     TypeInfo
 	Optional bool
+	Fixed    bool
 	SizeType string
 	SizeName string
 }
@@ -364,26 +340,43 @@ else
 }
 
 // Output generates the output unmarshalling code for the field.
-func (f *Field) Output(level int) error {
-	indent := 2 + level*4
-
+func (f *Field) Output(level, indent int) error {
 	debug(indent, "// %s\n", f)
 
 	idxName := fmt.Sprintf("%c", 'i'+level)
 	idxElName := fmt.Sprintf("%cel", 'i'+level)
 
-	var ctx string
+	var lvCtx string
+	var rvCtx string
+	var rvAddr string
 	if level > 0 {
-		ctx = fmt.Sprintf("%cel->", 'i'+level-1)
+		lvCtx = fmt.Sprintf("%cel->", 'i'+level-1)
+		rvCtx = fmt.Sprintf("%cel->", 'i'+level-1)
+		rvAddr = "&"
+	} else {
+		lvCtx = "*"
+		rvCtx = ""
+		rvAddr = ""
 	}
 
 	if len(f.SizeType) == 0 {
 		// Single instance.
 		if f.Type.IsBasic {
-			printf(indent, "*%s%s = vp_buffer_get_%s(&buf);\n",
-				ctx, f.Name, f.Type.Basic)
+			printf(indent, "%s%s = vp_buffer_get_%s(&buf);\n",
+				lvCtx, f.Name, f.Type.Basic)
 		} else {
-			printf(indent, "// single not basic\n")
+			printf(indent, "{\n")
+			printf(indent, "  %s *%s = %s%s%s;\n\n",
+				f.Type, idxElName, rvAddr, rvCtx, f.Name)
+
+			for _, c := range f.Type.Compound {
+				err := c.Output(level+1, indent+2)
+				if err != nil {
+					return err
+				}
+			}
+
+			printf(indent, "}\n")
 		}
 	} else {
 		// Array
@@ -417,19 +410,26 @@ func (f *Field) Output(level int) error {
 				f.Name)
 		} else if f.Type.IsBasic {
 			// Array of basic types.
-			printf(indent, "vp_buffer_get_%s_arr(&buf, %s%s, &%s%s);\n",
-				f.Type.Basic,
-				ctx, f.Name,
-				ctx, f.SizeName)
+			if f.Fixed {
+				printf(indent, "vp_buffer_get_%s_arr(&buf, %s%s, %s);\n",
+					f.Type.Basic,
+					rvCtx, f.Name,
+					f.SizeType)
+			} else {
+				printf(indent, "vp_buffer_get_%s_arr(&buf, %s%s, &%s%s);\n",
+					f.Type.Basic,
+					rvCtx, f.Name,
+					rvCtx, f.SizeName)
+			}
 		} else {
 			// Array of compound type.
-			printf(indent, "*%s%s = vp_buffer_get_uint32(&buf);\n",
-				ctx, f.SizeName)
+			printf(indent, "%s%s = vp_buffer_get_uint32(&buf);\n",
+				lvCtx, f.SizeName)
 			printf(indent, "for (%s = 0; %s < %s; %s++)\n",
 				idxName, idxName, f.SizeName, idxName)
 			printf(indent, "  {\n")
-			printf(indent, "    %s *%s = &%s%s[%s];\n\n",
-				f.Type, idxElName, ctx, f.Name, idxName)
+			printf(indent, "    %s %s%s = &%s%s[%s];\n\n",
+				f.Type, lvCtx, idxElName, rvCtx, f.Name, idxName)
 
 			for _, c := range f.Type.Compound {
 				err := c.Input(level + 1)
@@ -460,11 +460,17 @@ func parseField(t, v string) (f Field, err error) {
 		v = v[:len(v)-1]
 	}
 
+	var fixed bool
+	if len(m[4]) == 0 {
+		fixed = true
+	}
+
 	return Field{
 		SizeType: m[2],
 		SizeName: m[4],
 		Type:     typeInfo,
 		Name:     v,
 		Optional: optional,
+		Fixed:    fixed,
 	}, nil
 }

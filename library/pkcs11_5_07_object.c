@@ -123,10 +123,10 @@ C_GetObjectSize
 
   *pulSize = vp_buffer_get_uint32(&buf);
 
-  if (vp_buffer_error(&buf))
+  if (vp_buffer_error(&buf, &ret))
     {
       vp_buffer_uninit(&buf);
-      return CKR_DEVICE_ERROR;
+      return ret;
     }
 
   vp_buffer_uninit(&buf);

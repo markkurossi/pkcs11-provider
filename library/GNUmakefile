@@ -16,9 +16,9 @@ clean:
 maintainer-clean:
 	$(RM) $(RPC_SRCS)
 
-%.c : %.rpc
+%.c : %.rpc ../cmd/rpcc/$(wildcard *.go)
 	@if test -x "$(RPCC)"; then \
-	  $(RPCC) -t pkcs11_types.rpct -c -o $@ $+; \
+	  $(RPCC) -t pkcs11_types.rpct -c -o $@ $<; \
 	else \
 	  touch $@; \
 	fi

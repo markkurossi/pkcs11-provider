@@ -117,11 +117,6 @@ type InitializeResp struct {
 	NumSlots CKUlong
 }
 
-// GetInfoResp defines the result of C_GetInfo.
-type GetInfoResp struct {
-	Info CKInfo
-}
-
 // GetSlotListReq defines the arguments of C_GetSlotList.
 type GetSlotListReq struct {
 	TokenPresent CKBbool
@@ -141,6 +136,16 @@ type GetSlotInfoReq struct {
 // GetSlotInfoResp defines the result of C_GetSlotInfo.
 type GetSlotInfoResp struct {
 	Info CKSlotInfo
+}
+
+// GetTokenInfoReq defines the arguments of C_GetTokenInfo.
+type GetTokenInfoReq struct {
+	SlotID CKSlotID
+}
+
+// GetTokenInfoResp defines the result of C_GetTokenInfo.
+type GetTokenInfoResp struct {
+	Info CKTokenInfo
 }
 
 // InitTokenReq defines the arguments of C_InitToken.
@@ -179,9 +184,9 @@ type GetObjectSizeResp struct {
 // Provider defines the PKCS #11 provider interface.
 type Provider interface {
 	Initialize() (*InitializeResp, error)
-	GetInfo() (*GetInfoResp, error)
 	GetSlotList(req *GetSlotListReq) (*GetSlotListResp, error)
 	GetSlotInfo(req *GetSlotInfoReq) (*GetSlotInfoResp, error)
+	GetTokenInfo(req *GetTokenInfoReq) (*GetTokenInfoResp, error)
 	InitToken(req *InitTokenReq) error
 	InitPIN(req *InitPINReq) error
 	SetPIN(req *SetPINReq) error
@@ -198,11 +203,6 @@ func (b *Base) Initialize() (*InitializeResp, error) {
 	return nil, ErrFunctionNotSupported
 }
 
-// GetInfo implements the Provider.GetInfo().
-func (b *Base) GetInfo() (*GetInfoResp, error) {
-	return nil, ErrFunctionNotSupported
-}
-
 // GetSlotList implements the Provider.GetSlotList().
 func (b *Base) GetSlotList(req *GetSlotListReq) (*GetSlotListResp, error) {
 	return nil, ErrFunctionNotSupported
@@ -210,6 +210,11 @@ func (b *Base) GetSlotList(req *GetSlotListReq) (*GetSlotListResp, error) {
 
 // GetSlotInfo implements the Provider.GetSlotInfo().
 func (b *Base) GetSlotInfo(req *GetSlotInfoReq) (*GetSlotInfoResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
+// GetTokenInfo implements the Provider.GetTokenInfo().
+func (b *Base) GetTokenInfo(req *GetTokenInfoReq) (*GetTokenInfoResp, error) {
 	return nil, ErrFunctionNotSupported
 }
 
@@ -245,9 +250,9 @@ func (b *Base) FindObjectsFinal() error {
 
 var msgTypeNames = map[Type]string{
 	0xc0050401: "Initialize",
-	0xc0050403: "GetInfo",
 	0xc0050501: "GetSlotList",
 	0xc0050502: "GetSlotInfo",
+	0xc0050503: "GetTokenInfo",
 	0xc0050507: "InitToken",
 	0xc0050508: "InitPIN",
 	0xc0050509: "SetPIN",
@@ -280,13 +285,6 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 		}
 		return Marshal(resp)
 
-	case 0xc0050403: // GetInfo
-		resp, err := p.GetInfo()
-		if err != nil {
-			return nil, err
-		}
-		return Marshal(resp)
-
 	case 0xc0050501: // GetSlotList
 		var req GetSlotListReq
 		if err := Unmarshal(data, &req); err != nil {
@@ -304,6 +302,17 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 			return nil, err
 		}
 		resp, err := p.GetSlotInfo(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
+
+	case 0xc0050503: // GetTokenInfo
+		var req GetTokenInfoReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		resp, err := p.GetTokenInfo(&req)
 		if err != nil {
 			return nil, err
 		}
