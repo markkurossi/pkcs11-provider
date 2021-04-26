@@ -88,7 +88,12 @@ C_GetMechanismList
   CK_ULONG_PTR          pulCount         /* gets # of mechs. */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Inputs:
+   *                          CK_SLOT_ID        slotID
+   * InOutputs:
+   *   [CK_ULONG_PTR pulCount]CK_MECHANISM_TYPE pMechanismList?
+   */
 }
 
 /* C_GetMechanismInfo obtains information about a particular

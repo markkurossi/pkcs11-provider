@@ -148,6 +148,17 @@ type GetTokenInfoResp struct {
 	Info CKTokenInfo
 }
 
+// GetMechanismListReq defines the arguments of C_GetMechanismList.
+type GetMechanismListReq struct {
+	SlotID            CKSlotID
+	MechanismListSize uint32
+}
+
+// GetMechanismListResp defines the result of C_GetMechanismList.
+type GetMechanismListResp struct {
+	MechanismList []CKMechanismType
+}
+
 // InitTokenReq defines the arguments of C_InitToken.
 type InitTokenReq struct {
 	SlotID CKSlotID
@@ -187,6 +198,7 @@ type Provider interface {
 	GetSlotList(req *GetSlotListReq) (*GetSlotListResp, error)
 	GetSlotInfo(req *GetSlotInfoReq) (*GetSlotInfoResp, error)
 	GetTokenInfo(req *GetTokenInfoReq) (*GetTokenInfoResp, error)
+	GetMechanismList(req *GetMechanismListReq) (*GetMechanismListResp, error)
 	InitToken(req *InitTokenReq) error
 	InitPIN(req *InitPINReq) error
 	SetPIN(req *SetPINReq) error
@@ -215,6 +227,11 @@ func (b *Base) GetSlotInfo(req *GetSlotInfoReq) (*GetSlotInfoResp, error) {
 
 // GetTokenInfo implements the Provider.GetTokenInfo().
 func (b *Base) GetTokenInfo(req *GetTokenInfoReq) (*GetTokenInfoResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
+// GetMechanismList implements the Provider.GetMechanismList().
+func (b *Base) GetMechanismList(req *GetMechanismListReq) (*GetMechanismListResp, error) {
 	return nil, ErrFunctionNotSupported
 }
 
@@ -253,6 +270,7 @@ var msgTypeNames = map[Type]string{
 	0xc0050501: "GetSlotList",
 	0xc0050502: "GetSlotInfo",
 	0xc0050503: "GetTokenInfo",
+	0xc0050505: "GetMechanismList",
 	0xc0050507: "InitToken",
 	0xc0050508: "InitPIN",
 	0xc0050509: "SetPIN",
@@ -313,6 +331,17 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 			return nil, err
 		}
 		resp, err := p.GetTokenInfo(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
+
+	case 0xc0050505: // GetMechanismList
+		var req GetMechanismListReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		resp, err := p.GetMechanismList(&req)
 		if err != nil {
 			return nil, err
 		}
