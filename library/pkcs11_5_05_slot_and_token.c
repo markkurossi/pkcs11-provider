@@ -315,7 +315,46 @@ C_GetMechanismInfo
   CK_MECHANISM_INFO_PTR pInfo    /* receives mechanism info */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  CK_RV ret;
+  VPBuffer buf;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
+
+  /* Use global session. */
+  conn = global_conn;
+
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0050506);
+  vp_buffer_add_space(&buf, 4);
+
+  vp_buffer_add_uint32(&buf, slotID);
+  vp_buffer_add_uint32(&buf, type);
+
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  {
+    CK_MECHANISM_INFO *iel = pInfo;
+
+    iel->ulMinKeySize = vp_buffer_get_uint32(&buf);
+    iel->ulMaxKeySize = vp_buffer_get_uint32(&buf);
+    iel->flags = vp_buffer_get_uint32(&buf);
+  }
+
+  if (vp_buffer_error(&buf, &ret))
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  vp_buffer_uninit(&buf);
+
+  return ret;
 }
 
 /* C_InitToken initializes a token. */

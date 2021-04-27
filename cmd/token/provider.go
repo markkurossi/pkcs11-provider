@@ -24,6 +24,14 @@ var (
 	}
 )
 
+var mechanisms = map[ipc.CKMechanismType]ipc.CKMechanismInfo{
+	ipc.CkmRSAPKCSKeyPairGen: {
+		MinKeySize: 2048,
+		MaxKeySize: 8192,
+		Flags:      ipc.CkfGenerateKeyPair,
+	},
+}
+
 func goVersion() ipc.CKVersion {
 	v := runtime.Version()
 	log.Printf("runtime.Version: %s", v)
@@ -92,4 +100,31 @@ func (p *Provider) GetTokenInfo(req *ipc.GetTokenInfoReq) (*ipc.GetTokenInfoResp
 	copy(result.Info.ManufacturerID[:], []ipc.CKUTF8Char("www.golang.org"))
 	copy(result.Info.Model[:], []ipc.CKUTF8Char("Software"))
 	return result, nil
+}
+
+// GetMechanismList implements the Provider.GetMechanismList().
+func (p *Provider) GetMechanismList(req *ipc.GetMechanismListReq) (*ipc.GetMechanismListResp, error) {
+	var result []ipc.CKMechanismType
+
+	for k := range mechanisms {
+		result = append(result, k)
+	}
+
+	return &ipc.GetMechanismListResp{
+		MechanismList: result,
+	}, nil
+}
+
+// GetMechanismInfo implements the Provider.GetMechanismInfo().
+func (p *Provider) GetMechanismInfo(req *ipc.GetMechanismInfoReq) (*ipc.GetMechanismInfoResp, error) {
+	if req.SlotID != 0 {
+		return nil, ipc.ErrSlotIDInvalid
+	}
+	info, ok := mechanisms[req.Type]
+	if !ok {
+		return nil, ipc.ErrMechanismInvalid
+	}
+	return &ipc.GetMechanismInfoResp{
+		Info: info,
+	}, nil
 }

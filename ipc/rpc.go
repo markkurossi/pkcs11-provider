@@ -159,6 +159,17 @@ type GetMechanismListResp struct {
 	MechanismList []CKMechanismType
 }
 
+// GetMechanismInfoReq defines the arguments of C_GetMechanismInfo.
+type GetMechanismInfoReq struct {
+	SlotID CKSlotID
+	Type   CKMechanismType
+}
+
+// GetMechanismInfoResp defines the result of C_GetMechanismInfo.
+type GetMechanismInfoResp struct {
+	Info CKMechanismInfo
+}
+
 // InitTokenReq defines the arguments of C_InitToken.
 type InitTokenReq struct {
 	SlotID CKSlotID
@@ -199,6 +210,7 @@ type Provider interface {
 	GetSlotInfo(req *GetSlotInfoReq) (*GetSlotInfoResp, error)
 	GetTokenInfo(req *GetTokenInfoReq) (*GetTokenInfoResp, error)
 	GetMechanismList(req *GetMechanismListReq) (*GetMechanismListResp, error)
+	GetMechanismInfo(req *GetMechanismInfoReq) (*GetMechanismInfoResp, error)
 	InitToken(req *InitTokenReq) error
 	InitPIN(req *InitPINReq) error
 	SetPIN(req *SetPINReq) error
@@ -232,6 +244,11 @@ func (b *Base) GetTokenInfo(req *GetTokenInfoReq) (*GetTokenInfoResp, error) {
 
 // GetMechanismList implements the Provider.GetMechanismList().
 func (b *Base) GetMechanismList(req *GetMechanismListReq) (*GetMechanismListResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
+// GetMechanismInfo implements the Provider.GetMechanismInfo().
+func (b *Base) GetMechanismInfo(req *GetMechanismInfoReq) (*GetMechanismInfoResp, error) {
 	return nil, ErrFunctionNotSupported
 }
 
@@ -271,6 +288,7 @@ var msgTypeNames = map[Type]string{
 	0xc0050502: "GetSlotInfo",
 	0xc0050503: "GetTokenInfo",
 	0xc0050505: "GetMechanismList",
+	0xc0050506: "GetMechanismInfo",
 	0xc0050507: "InitToken",
 	0xc0050508: "InitPIN",
 	0xc0050509: "SetPIN",
@@ -342,6 +360,17 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 			return nil, err
 		}
 		resp, err := p.GetMechanismList(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
+
+	case 0xc0050506: // GetMechanismInfo
+		var req GetMechanismInfoReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		resp, err := p.GetMechanismInfo(&req)
 		if err != nil {
 			return nil, err
 		}
