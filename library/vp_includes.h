@@ -37,6 +37,10 @@ typedef unsigned long int CK_HANDLE;
 #include "vp_getput.h"
 #include "vp_ipc.h"
 
+/****************** Implementation specific RPC functions *******************/
+
+CK_RV C_ImplOpenSession(CK_SESSION_HANDLE hSession);
+
 
 /*************************** Global library state ***************************/
 

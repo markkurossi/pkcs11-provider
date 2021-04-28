@@ -1,0 +1,25 @@
+/* -*- c -*-
+ *
+ * Copyright (C) 2021 Markku Rossi.
+ *
+ * All rights reserved.
+ */
+
+#include "vp_includes.h"
+
+/** Version: 3.0 */
+/** Section: 0.1 Implementation specific functions */
+
+CK_RV
+C_ImplOpenSession
+(
+  CK_SESSION_HANDLE hSession
+)
+{
+  /**
+   * Session:
+   *  CK_SESSION_HANDLE hSession
+   * Inputs:
+   *  CK_SESSION_HANDLE hSession
+   */
+}

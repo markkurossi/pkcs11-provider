@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Markku Rossi.
+ * Copyright (C) 2020-2021 Markku Rossi.
  *
  * All rights reserved.
  */
@@ -11,6 +11,9 @@ vp_log(int priority, char *msg, ...)
 {
   va_list ap;
   char buf[1024];
+
+  if (priority >= LOG_INFO)
+    return;
 
   va_start(ap, msg);
   vsnprintf(buf, sizeof(buf), msg, ap);

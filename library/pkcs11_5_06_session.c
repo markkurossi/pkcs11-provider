@@ -24,7 +24,53 @@ C_OpenSession
   CK_SESSION_HANDLE_PTR phSession      /* gets session handle */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  CK_RV ret;
+  VPBuffer buf;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
+
+  /* Use global session. */
+  conn = global_conn;
+
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0050601);
+  vp_buffer_add_space(&buf, 4);
+
+  vp_buffer_add_uint32(&buf, slotID);
+  vp_buffer_add_uint32(&buf, flags);
+
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  *phSession = vp_buffer_get_uint32(&buf);
+
+  if (vp_buffer_error(&buf, &ret))
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  /* XXX open session IPC */
+  /* XXX store it to local session storage */
+
+  ret = C_ImplOpenSession(*phSession);
+  if (ret != CKR_OK)
+    {
+      /* XXX remove session from storage */
+      /* XXX uninit session object */
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+
+  vp_buffer_uninit(&buf);
+
+  return ret;
 }
 
 /* C_CloseSession closes a session between an application and a

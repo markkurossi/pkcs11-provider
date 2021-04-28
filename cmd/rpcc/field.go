@@ -98,7 +98,7 @@ func GoTypeName(name string) string {
 }
 
 var trimPrefixes = []string{
-	"p", "ul", "pul", "h",
+	"p", "ul", "pul", "h", "ph",
 }
 
 // GoFieldName converts the name to Go field name.

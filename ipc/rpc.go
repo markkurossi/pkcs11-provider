@@ -112,6 +112,11 @@ type CKVersion struct {
 	Minor CKByte
 }
 
+// ImplOpenSessionReq defines the arguments of C_ImplOpenSession.
+type ImplOpenSessionReq struct {
+	Session CKSessionHandle
+}
+
 // InitializeResp defines the result of C_Initialize.
 type InitializeResp struct {
 	NumSlots CKUlong
@@ -188,6 +193,17 @@ type SetPINReq struct {
 	NewPin []CKUTF8Char
 }
 
+// OpenSessionReq defines the arguments of C_OpenSession.
+type OpenSessionReq struct {
+	SlotID CKSlotID
+	Flags  CKFlags
+}
+
+// OpenSessionResp defines the result of C_OpenSession.
+type OpenSessionResp struct {
+	Session CKSessionHandle
+}
+
 // DestroyObjectReq defines the arguments of C_DestroyObject.
 type DestroyObjectReq struct {
 	Object CKObjectHandle
@@ -205,6 +221,7 @@ type GetObjectSizeResp struct {
 
 // Provider defines the PKCS #11 provider interface.
 type Provider interface {
+	ImplOpenSession(req *ImplOpenSessionReq) error
 	Initialize() (*InitializeResp, error)
 	GetSlotList(req *GetSlotListReq) (*GetSlotListResp, error)
 	GetSlotInfo(req *GetSlotInfoReq) (*GetSlotInfoResp, error)
@@ -214,6 +231,7 @@ type Provider interface {
 	InitToken(req *InitTokenReq) error
 	InitPIN(req *InitPINReq) error
 	SetPIN(req *SetPINReq) error
+	OpenSession(req *OpenSessionReq) (*OpenSessionResp, error)
 	DestroyObject(req *DestroyObjectReq) error
 	GetObjectSize(req *GetObjectSizeReq) (*GetObjectSizeResp, error)
 	FindObjectsFinal() error
@@ -221,6 +239,11 @@ type Provider interface {
 
 // Base provides a dummy implementation of the Provider interface.
 type Base struct{}
+
+// ImplOpenSession implements the Provider.ImplOpenSession().
+func (b *Base) ImplOpenSession(req *ImplOpenSessionReq) error {
+	return ErrFunctionNotSupported
+}
 
 // Initialize implements the Provider.Initialize().
 func (b *Base) Initialize() (*InitializeResp, error) {
@@ -267,6 +290,11 @@ func (b *Base) SetPIN(req *SetPINReq) error {
 	return ErrFunctionNotSupported
 }
 
+// OpenSession implements the Provider.OpenSession().
+func (b *Base) OpenSession(req *OpenSessionReq) (*OpenSessionResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
 // DestroyObject implements the Provider.DestroyObject().
 func (b *Base) DestroyObject(req *DestroyObjectReq) error {
 	return ErrFunctionNotSupported
@@ -283,6 +311,7 @@ func (b *Base) FindObjectsFinal() error {
 }
 
 var msgTypeNames = map[Type]string{
+	0xc0000101: "ImplOpenSession",
 	0xc0050401: "Initialize",
 	0xc0050501: "GetSlotList",
 	0xc0050502: "GetSlotInfo",
@@ -292,6 +321,7 @@ var msgTypeNames = map[Type]string{
 	0xc0050507: "InitToken",
 	0xc0050508: "InitPIN",
 	0xc0050509: "SetPIN",
+	0xc0050601: "OpenSession",
 	0xc0050703: "DestroyObject",
 	0xc0050704: "GetObjectSize",
 	0xc0050709: "FindObjectsFinal",
@@ -314,6 +344,13 @@ func Dispatch(p Provider, msgType Type, req []byte) (CKRV, []byte) {
 
 func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 	switch msgType {
+	case 0xc0000101: // ImplOpenSession
+		var req ImplOpenSessionReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		return nil, p.ImplOpenSession(&req)
+
 	case 0xc0050401: // Initialize
 		resp, err := p.Initialize()
 		if err != nil {
@@ -396,6 +433,17 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 			return nil, err
 		}
 		return nil, p.SetPIN(&req)
+
+	case 0xc0050601: // OpenSession
+		var req OpenSessionReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		resp, err := p.OpenSession(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
 
 	case 0xc0050703: // DestroyObject
 		var req DestroyObjectReq

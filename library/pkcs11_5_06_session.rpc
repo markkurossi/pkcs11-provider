@@ -23,7 +23,29 @@ C_OpenSession
   CK_SESSION_HANDLE_PTR phSession      /* gets session handle */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /** Header,Call
+   *
+   * Inputs:
+   *  CK_SLOT_ID         slotID
+   *  CK_FLAGS           flags
+   *
+   * Outputs:
+   *   CK_SESSION_HANDLE phSession
+   */
+
+  /* XXX open session IPC */
+  /* XXX store it to local session storage */
+
+  ret = C_ImplOpenSession(*phSession);
+  if (ret != CKR_OK)
+    {
+      /* XXX remove session from storage */
+      /* XXX uninit session object */
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  /** Trailer */
 }
 
 /* C_CloseSession closes a session between an application and a

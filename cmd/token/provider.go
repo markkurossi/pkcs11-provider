@@ -7,10 +7,12 @@
 package main
 
 import (
+	"crypto/rand"
 	"log"
 	"regexp"
 	"runtime"
 	"strconv"
+	"sync"
 
 	"github.com/markkurossi/pkcs11-provider/ipc"
 )
@@ -29,6 +31,13 @@ var mechanisms = map[ipc.CKMechanismType]ipc.CKMechanismInfo{
 		MinKeySize: 2048,
 		MaxKeySize: 8192,
 		Flags:      ipc.CkfGenerateKeyPair,
+	},
+	ipc.CkmRSAPKCS: {
+		MinKeySize: 2048,
+		MaxKeySize: 8192,
+		Flags: ipc.CkfMessageEncrypt | ipc.CkfMessageDecrypt |
+			ipc.CkfMessageSign | ipc.CkfMessageVerify | ipc.CkfEncrypt |
+			ipc.CkfDecrypt | ipc.CkfSign | ipc.CkfVerify,
 	},
 }
 
@@ -50,10 +59,45 @@ func goVersion() ipc.CKVersion {
 // Provider implements ipc.Provider interface.
 type Provider struct {
 	ipc.Base
+	m        sync.Mutex
+	sessions map[ipc.CKSessionHandle]*Session
+}
+
+func (p *Provider) newSession() (*Session, error) {
+	var buf [4]byte
+
+	p.m.Lock()
+	defer p.m.Unlock()
+
+	for {
+		_, err := rand.Read(buf[:])
+		if err != nil {
+			return nil, ipc.ErrDeviceError
+		}
+		id := ipc.CKSessionHandle(bo.Uint32(buf[:]))
+
+		session, ok := p.sessions[id]
+		if ok {
+			continue
+		}
+		session = &Session{
+			ID: id,
+		}
+		p.sessions[id] = session
+		return session, nil
+	}
+}
+
+// Session implements a session with the token.
+type Session struct {
+	ID    ipc.CKSessionHandle
+	Flags ipc.CKFlags
 }
 
 // Initialize implements ipc.Provider.Initialize().
 func (p *Provider) Initialize() (*ipc.InitializeResp, error) {
+	p.sessions = make(map[ipc.CKSessionHandle]*Session)
+
 	return &ipc.InitializeResp{
 		NumSlots: 1,
 	}, nil
@@ -126,5 +170,21 @@ func (p *Provider) GetMechanismInfo(req *ipc.GetMechanismInfoReq) (*ipc.GetMecha
 	}
 	return &ipc.GetMechanismInfoResp{
 		Info: info,
+	}, nil
+}
+
+// OpenSession implements the Provider.OpenSession().
+func (p *Provider) OpenSession(req *ipc.OpenSessionReq) (*ipc.OpenSessionResp, error) {
+	if req.SlotID != 0 {
+		return nil, ipc.ErrSlotIDInvalid
+	}
+	session, err := p.newSession()
+	if err != nil {
+		return nil, err
+	}
+	session.Flags = req.Flags
+
+	return &ipc.OpenSessionResp{
+		Session: session.ID,
 	}, nil
 }
