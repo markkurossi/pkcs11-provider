@@ -71,7 +71,10 @@ C_DestroyObject
 
   VP_FUNCTION_ENTER;
 
-  /* XXX lookup session by hSession */
+  /* Lookup session by hSession */
+  conn = vp_session(hSession, &ret);
+  if (ret != CKR_OK)
+    return ret;
 
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050703);
@@ -106,7 +109,10 @@ C_GetObjectSize
 
   VP_FUNCTION_ENTER;
 
-  /* XXX lookup session by hSession */
+  /* Lookup session by hSession */
+  conn = vp_session(hSession, &ret);
+  if (ret != CKR_OK)
+    return ret;
 
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050704);
@@ -239,7 +245,10 @@ C_FindObjectsFinal
 
   VP_FUNCTION_ENTER;
 
-  /* XXX lookup session by hSession */
+  /* Lookup session by hSession */
+  conn = vp_session(hSession, &ret);
+  if (ret != CKR_OK)
+    return ret;
 
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050709);

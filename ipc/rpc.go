@@ -117,6 +117,11 @@ type ImplOpenSessionReq struct {
 	Session CKSessionHandle
 }
 
+// ImplCloseSessionReq defines the arguments of C_ImplCloseSession.
+type ImplCloseSessionReq struct {
+	Session CKSessionHandle
+}
+
 // InitializeResp defines the result of C_Initialize.
 type InitializeResp struct {
 	NumSlots CKUlong
@@ -222,6 +227,7 @@ type GetObjectSizeResp struct {
 // Provider defines the PKCS #11 provider interface.
 type Provider interface {
 	ImplOpenSession(req *ImplOpenSessionReq) error
+	ImplCloseSession(req *ImplCloseSessionReq) error
 	Initialize() (*InitializeResp, error)
 	GetSlotList(req *GetSlotListReq) (*GetSlotListResp, error)
 	GetSlotInfo(req *GetSlotInfoReq) (*GetSlotInfoResp, error)
@@ -242,6 +248,11 @@ type Base struct{}
 
 // ImplOpenSession implements the Provider.ImplOpenSession().
 func (b *Base) ImplOpenSession(req *ImplOpenSessionReq) error {
+	return ErrFunctionNotSupported
+}
+
+// ImplCloseSession implements the Provider.ImplCloseSession().
+func (b *Base) ImplCloseSession(req *ImplCloseSessionReq) error {
 	return ErrFunctionNotSupported
 }
 
@@ -312,6 +323,7 @@ func (b *Base) FindObjectsFinal() error {
 
 var msgTypeNames = map[Type]string{
 	0xc0000101: "ImplOpenSession",
+	0xc0000102: "ImplCloseSession",
 	0xc0050401: "Initialize",
 	0xc0050501: "GetSlotList",
 	0xc0050502: "GetSlotInfo",
@@ -350,6 +362,13 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 			return nil, err
 		}
 		return nil, p.ImplOpenSession(&req)
+
+	case 0xc0000102: // ImplCloseSession
+		var req ImplCloseSessionReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		return nil, p.ImplCloseSession(&req)
 
 	case 0xc0050401: // Initialize
 		resp, err := p.Initialize()

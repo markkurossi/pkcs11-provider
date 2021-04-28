@@ -37,15 +37,21 @@ typedef unsigned long int CK_HANDLE;
 #include "vp_getput.h"
 #include "vp_ipc.h"
 
+#define SOCKET_PATH "/tmp/vp.sock"
+
 /****************** Implementation specific RPC functions *******************/
 
 CK_RV C_ImplOpenSession(CK_SESSION_HANDLE hSession);
+CK_RV C_ImplCloseSession(CK_SESSION_HANDLE hSession);
 
 
 /*************************** Global library state ***************************/
 
-extern CK_C_INITIALIZE_ARGS init_args;
-extern VPIPCConn *global_conn;
+extern CK_C_INITIALIZE_ARGS vp_init_args;
+extern VPIPCConn *vp_global_conn;
+extern void *vp_global_mutex;
+
+VPIPCConn *vp_session(CK_SESSION_HANDLE id, CK_RV *ret);
 
 
 /********************************* Logging **********************************/

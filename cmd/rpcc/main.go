@@ -341,14 +341,17 @@ func processFile(in *Input) error {
 			case 0:
 				printf(2, `
 /* Use global session. */
-conn = global_conn;
+conn = vp_global_conn;
 `)
 
 			case 1:
 				printf(2, `
-/* XXX lookup session by %s */
+/* Lookup session by %s */
+conn = vp_session(%s, &ret);
+if (ret != CKR_OK)
+  return ret;
 `,
-					session[0].Name)
+					session[0].Name, session[0].Name)
 
 			default:
 				return fmt.Errorf("multiple session variables")

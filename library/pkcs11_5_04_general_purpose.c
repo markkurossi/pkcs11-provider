@@ -24,11 +24,10 @@ static struct CK_FUNCTION_LIST_3_0 function_list =
 
   };
 
-#define SOCKET_PATH "/tmp/vp.sock"
-
-CK_C_INITIALIZE_ARGS init_args = {0};
-VPIPCConn *global_conn = NULL;
-CK_ULONG num_slots;
+CK_C_INITIALIZE_ARGS vp_init_args = {0};
+VPIPCConn *vp_global_conn = NULL;
+void *vp_global_mutex = NULL;
+CK_ULONG num_slots;             /* XXX */
 
 static CK_RV
 mutex_create(void **ret)
@@ -115,19 +114,26 @@ C_Initialize
 
   if (pInitArgs != NULL)
     {
-      memcpy(&init_args, pInitArgs, sizeof(init_args));
+      memcpy(&vp_init_args, pInitArgs, sizeof(vp_init_args));
     }
   else
     {
-      memset(&init_args, 0, sizeof(init_args));
-      init_args.CreateMutex = mutex_create;
-      init_args.DestroyMutex = mutex_destroy;
-      init_args.LockMutex = mutex_lock;
-      init_args.UnlockMutex = mutex_unlock;
+      memset(&vp_init_args, 0, sizeof(vp_init_args));
+      vp_init_args.CreateMutex = mutex_create;
+      vp_init_args.DestroyMutex = mutex_destroy;
+      vp_init_args.LockMutex = mutex_lock;
+      vp_init_args.UnlockMutex = mutex_unlock;
     }
 
-  global_conn = vp_ipc_connect(SOCKET_PATH);
-  if (global_conn == NULL)
+  ret = vp_init_args.CreateMutex(&vp_global_mutex);
+  if (ret != CKR_OK)
+    {
+      C_Finalize(NULL);
+      return ret;
+    }
+
+  vp_global_conn = vp_ipc_connect(SOCKET_PATH);
+  if (vp_global_conn == NULL)
     {
       vp_log(LOG_ERR, "%s: failed to connect: '%s'", __FUNCTION__, SOCKET_PATH);
       C_Finalize(NULL);
@@ -136,7 +142,7 @@ C_Initialize
 
 
   /* Use global session. */
-  conn = global_conn;
+  conn = vp_global_conn;
 
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050401);
@@ -176,8 +182,14 @@ C_Finalize
 {
   VP_FUNCTION_ENTER;
 
-  vp_ipc_close(global_conn);
-  global_conn = NULL;
+  if (vp_global_mutex != NULL)
+    {
+      vp_init_args.DestroyMutex(vp_global_mutex);
+      vp_global_mutex = NULL;
+    }
+
+  vp_ipc_close(vp_global_conn);
+  vp_global_conn = NULL;
 
   return CKR_OK;
 }

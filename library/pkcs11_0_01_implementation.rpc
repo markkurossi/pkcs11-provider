@@ -23,3 +23,15 @@ C_ImplOpenSession
    *  CK_SESSION_HANDLE hSession
    */
 }
+
+CK_RV
+C_ImplCloseSession
+(
+  CK_SESSION_HANDLE hSession
+)
+{
+  /**
+   * Inputs:
+   *  CK_SESSION_HANDLE hSession
+   */
+}

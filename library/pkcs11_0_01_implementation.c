@@ -23,10 +23,46 @@ C_ImplOpenSession
 
   VP_FUNCTION_ENTER;
 
-  /* XXX lookup session by hSession */
+  /* Lookup session by hSession */
+  conn = vp_session(hSession, &ret);
+  if (ret != CKR_OK)
+    return ret;
 
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0000101);
+  vp_buffer_add_space(&buf, 4);
+
+  vp_buffer_add_uint32(&buf, hSession);
+
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  vp_buffer_uninit(&buf);
+
+  return ret;
+}
+
+CK_RV
+C_ImplCloseSession
+(
+  CK_SESSION_HANDLE hSession
+)
+{
+  CK_RV ret;
+  VPBuffer buf;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
+
+  /* Use global session. */
+  conn = vp_global_conn;
+
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0000102);
   vp_buffer_add_space(&buf, 4);
 
   vp_buffer_add_uint32(&buf, hSession);

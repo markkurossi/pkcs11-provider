@@ -76,11 +76,11 @@ func (p *Provider) newSession() (*Session, error) {
 		}
 		id := ipc.CKSessionHandle(bo.Uint32(buf[:]))
 
-		session, ok := p.sessions[id]
+		_, ok := p.sessions[id]
 		if ok {
 			continue
 		}
-		session = &Session{
+		session := &Session{
 			ID: id,
 		}
 		p.sessions[id] = session
@@ -187,4 +187,9 @@ func (p *Provider) OpenSession(req *ipc.OpenSessionReq) (*ipc.OpenSessionResp, e
 	return &ipc.OpenSessionResp{
 		Session: session.ID,
 	}, nil
+}
+
+// ImplOpenSession implements the Provider.ImplOpenSession().
+func (p *Provider) ImplOpenSession(req *ipc.ImplOpenSessionReq) error {
+	return nil
 }

@@ -27,7 +27,7 @@ C_GetSlotList
   VP_FUNCTION_ENTER;
 
   /* Use global session. */
-  conn = global_conn;
+  conn = vp_global_conn;
 
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050501);
@@ -97,7 +97,7 @@ C_GetSlotInfo
   VP_FUNCTION_ENTER;
 
   /* Use global session. */
-  conn = global_conn;
+  conn = vp_global_conn;
 
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050502);
@@ -160,7 +160,7 @@ C_GetTokenInfo
   VP_FUNCTION_ENTER;
 
   /* Use global session. */
-  conn = global_conn;
+  conn = vp_global_conn;
 
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050503);
@@ -251,7 +251,7 @@ C_GetMechanismList
   VP_FUNCTION_ENTER;
 
   /* Use global session. */
-  conn = global_conn;
+  conn = vp_global_conn;
 
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050505);
@@ -322,7 +322,7 @@ C_GetMechanismInfo
   VP_FUNCTION_ENTER;
 
   /* Use global session. */
-  conn = global_conn;
+  conn = vp_global_conn;
 
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050506);
@@ -374,7 +374,7 @@ C_InitToken
   VP_FUNCTION_ENTER;
 
   /* Use global session. */
-  conn = global_conn;
+  conn = vp_global_conn;
 
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050507);
@@ -411,7 +411,10 @@ C_InitPIN
 
   VP_FUNCTION_ENTER;
 
-  /* XXX lookup session by hSession */
+  /* Lookup session by hSession */
+  conn = vp_session(hSession, &ret);
+  if (ret != CKR_OK)
+    return ret;
 
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050508);
@@ -448,7 +451,10 @@ C_SetPIN
 
   VP_FUNCTION_ENTER;
 
-  /* XXX lookup session by hSession */
+  /* Lookup session by hSession */
+  conn = vp_session(hSession, &ret);
+  if (ret != CKR_OK)
+    return ret;
 
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050509);

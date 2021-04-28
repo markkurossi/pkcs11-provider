@@ -8,6 +8,77 @@
 
 #include "vp_includes.h"
 
+/***************************** Session registry *****************************/
+
+struct VPSessionStruct
+{
+  struct VPSessionStruct *next;
+  CK_SESSION_HANDLE id;
+  VPIPCConn *session;
+};
+
+typedef struct VPSessionStruct VPSession;
+
+#define VP_SESSIONS_HASH_SIZE 1024
+
+static VPSession *sessions[VP_SESSIONS_HASH_SIZE];
+
+static CK_RV
+vp_session_register(VPIPCConn *session, CK_SESSION_HANDLE id)
+{
+  int idx = id % VP_SESSIONS_HASH_SIZE;
+  VPSession *s;
+  CK_RV ret;
+
+  s = calloc(1, sizeof(*s));
+  if (s == NULL)
+    return CKR_HOST_MEMORY;
+
+  s->id = id;
+  s->session = session;
+
+  ret = vp_init_args.LockMutex(vp_global_mutex);
+  if (ret != CKR_OK)
+    {
+      free(s);
+      return ret;
+    }
+
+  s->next = sessions[idx];
+  sessions[idx] = s;
+
+  vp_init_args.UnlockMutex(vp_global_mutex);
+
+  return CKR_OK;
+}
+
+VPIPCConn *
+vp_session(CK_SESSION_HANDLE id, CK_RV *ret)
+{
+  int idx = id % VP_SESSIONS_HASH_SIZE;
+  VPSession *s;
+
+  *ret = vp_init_args.LockMutex(vp_global_mutex);
+  if (*ret != CKR_OK)
+    return NULL;
+
+  for (s = sessions[idx]; s != NULL; s = s->next)
+    if (s->id == id)
+      {
+        *ret = vp_init_args.UnlockMutex(vp_global_mutex);
+        return s->session;
+      }
+
+  *ret = vp_init_args.UnlockMutex(vp_global_mutex);
+  if (*ret != CKR_OK)
+    return NULL;
+
+  *ret = CKR_SESSION_HANDLE_INVALID;
+
+  return NULL;
+}
+
+
 /** Version: 3.0 */
 /** Section: 5.6 Session management functions */
 
@@ -24,6 +95,8 @@ C_OpenSession
   CK_SESSION_HANDLE_PTR phSession      /* gets session handle */
 )
 {
+  VPIPCConn *session;
+
   CK_RV ret;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
@@ -31,7 +104,7 @@ C_OpenSession
   VP_FUNCTION_ENTER;
 
   /* Use global session. */
-  conn = global_conn;
+  conn = vp_global_conn;
 
   vp_buffer_init(&buf);
   vp_buffer_add_uint32(&buf, 0xc0050601);
@@ -55,8 +128,21 @@ C_OpenSession
       return ret;
     }
 
-  /* XXX open session IPC */
-  /* XXX store it to local session storage */
+  /* Open session IPC channel. */
+  session = vp_ipc_connect(SOCKET_PATH);
+  if (session == NULL)
+    {
+      C_ImplCloseSession(*phSession);
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_REMOVED;
+    }
+  ret = vp_session_register(session, *phSession);
+  if (ret != CKR_OK)
+    {
+      C_ImplCloseSession(*phSession);
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
 
   ret = C_ImplOpenSession(*phSession);
   if (ret != CKR_OK)
