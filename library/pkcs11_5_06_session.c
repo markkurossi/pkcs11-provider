@@ -247,7 +247,34 @@ C_Login
   CK_ULONG          ulPinLen   /* the length of the PIN */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  CK_RV ret;
+  VPBuffer buf;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
+
+  /* Lookup session by hSession */
+  conn = vp_session(hSession, &ret);
+  if (ret != CKR_OK)
+    return ret;
+
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0050608);
+  vp_buffer_add_space(&buf, 4);
+
+  vp_buffer_add_uint32(&buf, userType);
+  vp_buffer_add_byte_arr(&buf, pPin, ulPinLen);
+
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  vp_buffer_uninit(&buf);
+
+  return ret;
 }
 
 /* C_LoginUser logs a user into a token. */

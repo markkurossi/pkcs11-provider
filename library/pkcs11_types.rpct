@@ -4,20 +4,21 @@
 // All rights reserved.
 //
 
-type CK_BBOOL	        bool
-type CK_BYTE	        byte
-type CK_CHAR	        byte
-type CK_ULONG	        uint32
-type CK_ULONG_PTR      *uint32
-type CK_UTF8CHAR        byte
-type CK_VOID_PTR        byte
-type CK_FLAGS	        uint32
-type CK_SESSION_HANDLE  uint32
-type CK_OBJECT_HANDLE   uint32
-type CK_ATTRIBUTE_TYPE  uint32
-type CK_SLOT_ID	        uint32
-type CK_SLOT_ID_PTR    *uint32
-type CK_MECHANISM_TYPE  uint32
+type CK_BBOOL	         bool
+type CK_BYTE	         byte
+type CK_CHAR	       = byte
+type CK_ULONG	         uint32
+type CK_ULONG_PTR       *uint32
+type CK_UTF8CHAR       = byte
+type CK_VOID_PTR         byte
+type CK_FLAGS	         uint32
+type CK_SESSION_HANDLE   uint32
+type CK_OBJECT_HANDLE    uint32
+type CK_ATTRIBUTE_TYPE   uint32
+type CK_SLOT_ID	         uint32
+type CK_SLOT_ID_PTR     *uint32
+type CK_MECHANISM_TYPE   uint32
+type CK_USER_TYPE        uint32
 
 type CK_ATTRIBUTE struct {
                        CK_ATTRIBUTE_TYPE type

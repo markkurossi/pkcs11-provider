@@ -222,7 +222,13 @@ C_Login
   CK_ULONG          ulPinLen   /* the length of the PIN */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Session:
+   *                      CK_SESSION_HANDLE hSession
+   * Inputs:
+   *                      CK_USER_TYPE      userType
+   *   [CK_ULONG ulPinLen]CK_UTF8CHAR       pPin
+   */
 }
 
 /* C_LoginUser logs a user into a token. */

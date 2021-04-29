@@ -21,7 +21,7 @@ type CKBbool bool
 type CKByte byte
 
 // CKChar defines basic protocol type CK_CHAR.
-type CKChar byte
+type CKChar = byte
 
 // CKFlags defines basic protocol type CK_FLAGS.
 type CKFlags uint32
@@ -47,8 +47,11 @@ type CKUlong uint32
 // CKUlongPtr defines basic protocol type CK_ULONG_PTR.
 type CKUlongPtr uint32
 
+// CKUserType defines basic protocol type CK_USER_TYPE.
+type CKUserType uint32
+
 // CKUTF8Char defines basic protocol type CK_UTF8CHAR.
-type CKUTF8Char byte
+type CKUTF8Char = byte
 
 // CKVoidPtr defines basic protocol type CK_VOID_PTR.
 type CKVoidPtr byte
@@ -210,6 +213,12 @@ type OpenSessionResp struct {
 	Session CKSessionHandle
 }
 
+// LoginReq defines the arguments of C_Login.
+type LoginReq struct {
+	UserType CKUserType
+	Pin      []CKUTF8Char
+}
+
 // DestroyObjectReq defines the arguments of C_DestroyObject.
 type DestroyObjectReq struct {
 	Object CKObjectHandle
@@ -239,6 +248,7 @@ type Provider interface {
 	InitPIN(req *InitPINReq) error
 	SetPIN(req *SetPINReq) error
 	OpenSession(req *OpenSessionReq) (*OpenSessionResp, error)
+	Login(req *LoginReq) error
 	DestroyObject(req *DestroyObjectReq) error
 	GetObjectSize(req *GetObjectSizeReq) (*GetObjectSizeResp, error)
 	FindObjectsFinal() error
@@ -307,6 +317,11 @@ func (b *Base) OpenSession(req *OpenSessionReq) (*OpenSessionResp, error) {
 	return nil, ErrFunctionNotSupported
 }
 
+// Login implements the Provider.Login().
+func (b *Base) Login(req *LoginReq) error {
+	return ErrFunctionNotSupported
+}
+
 // DestroyObject implements the Provider.DestroyObject().
 func (b *Base) DestroyObject(req *DestroyObjectReq) error {
 	return ErrFunctionNotSupported
@@ -335,6 +350,7 @@ var msgTypeNames = map[Type]string{
 	0xc0050508: "InitPIN",
 	0xc0050509: "SetPIN",
 	0xc0050601: "OpenSession",
+	0xc0050608: "Login",
 	0xc0050703: "DestroyObject",
 	0xc0050704: "GetObjectSize",
 	0xc0050709: "FindObjectsFinal",
@@ -464,6 +480,13 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 			return nil, err
 		}
 		return Marshal(resp)
+
+	case 0xc0050608: // Login
+		var req LoginReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		return nil, p.Login(&req)
 
 	case 0xc0050703: // DestroyObject
 		var req DestroyObjectReq

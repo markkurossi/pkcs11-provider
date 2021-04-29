@@ -170,3 +170,9 @@ func (p *Provider) ImplOpenSession(req *ipc.ImplOpenSessionReq) error {
 	p.session = session
 	return nil
 }
+
+// Login implements the Provider.Login().
+func (p *Provider) Login(req *ipc.LoginReq) error {
+	log.Printf("Login: UserType=%v, Pin=%v", req.UserType, string(req.Pin))
+	return nil
+}

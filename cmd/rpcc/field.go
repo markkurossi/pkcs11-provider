@@ -20,7 +20,7 @@ import (
 var (
 	types         = make(map[string]TypeInfo)
 	reComment     = regexp.MustCompilePOSIX(`^[[:space:]]*//`)
-	reBasic       = regexp.MustCompilePOSIX(`^[[:space:]]*type[[:space:]]+([[:^space:]]+)[[:space:]]+([[:^space:]]+)[[:space:]]*$`)
+	reBasic       = regexp.MustCompilePOSIX(`^[[:space:]]*type[[:space:]]+([[:^space:]]+)[[:space:]]+(=[[:space:]]*)?([[:^space:]]+)[[:space:]]*$`)
 	reStructStart = regexp.MustCompilePOSIX(`^[[:space:]]*type[[:space:]]+([[:^space:]]+)[[:space:]]+struct[[:space:]]*{[[:space:]]*$`)
 	reStructField = regexp.MustCompilePOSIX(`^[[:space:]]*(.+)[[:space:]]+([[:^space:]]+)[[:space:]]*$`)
 	reStructEnd   = regexp.MustCompilePOSIX(`^[[:space:]]*}[[:space:]]*$`)
@@ -30,6 +30,7 @@ var (
 // TypeInfo provides information about a PKCS #11 API type.
 type TypeInfo struct {
 	Name      string
+	IsAlias   bool
 	IsBasic   bool
 	IsPointer bool
 	Basic     string
@@ -51,6 +52,10 @@ func (t TypeInfo) GoTypeName() string {
 // GoType returns the Go type definition for the type.
 func (t TypeInfo) GoType() string {
 	if t.IsBasic {
+		if t.IsAlias {
+			return fmt.Sprintf("type %s = %s",
+				GoTypeName(t.Name), GoType(t.Basic))
+		}
 		return fmt.Sprintf("type %s %s", GoTypeName(t.Name), GoType(t.Basic))
 	}
 	result := fmt.Sprintf("type %s struct {\n", GoTypeName(t.Name))
@@ -151,13 +156,19 @@ func readTypes(file string) error {
 		}
 		m := reBasic.FindStringSubmatch(line)
 		if m != nil {
+			var alias bool
+			if len(m[2]) > 0 {
+				alias = true
+			}
+
 			var ptr bool
-			basic := m[2]
+			basic := m[3]
 			if strings.HasPrefix(basic, "*") {
 				basic = basic[1:]
 				ptr = true
 			}
 			types[m[1]] = TypeInfo{
+				IsAlias:   alias,
 				IsBasic:   true,
 				IsPointer: ptr,
 				Name:      m[1],

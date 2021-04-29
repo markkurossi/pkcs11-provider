@@ -19,10 +19,10 @@ C_ImplOpenSession
 {
   /**
    * Session:
-   *  CK_SESSION_HANDLE hSession
+   *   CK_SESSION_HANDLE hSession
    * Inputs:
-   *  CK_ULONG          ulProviderID
-   *  CK_SESSION_HANDLE hSession
+   *   CK_ULONG          ulProviderID
+   *   CK_SESSION_HANDLE hSession
    */
 }
 
@@ -34,6 +34,6 @@ C_ImplCloseSession
 {
   /**
    * Inputs:
-   *  CK_SESSION_HANDLE hSession
+   *   CK_SESSION_HANDLE hSession
    */
 }
