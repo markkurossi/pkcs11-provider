@@ -37,6 +37,29 @@ var mechanisms = map[ipc.CKMechanismType]ipc.CKMechanismInfo{
 			ipc.CkfMessageSign | ipc.CkfMessageVerify | ipc.CkfEncrypt |
 			ipc.CkfDecrypt | ipc.CkfSign | ipc.CkfVerify,
 	},
+	ipc.CkmSHA256RSAPKCS: {
+		MinKeySize: 2048,
+		MaxKeySize: 8192,
+		Flags: ipc.CkfMessageEncrypt | ipc.CkfMessageDecrypt |
+			ipc.CkfMessageSign | ipc.CkfMessageVerify | ipc.CkfEncrypt |
+			ipc.CkfDecrypt | ipc.CkfSign | ipc.CkfVerify,
+	},
+	ipc.CkmSHA512RSAPKCS: {
+		MinKeySize: 2048,
+		MaxKeySize: 8192,
+		Flags: ipc.CkfMessageEncrypt | ipc.CkfMessageDecrypt |
+			ipc.CkfMessageSign | ipc.CkfMessageVerify | ipc.CkfEncrypt |
+			ipc.CkfDecrypt | ipc.CkfSign | ipc.CkfVerify,
+	},
+	ipc.CkmSHA256: {
+		Flags: ipc.CkfDigest,
+	},
+	ipc.CkmSHA384: {
+		Flags: ipc.CkfDigest,
+	},
+	ipc.CkmSHA512: {
+		Flags: ipc.CkfDigest,
+	},
 }
 
 func goVersion() ipc.CKVersion {
