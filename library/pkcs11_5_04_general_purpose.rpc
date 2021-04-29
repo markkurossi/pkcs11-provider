@@ -26,7 +26,7 @@ static struct CK_FUNCTION_LIST_3_0 function_list =
 CK_C_INITIALIZE_ARGS vp_init_args = {0};
 VPIPCConn *vp_global_conn = NULL;
 void *vp_global_mutex = NULL;
-CK_ULONG num_slots;             /* XXX */
+CK_ULONG vp_provider_id;
 
 static CK_RV
 mutex_create(void **ret)
@@ -103,12 +103,12 @@ C_Initialize
                             */
 )
 {
-  CK_ULONG *pulNumSlots = &num_slots;
+  CK_ULONG *pulProviderID = &vp_provider_id;
 
   /** Header
    *
    * Outputs:
-   *   CK_ULONG pulNumSlots
+   *   CK_ULONG pulProviderID
    */
 
   if (pInitArgs != NULL)
@@ -141,7 +141,7 @@ C_Initialize
 
   /** Call */
 
-  vp_log(LOG_DEBUG, "#slots: %lu", (unsigned long) num_slots);
+  vp_log(LOG_INFO, "ProviderID: %08lx", (unsigned long) vp_provider_id);
 
   /** Trailer */
 }

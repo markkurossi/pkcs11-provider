@@ -114,7 +114,8 @@ type CKVersion struct {
 
 // ImplOpenSessionReq defines the arguments of C_ImplOpenSession.
 type ImplOpenSessionReq struct {
-	Session CKSessionHandle
+	ProviderID CKUlong
+	Session    CKSessionHandle
 }
 
 // ImplCloseSessionReq defines the arguments of C_ImplCloseSession.
@@ -124,7 +125,7 @@ type ImplCloseSessionReq struct {
 
 // InitializeResp defines the result of C_Initialize.
 type InitializeResp struct {
-	NumSlots CKUlong
+	ProviderID CKUlong
 }
 
 // GetSlotListReq defines the arguments of C_GetSlotList.

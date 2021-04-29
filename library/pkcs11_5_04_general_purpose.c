@@ -27,7 +27,7 @@ static struct CK_FUNCTION_LIST_3_0 function_list =
 CK_C_INITIALIZE_ARGS vp_init_args = {0};
 VPIPCConn *vp_global_conn = NULL;
 void *vp_global_mutex = NULL;
-CK_ULONG num_slots;             /* XXX */
+CK_ULONG vp_provider_id;
 
 static CK_RV
 mutex_create(void **ret)
@@ -104,7 +104,7 @@ C_Initialize
                             */
 )
 {
-  CK_ULONG *pulNumSlots = &num_slots;
+  CK_ULONG *pulProviderID = &vp_provider_id;
 
   CK_RV ret;
   VPBuffer buf;
@@ -155,7 +155,7 @@ C_Initialize
       return ret;
     }
 
-  *pulNumSlots = vp_buffer_get_uint32(&buf);
+  *pulProviderID = vp_buffer_get_uint32(&buf);
 
   if (vp_buffer_error(&buf, &ret))
     {
@@ -163,7 +163,7 @@ C_Initialize
       return ret;
     }
 
-  vp_log(LOG_DEBUG, "#slots: %lu", (unsigned long) num_slots);
+  vp_log(LOG_INFO, "ProviderID: %08lx", (unsigned long) vp_provider_id);
 
 
   vp_buffer_uninit(&buf);

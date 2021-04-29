@@ -14,6 +14,7 @@
 CK_RV
 C_ImplOpenSession
 (
+  CK_ULONG          ulProviderID,
   CK_SESSION_HANDLE hSession
 )
 {
@@ -32,6 +33,7 @@ C_ImplOpenSession
   vp_buffer_add_uint32(&buf, 0xc0000101);
   vp_buffer_add_space(&buf, 4);
 
+  vp_buffer_add_uint32(&buf, ulProviderID);
   vp_buffer_add_uint32(&buf, hSession);
 
   ret = vp_ipc_tx(conn, &buf);

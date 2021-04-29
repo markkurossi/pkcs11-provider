@@ -144,7 +144,7 @@ C_OpenSession
       return ret;
     }
 
-  ret = C_ImplOpenSession(*phSession);
+  ret = C_ImplOpenSession(vp_provider_id, *phSession);
   if (ret != CKR_OK)
     {
       /* XXX remove session from storage */
@@ -152,6 +152,10 @@ C_OpenSession
       vp_buffer_uninit(&buf);
       return ret;
     }
+
+  vp_log(LOG_INFO, "SessionID:  %08lx", (unsigned long) *phSession);
+
+  /* XXX store Notify+pApplication. */
 
 
   vp_buffer_uninit(&buf);

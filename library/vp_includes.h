@@ -41,7 +41,7 @@ typedef unsigned long int CK_HANDLE;
 
 /****************** Implementation specific RPC functions *******************/
 
-CK_RV C_ImplOpenSession(CK_SESSION_HANDLE hSession);
+CK_RV C_ImplOpenSession(CK_ULONG ulProviderID, CK_SESSION_HANDLE hSession);
 CK_RV C_ImplCloseSession(CK_SESSION_HANDLE hSession);
 
 
@@ -50,6 +50,7 @@ CK_RV C_ImplCloseSession(CK_SESSION_HANDLE hSession);
 extern CK_C_INITIALIZE_ARGS vp_init_args;
 extern VPIPCConn *vp_global_conn;
 extern void *vp_global_mutex;
+extern CK_ULONG vp_provider_id;
 
 VPIPCConn *vp_session(CK_SESSION_HANDLE id, CK_RV *ret);
 

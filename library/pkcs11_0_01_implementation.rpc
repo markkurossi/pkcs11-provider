@@ -13,6 +13,7 @@
 CK_RV
 C_ImplOpenSession
 (
+  CK_ULONG          ulProviderID,
   CK_SESSION_HANDLE hSession
 )
 {
@@ -20,6 +21,7 @@ C_ImplOpenSession
    * Session:
    *  CK_SESSION_HANDLE hSession
    * Inputs:
+   *  CK_ULONG          ulProviderID
    *  CK_SESSION_HANDLE hSession
    */
 }

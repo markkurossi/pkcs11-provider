@@ -7,12 +7,10 @@
 package main
 
 import (
-	"crypto/rand"
 	"log"
 	"regexp"
 	"runtime"
 	"strconv"
-	"sync"
 
 	"github.com/markkurossi/pkcs11-provider/ipc"
 )
@@ -59,47 +57,15 @@ func goVersion() ipc.CKVersion {
 // Provider implements ipc.Provider interface.
 type Provider struct {
 	ipc.Base
-	m        sync.Mutex
-	sessions map[ipc.CKSessionHandle]*Session
-}
-
-func (p *Provider) newSession() (*Session, error) {
-	var buf [4]byte
-
-	p.m.Lock()
-	defer p.m.Unlock()
-
-	for {
-		_, err := rand.Read(buf[:])
-		if err != nil {
-			return nil, ipc.ErrDeviceError
-		}
-		id := ipc.CKSessionHandle(bo.Uint32(buf[:]))
-
-		_, ok := p.sessions[id]
-		if ok {
-			continue
-		}
-		session := &Session{
-			ID: id,
-		}
-		p.sessions[id] = session
-		return session, nil
-	}
-}
-
-// Session implements a session with the token.
-type Session struct {
-	ID    ipc.CKSessionHandle
-	Flags ipc.CKFlags
+	id      ipc.CKUlong
+	parent  *Provider
+	session *Session
 }
 
 // Initialize implements ipc.Provider.Initialize().
 func (p *Provider) Initialize() (*ipc.InitializeResp, error) {
-	p.sessions = make(map[ipc.CKSessionHandle]*Session)
-
 	return &ipc.InitializeResp{
-		NumSlots: 1,
+		ProviderID: p.id,
 	}, nil
 }
 
@@ -178,7 +144,7 @@ func (p *Provider) OpenSession(req *ipc.OpenSessionReq) (*ipc.OpenSessionResp, e
 	if req.SlotID != 0 {
 		return nil, ipc.ErrSlotIDInvalid
 	}
-	session, err := p.newSession()
+	session, err := NewSession()
 	if err != nil {
 		return nil, err
 	}
@@ -191,5 +157,16 @@ func (p *Provider) OpenSession(req *ipc.OpenSessionReq) (*ipc.OpenSessionResp, e
 
 // ImplOpenSession implements the Provider.ImplOpenSession().
 func (p *Provider) ImplOpenSession(req *ipc.ImplOpenSessionReq) error {
+	parent, err := LookupProvider(req.ProviderID)
+	if err != nil {
+		return err
+	}
+	p.parent = parent
+
+	session, err := LookupSession(req.Session)
+	if err != nil {
+		return err
+	}
+	p.session = session
 	return nil
 }
