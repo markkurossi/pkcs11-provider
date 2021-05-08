@@ -401,8 +401,7 @@ func (f *Field) Output(level, indent int) error {
 	} else {
 		// Array
 		if f.Optional {
-			printf(indent, `
-{
+			printf(indent, `{
   uint32_t count = vp_buffer_get_uint32(&buf);
 
   if (%s == NULL)

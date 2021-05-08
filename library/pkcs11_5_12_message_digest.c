@@ -93,7 +93,6 @@ C_Digest
       return ret;
     }
 
-
   {
     uint32_t count = vp_buffer_get_uint32(&buf);
 

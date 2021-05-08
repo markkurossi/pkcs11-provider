@@ -47,7 +47,6 @@ C_GetSlotList
       return ret;
     }
 
-
   {
     uint32_t count = vp_buffer_get_uint32(&buf);
 
@@ -269,7 +268,6 @@ C_GetMechanismList
       vp_buffer_uninit(&buf);
       return ret;
     }
-
 
   {
     uint32_t count = vp_buffer_get_uint32(&buf);
