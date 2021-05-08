@@ -63,6 +63,7 @@ C_GetSlotList
       }
     else
       {
+        *pulCount = count;
         vp_buffer_get_uint32_arr(&buf, pSlotList, count);
       }
   }
@@ -285,6 +286,7 @@ C_GetMechanismList
       }
     else
       {
+        *pulCount = count;
         vp_buffer_get_uint32_arr(&buf, pMechanismList, count);
       }
   }

@@ -417,11 +417,13 @@ func (f *Field) Output(level, indent int) error {
     }
   else
     {
+      *%s = count;
       vp_buffer_get_%s_arr(&buf, %s, count);
     }
 }
 `,
 				f.Name,
+				f.SizeName,
 				f.SizeName,
 				f.SizeName,
 				f.SizeName,

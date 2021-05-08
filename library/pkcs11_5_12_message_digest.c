@@ -109,6 +109,7 @@ C_Digest
       }
     else
       {
+        *pulDigestLen = count;
         vp_buffer_get_byte_arr(&buf, pDigest, count);
       }
   }
