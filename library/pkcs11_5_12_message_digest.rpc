@@ -18,7 +18,12 @@ C_DigestInit
   CK_MECHANISM_PTR  pMechanism  /* the digesting mechanism */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Session:
+   *   CK_SESSION_HANDLE hSession
+   * Inputs:
+   *   CK_MECHANISM      pMechanism
+   */
 }
 
 /* C_Digest digests data in a single part. */
@@ -32,6 +37,14 @@ C_Digest
   CK_ULONG_PTR      pulDigestLen  /* gets digest length */
 )
 {
+  /**
+   * Session:
+   *   CK_SESSION_HANDLE hSession
+   * Inputs:
+   *   [CK_ULONG ulDataLen]CK_BYTE pData
+   * InOutputs:
+   *   [CK_ULONG_PTR pulDigestLen]CK_BYTE pDigest?
+   */
   VP_FUNCTION_NOT_SUPPORTED;
 }
 

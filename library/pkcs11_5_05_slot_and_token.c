@@ -50,7 +50,6 @@ C_GetSlotList
 
   {
     uint32_t count = vp_buffer_get_uint32(&buf);
-    uint32_t i;
 
     if (pSlotList == NULL)
       {
@@ -58,14 +57,13 @@ C_GetSlotList
       }
     else if (count > *pulCount)
       {
+        *pulCount = count;
         vp_buffer_uninit(&buf);
         return CKR_BUFFER_TOO_SMALL;
       }
     else
       {
-        *pulCount = count;
-        for (i = 0; i < count; i++)
-          pSlotList[i] = vp_buffer_get_uint32(&buf);
+        vp_buffer_get_uint32_arr(&buf, pSlotList, count);
       }
   }
 
@@ -274,7 +272,6 @@ C_GetMechanismList
 
   {
     uint32_t count = vp_buffer_get_uint32(&buf);
-    uint32_t i;
 
     if (pMechanismList == NULL)
       {
@@ -282,14 +279,13 @@ C_GetMechanismList
       }
     else if (count > *pulCount)
       {
+        *pulCount = count;
         vp_buffer_uninit(&buf);
         return CKR_BUFFER_TOO_SMALL;
       }
     else
       {
-        *pulCount = count;
-        for (i = 0; i < count; i++)
-          pMechanismList[i] = vp_buffer_get_uint32(&buf);
+        vp_buffer_get_uint32_arr(&buf, pMechanismList, count);
       }
   }
 

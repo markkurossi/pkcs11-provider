@@ -285,9 +285,7 @@ func (f *Field) Depth() (int, error) {
 }
 
 // Input generates the input marshalling code for the field.
-func (f *Field) Input(level int) error {
-	indent := 2 + level*4
-
+func (f *Field) Input(level, indent int) error {
 	debug(indent, "// %s\n", f)
 
 	idxName := fmt.Sprintf("%c", 'i'+level)
@@ -304,7 +302,18 @@ func (f *Field) Input(level int) error {
 			printf(indent, "vp_buffer_add_%s(&buf, %s%s);\n",
 				f.Type.Basic, ctx, f.Name)
 		} else {
-			printf(indent, "// single not basic\n")
+			printf(indent, "{\n")
+			printf(indent, "  %s *%s = %s%s;\n\n",
+				f.Type, idxElName, ctx, f.Name)
+
+			for _, c := range f.Type.Compound {
+				err := c.Input(level+1, indent+2)
+				if err != nil {
+					return err
+				}
+			}
+
+			printf(indent, "}\n")
 		}
 	} else {
 		// Array
@@ -338,7 +347,7 @@ else
 				f.Type, idxElName, ctx, f.Name, idxName)
 
 			for _, c := range f.Type.Compound {
-				err := c.Input(level + 1)
+				err := c.Input(level+1, indent+4)
 				if err != nil {
 					return err
 				}
@@ -395,7 +404,6 @@ func (f *Field) Output(level, indent int) error {
 			printf(indent, `
 {
   uint32_t count = vp_buffer_get_uint32(&buf);
-  uint32_t i;
 
   if (%s == NULL)
     {
@@ -403,14 +411,13 @@ func (f *Field) Output(level, indent int) error {
     }
   else if (count > *%s)
     {
+      *%s = count;
       vp_buffer_uninit(&buf);
       return CKR_BUFFER_TOO_SMALL;
     }
   else
     {
-      *%s = count;
-      for (i = 0; i < count; i++)
-        %s[i] = vp_buffer_get_uint32(&buf);
+      vp_buffer_get_%s_arr(&buf, %s, count);
     }
 }
 `,
@@ -418,6 +425,7 @@ func (f *Field) Output(level, indent int) error {
 				f.SizeName,
 				f.SizeName,
 				f.SizeName,
+				f.Type.Basic,
 				f.Name)
 		} else if f.Type.IsBasic {
 			// Array of basic types.
@@ -443,7 +451,7 @@ func (f *Field) Output(level, indent int) error {
 				f.Type, lvCtx, idxElName, rvCtx, f.Name, idxName)
 
 			for _, c := range f.Type.Compound {
-				err := c.Input(level + 1)
+				err := c.Input(level+1, indent+4)
 				if err != nil {
 					return err
 				}

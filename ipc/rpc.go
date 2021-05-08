@@ -18,7 +18,7 @@ type CKAttributeType uint32
 type CKBbool bool
 
 // CKByte defines basic protocol type CK_BYTE.
-type CKByte byte
+type CKByte = byte
 
 // CKChar defines basic protocol type CK_CHAR.
 type CKChar = byte
@@ -54,7 +54,7 @@ type CKUserType uint32
 type CKUTF8Char = byte
 
 // CKVoidPtr defines basic protocol type CK_VOID_PTR.
-type CKVoidPtr byte
+type CKVoidPtr = byte
 
 // CKAttribute defines compound protocol type CK_ATTRIBUTE.
 type CKAttribute struct {
@@ -69,6 +69,12 @@ type CKInfo struct {
 	Flags              CKFlags
 	LibraryDescription [32]CKUTF8Char
 	LibraryVersion     CKVersion
+}
+
+// CKMechanism defines compound protocol type CK_MECHANISM.
+type CKMechanism struct {
+	Mechanism CKMechanismType
+	Parameter []CKVoidPtr
 }
 
 // CKMechanismInfo defines compound protocol type CK_MECHANISM_INFO.
@@ -139,7 +145,8 @@ type GetSlotListReq struct {
 
 // GetSlotListResp defines the result of C_GetSlotList.
 type GetSlotListResp struct {
-	SlotList []CKSlotID
+	SlotListLen int
+	SlotList    []CKSlotID
 }
 
 // GetSlotInfoReq defines the arguments of C_GetSlotInfo.
@@ -170,7 +177,8 @@ type GetMechanismListReq struct {
 
 // GetMechanismListResp defines the result of C_GetMechanismList.
 type GetMechanismListResp struct {
-	MechanismList []CKMechanismType
+	MechanismListLen int
+	MechanismList    []CKMechanismType
 }
 
 // GetMechanismInfoReq defines the arguments of C_GetMechanismInfo.
@@ -234,6 +242,23 @@ type GetObjectSizeResp struct {
 	Size CKUlong
 }
 
+// DigestInitReq defines the arguments of C_DigestInit.
+type DigestInitReq struct {
+	Mechanism CKMechanism
+}
+
+// DigestReq defines the arguments of C_Digest.
+type DigestReq struct {
+	Data       []CKByte
+	DigestSize uint32
+}
+
+// DigestResp defines the result of C_Digest.
+type DigestResp struct {
+	DigestLen int
+	Digest    []CKByte
+}
+
 // Provider defines the PKCS #11 provider interface.
 type Provider interface {
 	ImplOpenSession(req *ImplOpenSessionReq) error
@@ -252,6 +277,8 @@ type Provider interface {
 	DestroyObject(req *DestroyObjectReq) error
 	GetObjectSize(req *GetObjectSizeReq) (*GetObjectSizeResp, error)
 	FindObjectsFinal() error
+	DigestInit(req *DigestInitReq) error
+	Digest(req *DigestReq) (*DigestResp, error)
 }
 
 // Base provides a dummy implementation of the Provider interface.
@@ -337,6 +364,16 @@ func (b *Base) FindObjectsFinal() error {
 	return ErrFunctionNotSupported
 }
 
+// DigestInit implements the Provider.DigestInit().
+func (b *Base) DigestInit(req *DigestInitReq) error {
+	return ErrFunctionNotSupported
+}
+
+// Digest implements the Provider.Digest().
+func (b *Base) Digest(req *DigestReq) (*DigestResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
 var msgTypeNames = map[Type]string{
 	0xc0000101: "ImplOpenSession",
 	0xc0000102: "ImplCloseSession",
@@ -354,6 +391,8 @@ var msgTypeNames = map[Type]string{
 	0xc0050703: "DestroyObject",
 	0xc0050704: "GetObjectSize",
 	0xc0050709: "FindObjectsFinal",
+	0xc0050c01: "DigestInit",
+	0xc0050c02: "Digest",
 }
 
 // Dispatch dispatches the message to provider and returns the message
@@ -508,6 +547,24 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 
 	case 0xc0050709: // FindObjectsFinal
 		return nil, p.FindObjectsFinal()
+
+	case 0xc0050c01: // DigestInit
+		var req DigestInitReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		return nil, p.DigestInit(&req)
+
+	case 0xc0050c02: // Digest
+		var req DigestReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		resp, err := p.Digest(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
 
 	default:
 		return nil, ErrFunctionNotSupported

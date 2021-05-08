@@ -9,6 +9,7 @@ package main
 import (
 	"crypto/rand"
 	"encoding/binary"
+	"hash"
 	"log"
 	"net"
 	"os"
@@ -69,8 +70,9 @@ func LookupProvider(id ipc.CKUlong) (*Provider, error) {
 
 // Session implements a session with the token.
 type Session struct {
-	ID    ipc.CKSessionHandle
-	Flags ipc.CKFlags
+	ID     ipc.CKSessionHandle
+	Flags  ipc.CKFlags
+	Digest hash.Hash
 }
 
 // NewSession creates a new session instance.

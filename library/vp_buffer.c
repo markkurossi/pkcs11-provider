@@ -177,7 +177,7 @@ vp_buffer_get_uint32(VPBuffer *buf)
 }
 
 bool
-vp_buffer_get_byte_arr(VPBuffer *buf, void *data, size_t data_len)
+vp_buffer_get_byte_arr(VPBuffer *buf, void *data, size_t data_count)
 {
   unsigned char *ucp;
   size_t len;
@@ -185,7 +185,7 @@ vp_buffer_get_byte_arr(VPBuffer *buf, void *data, size_t data_len)
   if (buf->offset + 4 > buf->used)
     {
       buf->error = CKR_DATA_LEN_RANGE;
-      return 0;
+      return false;
     }
   ucp = buf->data + buf->offset;
   buf->offset += 4;
@@ -199,14 +199,52 @@ vp_buffer_get_byte_arr(VPBuffer *buf, void *data, size_t data_len)
       buf->offset = buf->used;
       return false;
     }
-  if (len > data_len)
+  if (len > data_count)
     {
-      buf->error = CKR_DATA_LEN_RANGE;
+      buf->error = CKR_BUFFER_TOO_SMALL;
       buf->offset += len;
       return false;
     }
   memcpy(data, ucp, len);
   buf->offset += len;
+
+  return true;
+}
+
+bool
+vp_buffer_get_uint32_arr(VPBuffer *buf, void *data, size_t data_count)
+{
+  unsigned char *ucp;
+  size_t i, count;
+  uint32_t *arr;
+
+  if (buf->offset + 4 > buf->used)
+    {
+      buf->error = CKR_DATA_LEN_RANGE;
+      return false;
+    }
+  ucp = buf->data + buf->offset;
+  buf->offset += 4;
+
+  count = VP_GET_UINT32(ucp);
+  ucp += 4;
+
+  if (buf->offset + count * 4 > buf->used)
+    {
+      buf->error = CKR_DATA_LEN_RANGE;
+      buf->offset = buf->used;
+      return false;
+    }
+  if (count > data_count)
+    {
+      buf->error = CKR_BUFFER_TOO_SMALL;
+      buf->offset += count * 4;
+      return false;
+    }
+
+  arr = (uint32_t *) data;
+  for (i = 0; i < count; i++)
+    arr[i] = vp_buffer_get_uint32(buf);
 
   return true;
 }

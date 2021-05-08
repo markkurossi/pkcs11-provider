@@ -7,6 +7,8 @@
 package main
 
 import (
+	"crypto/sha256"
+	"crypto/sha512"
 	"log"
 	"regexp"
 	"runtime"
@@ -95,7 +97,8 @@ func (p *Provider) Initialize() (*ipc.InitializeResp, error) {
 // GetSlotList implements the Provider.GetSlotList().
 func (p *Provider) GetSlotList(req *ipc.GetSlotListReq) (*ipc.GetSlotListResp, error) {
 	return &ipc.GetSlotListResp{
-		SlotList: []ipc.CKSlotID{0},
+		SlotListLen: 1,
+		SlotList:    []ipc.CKSlotID{0},
 	}, nil
 }
 
@@ -144,7 +147,8 @@ func (p *Provider) GetMechanismList(req *ipc.GetMechanismListReq) (*ipc.GetMecha
 	}
 
 	return &ipc.GetMechanismListResp{
-		MechanismList: result,
+		MechanismListLen: len(result),
+		MechanismList:    result,
 	}, nil
 }
 
@@ -198,4 +202,50 @@ func (p *Provider) ImplOpenSession(req *ipc.ImplOpenSessionReq) error {
 func (p *Provider) Login(req *ipc.LoginReq) error {
 	log.Printf("Login: UserType=%v, Pin=%v", req.UserType, string(req.Pin))
 	return nil
+}
+
+// DigestInit implements the Provider.DigestInit().
+func (p *Provider) DigestInit(req *ipc.DigestInitReq) error {
+	if p.session == nil {
+		return ipc.ErrSessionHandleInvalid
+	}
+	if p.session.Digest != nil {
+		return ipc.ErrOperationActive
+	}
+
+	switch req.Mechanism.Mechanism {
+	case ipc.CkmSHA256:
+		p.session.Digest = sha256.New()
+		return nil
+
+	case ipc.CkmSHA512:
+		p.session.Digest = sha512.New()
+		return nil
+
+	default:
+		log.Printf("DigestInit: Mechanism=%x", req.Mechanism.Mechanism)
+		return ipc.ErrMechanismInvalid
+	}
+}
+
+// Digest implements the Provider.Digest().
+func (p *Provider) Digest(req *ipc.DigestReq) (*ipc.DigestResp, error) {
+	if p.session == nil {
+		return nil, ipc.ErrSessionHandleInvalid
+	}
+	hash := p.session.Digest
+	if hash == nil {
+		return nil, ipc.ErrOperationNotInitialized
+	}
+	resp := &ipc.DigestResp{
+		DigestLen: hash.Size(),
+	}
+	if req.DigestSize == 0 {
+		return resp, nil
+	}
+	hash.Write(req.Data)
+	resp.Digest = hash.Sum(nil)
+	p.session.Digest = nil
+
+	return resp, nil
 }

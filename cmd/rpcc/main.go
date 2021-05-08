@@ -368,7 +368,7 @@ vp_buffer_add_space(&buf, 4);
 				if idx == 0 {
 					printf(0, "\n")
 				}
-				err = input.Input(0)
+				err = input.Input(0, 2)
 				if err != nil {
 					return err
 				}
@@ -626,8 +626,12 @@ func goCallTypes(fields []Field, functionName string, req bool) {
 	var max int
 	for _, field := range fields {
 		parts := strings.Split(field.GoType(req), " ")
-		if len(parts[0]) > max {
-			max = len(parts[0])
+		nameLen := len(parts[0])
+		if !req && field.Optional {
+			nameLen += 3
+		}
+		if nameLen > max {
+			max = nameLen
 		}
 	}
 
@@ -650,6 +654,14 @@ type %s%s struct {
 `,
 		goFunc, suffix, comment, functionName, goFunc, suffix)
 	for _, field := range fields {
+		if !req && field.Optional {
+			lenName := fmt.Sprintf("%sLen", GoFieldName(field.Name))
+			fmt.Printf("\t%s", lenName)
+			for i := len(lenName); i < max; i++ {
+				fmt.Print(" ")
+			}
+			fmt.Printf(" int\n")
+		}
 		parts := strings.Split(field.GoType(req), " ")
 		fmt.Printf("\t%s", parts[0])
 
