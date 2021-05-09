@@ -22,7 +22,33 @@ C_SeedRandom
   CK_ULONG          ulSeedLen  /* length of seed material */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  CK_RV ret;
+  VPBuffer buf;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
+
+  /* Lookup session by hSession */
+  conn = vp_session(hSession, &ret);
+  if (ret != CKR_OK)
+    return ret;
+
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0051301);
+  vp_buffer_add_space(&buf, 4);
+
+  vp_buffer_add_byte_arr(&buf, pSeed, ulSeedLen);
+
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  vp_buffer_uninit(&buf);
+
+  return ret;
 }
 
 /* C_GenerateRandom generates random data. */
@@ -34,5 +60,39 @@ C_GenerateRandom
   CK_ULONG          ulRandomLen  /* # of bytes to generate */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  CK_RV ret;
+  VPBuffer buf;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
+
+  /* Lookup session by hSession */
+  conn = vp_session(hSession, &ret);
+  if (ret != CKR_OK)
+    return ret;
+
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0051302);
+  vp_buffer_add_space(&buf, 4);
+
+  vp_buffer_add_uint32(&buf, ulRandomLen);
+
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  vp_buffer_get_byte_arr(&buf, RandomData, ulRandomLen);
+
+  if (vp_buffer_error(&buf, &ret))
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  vp_buffer_uninit(&buf);
+
+  return ret;
 }

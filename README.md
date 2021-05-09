@@ -31,5 +31,5 @@ following components:
  - [ ] Crypto provider with Go
    - [ ] Message sign
    - [ ] Message digest
-   - [ ] Random numbers
+   - [X] Random numbers
    - [ ] and others...

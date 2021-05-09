@@ -436,7 +436,7 @@ func (f *Field) Output(level, indent int) error {
 					rvCtx, f.Name,
 					f.SizeType)
 			} else {
-				printf(indent, "vp_buffer_get_%s_arr(&buf, %s%s, &%s%s);\n",
+				printf(indent, "vp_buffer_get_%s_arr(&buf, %s%s, %s%s);\n",
 					f.Type.Basic,
 					rvCtx, f.Name,
 					rvCtx, f.SizeName)

@@ -275,6 +275,21 @@ type DigestFinalResp struct {
 	Digest    []CKByte
 }
 
+// SeedRandomReq defines the arguments of C_SeedRandom.
+type SeedRandomReq struct {
+	Seed []CKByte
+}
+
+// GenerateRandomReq defines the arguments of C_GenerateRandom.
+type GenerateRandomReq struct {
+	RandomLen CKUlong
+}
+
+// GenerateRandomResp defines the result of C_GenerateRandom.
+type GenerateRandomResp struct {
+	RandomData []CKByte
+}
+
 // Provider defines the PKCS #11 provider interface.
 type Provider interface {
 	ImplOpenSession(req *ImplOpenSessionReq) error
@@ -297,6 +312,8 @@ type Provider interface {
 	Digest(req *DigestReq) (*DigestResp, error)
 	DigestUpdate(req *DigestUpdateReq) error
 	DigestFinal(req *DigestFinalReq) (*DigestFinalResp, error)
+	SeedRandom(req *SeedRandomReq) error
+	GenerateRandom(req *GenerateRandomReq) (*GenerateRandomResp, error)
 }
 
 // Base provides a dummy implementation of the Provider interface.
@@ -402,6 +419,16 @@ func (b *Base) DigestFinal(req *DigestFinalReq) (*DigestFinalResp, error) {
 	return nil, ErrFunctionNotSupported
 }
 
+// SeedRandom implements the Provider.SeedRandom().
+func (b *Base) SeedRandom(req *SeedRandomReq) error {
+	return ErrFunctionNotSupported
+}
+
+// GenerateRandom implements the Provider.GenerateRandom().
+func (b *Base) GenerateRandom(req *GenerateRandomReq) (*GenerateRandomResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
 var msgTypeNames = map[Type]string{
 	0xc0000101: "ImplOpenSession",
 	0xc0000102: "ImplCloseSession",
@@ -423,6 +450,8 @@ var msgTypeNames = map[Type]string{
 	0xc0050c02: "Digest",
 	0xc0050c03: "DigestUpdate",
 	0xc0050c05: "DigestFinal",
+	0xc0051301: "SeedRandom",
+	0xc0051302: "GenerateRandom",
 }
 
 // Dispatch dispatches the message to provider and returns the message
@@ -609,6 +638,24 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 			return nil, err
 		}
 		resp, err := p.DigestFinal(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
+
+	case 0xc0051301: // SeedRandom
+		var req SeedRandomReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		return nil, p.SeedRandom(&req)
+
+	case 0xc0051302: // GenerateRandom
+		var req GenerateRandomReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		resp, err := p.GenerateRandom(&req)
 		if err != nil {
 			return nil, err
 		}

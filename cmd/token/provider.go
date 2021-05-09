@@ -7,6 +7,7 @@
 package main
 
 import (
+	"crypto/rand"
 	"crypto/sha256"
 	"crypto/sha512"
 	"log"
@@ -282,5 +283,25 @@ func (p *Provider) DigestFinal(req *ipc.DigestFinalReq) (*ipc.DigestFinalResp, e
 	resp.Digest = hash.Sum(nil)
 	p.session.Digest = nil
 
+	return resp, nil
+}
+
+// SeedRandom implements the Provider.SeedRandom().
+func (p *Provider) SeedRandom(req *ipc.SeedRandomReq) error {
+	return ipc.ErrRandomSeedNotSupported
+}
+
+// GenerateRandom implements the Provider.GenerateRandom().
+func (p *Provider) GenerateRandom(req *ipc.GenerateRandomReq) (*ipc.GenerateRandomResp, error) {
+	if p.session == nil {
+		return nil, ipc.ErrSessionHandleInvalid
+	}
+	resp := &ipc.GenerateRandomResp{
+		RandomData: make([]byte, req.RandomLen),
+	}
+	_, err := rand.Reader.Read(resp.RandomData)
+	if err != nil {
+		return nil, ipc.ErrDeviceError
+	}
 	return resp, nil
 }

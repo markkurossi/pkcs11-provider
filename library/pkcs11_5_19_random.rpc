@@ -21,7 +21,12 @@ C_SeedRandom
   CK_ULONG          ulSeedLen  /* length of seed material */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Session:
+   *                       CK_SESSION_HANDLE hSession
+   * Inputs:
+   *   [CK_ULONG ulSeedLen]CK_BYTE           pSeed
+   */
 }
 
 /* C_GenerateRandom generates random data. */
@@ -33,5 +38,12 @@ C_GenerateRandom
   CK_ULONG          ulRandomLen  /* # of bytes to generate */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Session:
+   *                         CK_SESSION_HANDLE hSession
+   * Inputs:
+   *                         CK_ULONG          ulRandomLen
+   * Outputs:
+   *   [CK_ULONG ulRandomLen]CK_BYTE           RandomData
+   */
 }
