@@ -22,7 +22,7 @@ type CK_USER_TYPE        uint32
 
 type CK_ATTRIBUTE struct {
                        CK_ATTRIBUTE_TYPE type
-  [CK_ULONG ulValueLen]CK_VOID_PTR       pValue
+  [CK_ULONG ulValueLen]CK_BYTE           pValue
 }
 
 type CK_VERSION struct {

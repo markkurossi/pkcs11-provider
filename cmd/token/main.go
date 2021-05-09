@@ -9,6 +9,7 @@ package main
 import (
 	"crypto/rand"
 	"encoding/binary"
+	"encoding/hex"
 	"hash"
 	"log"
 	"net"
@@ -158,7 +159,7 @@ func messageLoop(conn net.Conn) error {
 
 		msgType := ipc.Type(bo.Uint32(hdr[0:4]))
 		length := bo.Uint32(hdr[4:8])
-		log.Printf("msg=%s, length=%d\n", msgType.Name(), length)
+		log.Printf("\u250C\u2500%s:\n", msgType.Name())
 
 		var msg []byte
 		if length > 0 {
@@ -167,10 +168,23 @@ func messageLoop(conn net.Conn) error {
 			if err != nil {
 				return err
 			}
+			if length > 64 {
+				log.Printf("\u251c\u2500\u2500\u2500\u2500req: length=%d:\n%s",
+					length, hex.Dump(msg))
+			} else {
+				log.Printf("\u251c\u2500\u2500\u2500\u2500req: %x\n", msg)
+			}
 		}
 
 		ret, data := ipc.Dispatch(provider, msgType, msg)
-		log.Printf("ret: %s, data=%d", ret, len(data))
+		if len(data) > 64 {
+			log.Printf("\u2514>%s: length=%d:\n%s",
+				ret, len(data), hex.Dump(data))
+		} else if len(data) > 0 {
+			log.Printf("\u2514>%s: %x\n", ret, data)
+		} else {
+			log.Printf("\u2514>%s\n", ret)
+		}
 
 		bo.PutUint32(hdr[0:4], uint32(ret))
 		bo.PutUint32(hdr[4:8], uint32(len(data)))

@@ -59,7 +59,7 @@ type CKVoidPtr = byte
 // CKAttribute defines compound protocol type CK_ATTRIBUTE.
 type CKAttribute struct {
 	Type  CKAttributeType
-	Value []CKVoidPtr
+	Value []CKByte
 }
 
 // CKInfo defines compound protocol type CK_INFO.
@@ -227,6 +227,27 @@ type LoginReq struct {
 	Pin      []CKUTF8Char
 }
 
+// CreateObjectReq defines the arguments of C_CreateObject.
+type CreateObjectReq struct {
+	Template []CKAttribute
+}
+
+// CreateObjectResp defines the result of C_CreateObject.
+type CreateObjectResp struct {
+	Object CKObjectHandle
+}
+
+// CopyObjectReq defines the arguments of C_CopyObject.
+type CopyObjectReq struct {
+	Object   CKObjectHandle
+	Template []CKAttribute
+}
+
+// CopyObjectResp defines the result of C_CopyObject.
+type CopyObjectResp struct {
+	NewObject CKObjectHandle
+}
+
 // DestroyObjectReq defines the arguments of C_DestroyObject.
 type DestroyObjectReq struct {
 	Object CKObjectHandle
@@ -305,6 +326,8 @@ type Provider interface {
 	SetPIN(req *SetPINReq) error
 	OpenSession(req *OpenSessionReq) (*OpenSessionResp, error)
 	Login(req *LoginReq) error
+	CreateObject(req *CreateObjectReq) (*CreateObjectResp, error)
+	CopyObject(req *CopyObjectReq) (*CopyObjectResp, error)
 	DestroyObject(req *DestroyObjectReq) error
 	GetObjectSize(req *GetObjectSizeReq) (*GetObjectSizeResp, error)
 	FindObjectsFinal() error
@@ -384,6 +407,16 @@ func (b *Base) Login(req *LoginReq) error {
 	return ErrFunctionNotSupported
 }
 
+// CreateObject implements the Provider.CreateObject().
+func (b *Base) CreateObject(req *CreateObjectReq) (*CreateObjectResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
+// CopyObject implements the Provider.CopyObject().
+func (b *Base) CopyObject(req *CopyObjectReq) (*CopyObjectResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
 // DestroyObject implements the Provider.DestroyObject().
 func (b *Base) DestroyObject(req *DestroyObjectReq) error {
 	return ErrFunctionNotSupported
@@ -443,6 +476,8 @@ var msgTypeNames = map[Type]string{
 	0xc0050509: "SetPIN",
 	0xc0050601: "OpenSession",
 	0xc0050608: "Login",
+	0xc0050701: "CreateObject",
+	0xc0050702: "CopyObject",
 	0xc0050703: "DestroyObject",
 	0xc0050704: "GetObjectSize",
 	0xc0050709: "FindObjectsFinal",
@@ -585,6 +620,28 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 			return nil, err
 		}
 		return nil, p.Login(&req)
+
+	case 0xc0050701: // CreateObject
+		var req CreateObjectReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		resp, err := p.CreateObject(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
+
+	case 0xc0050702: // CopyObject
+		var req CopyObjectReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		resp, err := p.CopyObject(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
 
 	case 0xc0050703: // DestroyObject
 		var req DestroyObjectReq
