@@ -249,3 +249,38 @@ func (p *Provider) Digest(req *ipc.DigestReq) (*ipc.DigestResp, error) {
 
 	return resp, nil
 }
+
+// DigestUpdate implements the Provider.DigestUpdate().
+func (p *Provider) DigestUpdate(req *ipc.DigestUpdateReq) error {
+	if p.session == nil {
+		return ipc.ErrSessionHandleInvalid
+	}
+	hash := p.session.Digest
+	if hash == nil {
+		return ipc.ErrOperationNotInitialized
+	}
+	hash.Write(req.Part)
+
+	return nil
+}
+
+// DigestFinal implements the Provider.DigestFinal().
+func (p *Provider) DigestFinal(req *ipc.DigestFinalReq) (*ipc.DigestFinalResp, error) {
+	if p.session == nil {
+		return nil, ipc.ErrSessionHandleInvalid
+	}
+	hash := p.session.Digest
+	if hash == nil {
+		return nil, ipc.ErrOperationNotInitialized
+	}
+	resp := &ipc.DigestFinalResp{
+		DigestLen: hash.Size(),
+	}
+	if req.DigestSize == 0 {
+		return resp, nil
+	}
+	resp.Digest = hash.Sum(nil)
+	p.session.Digest = nil
+
+	return resp, nil
+}

@@ -39,11 +39,11 @@ C_Digest
 {
   /**
    * Session:
-   *   CK_SESSION_HANDLE hSession
+   *                              CK_SESSION_HANDLE hSession
    * Inputs:
-   *   [CK_ULONG ulDataLen]CK_BYTE pData
+   *          [CK_ULONG ulDataLen]CK_BYTE           pData
    * InOutputs:
-   *   [CK_ULONG_PTR pulDigestLen]CK_BYTE pDigest?
+   *   [CK_ULONG_PTR pulDigestLen]CK_BYTE           pDigest?
    */
 }
 
@@ -58,7 +58,12 @@ C_DigestUpdate
   CK_ULONG          ulPartLen  /* bytes of data to be digested */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Session:
+   *                       CK_SESSION_HANDLE hSession
+   * Inputs:
+   *   [CK_ULONG ulPartLen]CK_BYTE           pPart
+   */
 }
 
 /* C_DigestKey continues a multi-part message-digesting
@@ -86,5 +91,10 @@ C_DigestFinal
   CK_ULONG_PTR      pulDigestLen  /* gets byte count of digest */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Session:
+   *                              CK_SESSION_HANDLE hSession
+   * InOutputs:
+   *   [CK_ULONG_PTR pulDigestLen]CK_BYTE           pDigest?
+   */
 }

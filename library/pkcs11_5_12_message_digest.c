@@ -135,7 +135,33 @@ C_DigestUpdate
   CK_ULONG          ulPartLen  /* bytes of data to be digested */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  CK_RV ret;
+  VPBuffer buf;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
+
+  /* Lookup session by hSession */
+  conn = vp_session(hSession, &ret);
+  if (ret != CKR_OK)
+    return ret;
+
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0050c03);
+  vp_buffer_add_space(&buf, 4);
+
+  vp_buffer_add_byte_arr(&buf, pPart, ulPartLen);
+
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  vp_buffer_uninit(&buf);
+
+  return ret;
 }
 
 /* C_DigestKey continues a multi-part message-digesting
@@ -163,5 +189,61 @@ C_DigestFinal
   CK_ULONG_PTR      pulDigestLen  /* gets byte count of digest */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  CK_RV ret;
+  VPBuffer buf;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
+
+  /* Lookup session by hSession */
+  conn = vp_session(hSession, &ret);
+  if (ret != CKR_OK)
+    return ret;
+
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0050c05);
+  vp_buffer_add_space(&buf, 4);
+
+
+  if (pDigest == NULL)
+    vp_buffer_add_uint32(&buf, 0);
+  else
+    vp_buffer_add_uint32(&buf, *pulDigestLen);
+
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  {
+    uint32_t count = vp_buffer_get_uint32(&buf);
+
+    if (pDigest == NULL)
+      {
+        *pulDigestLen = count;
+      }
+    else if (count > *pulDigestLen)
+      {
+        *pulDigestLen = count;
+        vp_buffer_uninit(&buf);
+        return CKR_BUFFER_TOO_SMALL;
+      }
+    else
+      {
+        *pulDigestLen = count;
+        vp_buffer_get_byte_arr(&buf, pDigest, count);
+      }
+  }
+
+  if (vp_buffer_error(&buf, &ret))
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  vp_buffer_uninit(&buf);
+
+  return ret;
 }

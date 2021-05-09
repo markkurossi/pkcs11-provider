@@ -259,6 +259,22 @@ type DigestResp struct {
 	Digest    []CKByte
 }
 
+// DigestUpdateReq defines the arguments of C_DigestUpdate.
+type DigestUpdateReq struct {
+	Part []CKByte
+}
+
+// DigestFinalReq defines the arguments of C_DigestFinal.
+type DigestFinalReq struct {
+	DigestSize uint32
+}
+
+// DigestFinalResp defines the result of C_DigestFinal.
+type DigestFinalResp struct {
+	DigestLen int
+	Digest    []CKByte
+}
+
 // Provider defines the PKCS #11 provider interface.
 type Provider interface {
 	ImplOpenSession(req *ImplOpenSessionReq) error
@@ -279,6 +295,8 @@ type Provider interface {
 	FindObjectsFinal() error
 	DigestInit(req *DigestInitReq) error
 	Digest(req *DigestReq) (*DigestResp, error)
+	DigestUpdate(req *DigestUpdateReq) error
+	DigestFinal(req *DigestFinalReq) (*DigestFinalResp, error)
 }
 
 // Base provides a dummy implementation of the Provider interface.
@@ -374,6 +392,16 @@ func (b *Base) Digest(req *DigestReq) (*DigestResp, error) {
 	return nil, ErrFunctionNotSupported
 }
 
+// DigestUpdate implements the Provider.DigestUpdate().
+func (b *Base) DigestUpdate(req *DigestUpdateReq) error {
+	return ErrFunctionNotSupported
+}
+
+// DigestFinal implements the Provider.DigestFinal().
+func (b *Base) DigestFinal(req *DigestFinalReq) (*DigestFinalResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
 var msgTypeNames = map[Type]string{
 	0xc0000101: "ImplOpenSession",
 	0xc0000102: "ImplCloseSession",
@@ -393,6 +421,8 @@ var msgTypeNames = map[Type]string{
 	0xc0050709: "FindObjectsFinal",
 	0xc0050c01: "DigestInit",
 	0xc0050c02: "Digest",
+	0xc0050c03: "DigestUpdate",
+	0xc0050c05: "DigestFinal",
 }
 
 // Dispatch dispatches the message to provider and returns the message
@@ -561,6 +591,24 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 			return nil, err
 		}
 		resp, err := p.Digest(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
+
+	case 0xc0050c03: // DigestUpdate
+		var req DigestUpdateReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		return nil, p.DigestUpdate(&req)
+
+	case 0xc0050c05: // DigestFinal
+		var req DigestFinalReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		resp, err := p.DigestFinal(&req)
 		if err != nil {
 			return nil, err
 		}
