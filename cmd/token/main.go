@@ -168,7 +168,7 @@ func messageLoop(conn net.Conn) error {
 			if err != nil {
 				return err
 			}
-			if length > 64 {
+			if length > 32 {
 				log.Printf("\u251c\u2500\u2500\u2500\u2500req: length=%d:\n%s",
 					length, hex.Dump(msg))
 			} else {
@@ -177,7 +177,7 @@ func messageLoop(conn net.Conn) error {
 		}
 
 		ret, data := ipc.Dispatch(provider, msgType, msg)
-		if len(data) > 64 {
+		if len(data) > 32 {
 			log.Printf("\u2514>%s: length=%d:\n%s",
 				ret, len(data), hex.Dump(data))
 		} else if len(data) > 0 {
