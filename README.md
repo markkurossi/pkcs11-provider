@@ -18,9 +18,18 @@ following components:
    need the Go environment only if you modify the `.rpc` files under
    library.
 
+ - [Software Token](cmd/token/) implementing PKCS #11 operations. The
+   token is implemented in Go and (will) support all modern PKCS #11
+   cryptographic operations.
+
 # TODO
 
- - [ ] RPC compiler
- - [ ] ASN.1 encode/decode
- - [ ] IPC over Unix domain sockets
- - [ ] crypto provider with Go
+ - [ ] RPC compiler (ugly but it works):
+   - [ ] Cleanup field input/output handling and types
+   - [ ] Remove old unused input/output code
+ - [X] IPC over Unix domain sockets
+ - [ ] Crypto provider with Go
+   - [ ] Message sign
+   - [ ] Message digest
+   - [ ] Random numbers
+   - [ ] and others...

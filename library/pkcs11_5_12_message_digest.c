@@ -122,7 +122,6 @@ C_Digest
   vp_buffer_uninit(&buf);
 
   return ret;
-  VP_FUNCTION_NOT_SUPPORTED;
 }
 
 /* C_DigestUpdate continues a multiple-part message-digesting

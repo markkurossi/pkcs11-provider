@@ -45,7 +45,6 @@ C_Digest
    * InOutputs:
    *   [CK_ULONG_PTR pulDigestLen]CK_BYTE pDigest?
    */
-  VP_FUNCTION_NOT_SUPPORTED;
 }
 
 /* C_DigestUpdate continues a multiple-part message-digesting
