@@ -10,6 +10,8 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/sha512"
+	"encoding/hex"
+	"fmt"
 	"log"
 	"regexp"
 	"runtime"
@@ -203,6 +205,18 @@ func (p *Provider) ImplOpenSession(req *ipc.ImplOpenSessionReq) error {
 func (p *Provider) Login(req *ipc.LoginReq) error {
 	log.Printf("Login: UserType=%v, Pin=%v", req.UserType, string(req.Pin))
 	return nil
+}
+
+// CreateObject implements the Provider.CreateObject().
+func (p *Provider) CreateObject(req *ipc.CreateObjectReq) (*ipc.CreateObjectResp, error) {
+	for idx, attr := range req.Template {
+		fmt.Printf("%d:\t%s\n", idx, attr.Type)
+		if len(attr.Value) > 0 {
+			fmt.Printf("%s", hex.Dump(attr.Value))
+		}
+	}
+
+	return nil, ipc.ErrFunctionNotSupported
 }
 
 // DigestInit implements the Provider.DigestInit().

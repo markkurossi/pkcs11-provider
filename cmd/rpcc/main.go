@@ -35,6 +35,7 @@ var (
 
 	output     io.WriteCloser = os.Stdout
 	outputC    bool
+	defines    bool
 	outputGo   bool
 	printInfo  bool
 	printDebug bool
@@ -43,6 +44,7 @@ var (
 func main() {
 	log.SetFlags(0)
 	flag.BoolVar(&outputC, "c", false, "generate C code")
+	flag.BoolVar(&defines, "D", false, "generate Go defines from C")
 	flag.BoolVar(&outputGo, "go", false, "generate Go code")
 	flag.BoolVar(&printInfo, "i", false, "print file information")
 	flag.BoolVar(&printDebug, "d", false, "print debug information")
@@ -65,6 +67,25 @@ func main() {
 			log.Fatalf("failed to create output file: %s", err)
 		}
 		defer output.Close()
+	}
+
+	if defines {
+		for _, arg := range flag.Args() {
+			f, err := os.Open(arg)
+			if err != nil {
+				log.Fatalf("%s: %s", arg, err)
+			}
+			input := &Input{
+				Reader: bufio.NewReader(f),
+			}
+
+			fmt.Fprintf(os.Stderr, "%s\n", arg)
+			err = processDefines(input)
+			if err != nil {
+				log.Fatalf("%s:%d: %s\n", arg, input.Line, err)
+			}
+		}
+		return
 	}
 
 	if outputGo {
@@ -93,7 +114,6 @@ import (
 		if err != nil {
 			log.Fatalf("%s: %s\n", arg, err)
 		}
-		defer f.Close()
 		header(arg)
 
 		input := &Input{
@@ -105,6 +125,7 @@ import (
 		if err != nil {
 			log.Fatalf("%s:%d: %s\n", arg, input.Line, err)
 		}
+		f.Close()
 	}
 
 	if outputGo {

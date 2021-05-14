@@ -11,6 +11,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"hash"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -154,6 +155,9 @@ func messageLoop(conn net.Conn) error {
 	for {
 		_, err := conn.Read(hdr[:])
 		if err != nil {
+			if err == io.EOF {
+				return nil
+			}
 			return err
 		}
 

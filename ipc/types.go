@@ -6,6 +6,10 @@
 
 package ipc
 
+import (
+	"fmt"
+)
+
 // Flags that describe capabilities of a slot.
 const (
 	CkfTokenPresent    CKFlags = 0x00000001
@@ -497,3 +501,259 @@ const (
 	CkmSP800108DoublePipelineKDF   CKMechanismType = 0x000003ae
 	CkmVendorDefined               CKMechanismType = 0x80000000
 )
+
+// Attribute types.
+const (
+	CkfArrayAttribute CKAttributeType = 0x40000000
+
+	CkaClass                   CKAttributeType = 0x00000000
+	CkaToken                   CKAttributeType = 0x00000001
+	CkaPrivate                 CKAttributeType = 0x00000002
+	CkaLabel                   CKAttributeType = 0x00000003
+	CkaUniqueID                CKAttributeType = 0x00000004
+	CkaApplication             CKAttributeType = 0x00000010
+	CkaValue                   CKAttributeType = 0x00000011
+	CkaObjectID                CKAttributeType = 0x00000012
+	CkaCertificateType         CKAttributeType = 0x00000080
+	CkaIssuer                  CKAttributeType = 0x00000081
+	CkaSerialNumber            CKAttributeType = 0x00000082
+	CkaACIssuer                CKAttributeType = 0x00000083
+	CkaOwner                   CKAttributeType = 0x00000084
+	CkaAttrTypes               CKAttributeType = 0x00000085
+	CkaTrusted                 CKAttributeType = 0x00000086
+	CkaCertificateCategory     CKAttributeType = 0x00000087
+	CkaJavaMIDPSecurityDomain  CKAttributeType = 0x00000088
+	CkaURL                     CKAttributeType = 0x00000089
+	CkaHashOfSubjectPublicKey  CKAttributeType = 0x0000008A
+	CkaHashOfIssuerPublicKey   CKAttributeType = 0x0000008B
+	CkaNameHashAlgorithm       CKAttributeType = 0x0000008C
+	CkaCheckValue              CKAttributeType = 0x00000090
+	CkaKeyType                 CKAttributeType = 0x00000100
+	CkaSubject                 CKAttributeType = 0x00000101
+	CkaID                      CKAttributeType = 0x00000102
+	CkaSensitive               CKAttributeType = 0x00000103
+	CkaEncrypt                 CKAttributeType = 0x00000104
+	CkaDecrypt                 CKAttributeType = 0x00000105
+	CkaWrap                    CKAttributeType = 0x00000106
+	CkaUnwrap                  CKAttributeType = 0x00000107
+	CkaSign                    CKAttributeType = 0x00000108
+	CkaSignRecover             CKAttributeType = 0x00000109
+	CkaVerify                  CKAttributeType = 0x0000010A
+	CkaVerifyRecover           CKAttributeType = 0x0000010B
+	CkaDerive                  CKAttributeType = 0x0000010C
+	CkaStartDate               CKAttributeType = 0x00000110
+	CkaEndDate                 CKAttributeType = 0x00000111
+	CkaModulus                 CKAttributeType = 0x00000120
+	CkaModulusBits             CKAttributeType = 0x00000121
+	CkaPublicExponent          CKAttributeType = 0x00000122
+	CkaPrivateExponent         CKAttributeType = 0x00000123
+	CkaPrime1                  CKAttributeType = 0x00000124
+	CkaPrime2                  CKAttributeType = 0x00000125
+	CkaExponent1               CKAttributeType = 0x00000126
+	CkaExponent2               CKAttributeType = 0x00000127
+	CkaCoefficient             CKAttributeType = 0x00000128
+	CkaPublicKeyInfo           CKAttributeType = 0x00000129
+	CkaPrime                   CKAttributeType = 0x00000130
+	CkaSubprime                CKAttributeType = 0x00000131
+	CkaBase                    CKAttributeType = 0x00000132
+	CkaPrimeBits               CKAttributeType = 0x00000133
+	CkaSubPrimeBits            CKAttributeType = 0x00000134
+	CkaValueBits               CKAttributeType = 0x00000160
+	CkaValueLen                CKAttributeType = 0x00000161
+	CkaExtractable             CKAttributeType = 0x00000162
+	CkaLocal                   CKAttributeType = 0x00000163
+	CkaNeverExtractable        CKAttributeType = 0x00000164
+	CkaAlwaysSensitive         CKAttributeType = 0x00000165
+	CkaKeyGenMechanism         CKAttributeType = 0x00000166
+	CkaModifiable              CKAttributeType = 0x00000170
+	CkaCopyable                CKAttributeType = 0x00000171
+	CkaDestroyable             CKAttributeType = 0x00000172
+	CkaEcdsaParams             CKAttributeType = 0x00000180 /* Deprecated */
+	CkaECParams                CKAttributeType = 0x00000180
+	CkaECPoint                 CKAttributeType = 0x00000181
+	CkaSecondaryAuth           CKAttributeType = 0x00000200 /* Deprecated */
+	CkaAuthPinFlags            CKAttributeType = 0x00000201 /* Deprecated */
+	CkaAlwaysAuthenticate      CKAttributeType = 0x00000202
+	CkaWrapWithTrusted         CKAttributeType = 0x00000210
+	CkaWrapTemplate            CKAttributeType = CkfArrayAttribute | 0x00000211
+	CkaUnwrapTemplate          CKAttributeType = CkfArrayAttribute | 0x00000212
+	CkaDeriveTemplate          CKAttributeType = CkfArrayAttribute | 0x00000213
+	CkaOtpFormat               CKAttributeType = 0x00000220
+	CkaOtpLength               CKAttributeType = 0x00000221
+	CkaOtpTimeInterval         CKAttributeType = 0x00000222
+	CkaOtpUserFriendlyMode     CKAttributeType = 0x00000223
+	CkaOtpChallengeRequirement CKAttributeType = 0x00000224
+	CkaOtpTimeRequirement      CKAttributeType = 0x00000225
+	CkaOtpCounterRequirement   CKAttributeType = 0x00000226
+	CkaOtpPinRequirement       CKAttributeType = 0x00000227
+	CkaOtpCounter              CKAttributeType = 0x0000022E
+	CkaOtpTime                 CKAttributeType = 0x0000022F
+	CkaOtpUserIdentifier       CKAttributeType = 0x0000022A
+	CkaOtpServiceIdentifier    CKAttributeType = 0x0000022B
+	CkaOtpServiceLogo          CKAttributeType = 0x0000022C
+	CkaOtpServiceLogoType      CKAttributeType = 0x0000022D
+	CkaGostr3410Params         CKAttributeType = 0x00000250
+	CkaGostr3411Params         CKAttributeType = 0x00000251
+	CkaGost28147Params         CKAttributeType = 0x00000252
+	CkaHWFeatureType           CKAttributeType = 0x00000300
+	CkaResetOnInit             CKAttributeType = 0x00000301
+	CkaHasReset                CKAttributeType = 0x00000302
+	CkaPixelX                  CKAttributeType = 0x00000400
+	CkaPixelY                  CKAttributeType = 0x00000401
+	CkaResolution              CKAttributeType = 0x00000402
+	CkaCharRows                CKAttributeType = 0x00000403
+	CkaCharColumns             CKAttributeType = 0x00000404
+	CkaColor                   CKAttributeType = 0x00000405
+	CkaBitsPerPixel            CKAttributeType = 0x00000406
+	CkaCharSets                CKAttributeType = 0x00000480
+	CkaEncodingMethods         CKAttributeType = 0x00000481
+	CkaMimeTypes               CKAttributeType = 0x00000482
+	CkaMechanismType           CKAttributeType = 0x00000500
+	CkaRequiredCMSAttributes   CKAttributeType = 0x00000501
+	CkaDefaultCMSAttributes    CKAttributeType = 0x00000502
+	CkaSupportedCMSAttributes  CKAttributeType = 0x00000503
+	CkaAllowedMechanisms       CKAttributeType = CkfArrayAttribute | 0x00000600
+	CkaProfileID               CKAttributeType = 0x00000601
+	CkaVendorDefined           CKAttributeType = 0x80000000
+)
+
+var ckaNames = map[CKAttributeType]string{
+	CkaClass:                   "CKA_CLASS",
+	CkaToken:                   "CKA_TOKEN",
+	CkaPrivate:                 "CKA_PRIVATE",
+	CkaLabel:                   "CKA_LABEL",
+	CkaUniqueID:                "CKA_UNIQUE_ID",
+	CkaApplication:             "CKA_APPLICATION",
+	CkaValue:                   "CKA_VALUE",
+	CkaObjectID:                "CKA_OBJECT_ID",
+	CkaCertificateType:         "CKA_CERTIFICATE_TYPE",
+	CkaIssuer:                  "CKA_ISSUER",
+	CkaSerialNumber:            "CKA_SERIAL_NUMBER",
+	CkaACIssuer:                "CKA_AC_ISSUER",
+	CkaOwner:                   "CKA_OWNER",
+	CkaAttrTypes:               "CKA_ATTR_TYPES",
+	CkaTrusted:                 "CKA_TRUSTED",
+	CkaCertificateCategory:     "CKA_CERTIFICATE_CATEGORY",
+	CkaJavaMIDPSecurityDomain:  "CKA_JAVA_MIDP_SECURITY_DOMAIN",
+	CkaURL:                     "CKA_URL",
+	CkaHashOfSubjectPublicKey:  "CKA_HASH_OF_SUBJECT_PUBLIC_KEY",
+	CkaHashOfIssuerPublicKey:   "CKA_HASH_OF_ISSUER_PUBLIC_KEY",
+	CkaNameHashAlgorithm:       "CKA_NAME_HASH_ALGORITHM",
+	CkaCheckValue:              "CKA_CHECK_VALUE",
+	CkaKeyType:                 "CKA_KEY_TYPE",
+	CkaSubject:                 "CKA_SUBJECT",
+	CkaID:                      "CKA_ID",
+	CkaSensitive:               "CKA_SENSITIVE",
+	CkaEncrypt:                 "CKA_ENCRYPT",
+	CkaDecrypt:                 "CKA_DECRYPT",
+	CkaWrap:                    "CKA_WRAP",
+	CkaUnwrap:                  "CKA_UNWRAP",
+	CkaSign:                    "CKA_SIGN",
+	CkaSignRecover:             "CKA_SIGN_RECOVER",
+	CkaVerify:                  "CKA_VERIFY",
+	CkaVerifyRecover:           "CKA_VERIFY_RECOVER",
+	CkaDerive:                  "CKA_DERIVE",
+	CkaStartDate:               "CKA_START_DATE",
+	CkaEndDate:                 "CKA_END_DATE",
+	CkaModulus:                 "CKA_MODULUS",
+	CkaModulusBits:             "CKA_MODULUS_BITS",
+	CkaPublicExponent:          "CKA_PUBLIC_EXPONENT",
+	CkaPrivateExponent:         "CKA_PRIVATE_EXPONENT",
+	CkaPrime1:                  "CKA_PRIME_1",
+	CkaPrime2:                  "CKA_PRIME_2",
+	CkaExponent1:               "CKA_EXPONENT_1",
+	CkaExponent2:               "CKA_EXPONENT_2",
+	CkaCoefficient:             "CKA_COEFFICIENT",
+	CkaPublicKeyInfo:           "CKA_PUBLIC_KEY_INFO",
+	CkaPrime:                   "CKA_PRIME",
+	CkaSubprime:                "CKA_SUBPRIME",
+	CkaBase:                    "CKA_BASE",
+	CkaPrimeBits:               "CKA_PRIME_BITS",
+	CkaSubPrimeBits:            "CKA_SUB_PRIME_BITS",
+	CkaValueBits:               "CKA_VALUE_BITS",
+	CkaValueLen:                "CKA_VALUE_LEN",
+	CkaExtractable:             "CKA_EXTRACTABLE",
+	CkaLocal:                   "CKA_LOCAL",
+	CkaNeverExtractable:        "CKA_NEVER_EXTRACTABLE",
+	CkaAlwaysSensitive:         "CKA_ALWAYS_SENSITIVE",
+	CkaKeyGenMechanism:         "CKA_KEY_GEN_MECHANISM",
+	CkaModifiable:              "CKA_MODIFIABLE",
+	CkaCopyable:                "CKA_COPYABLE",
+	CkaDestroyable:             "CKA_DESTROYABLE",
+	CkaECParams:                "CKA_EC_PARAMS",
+	CkaECPoint:                 "CKA_EC_POINT",
+	CkaSecondaryAuth:           "CKA_SECONDARY_AUTH",
+	CkaAuthPinFlags:            "CKA_AUTH_PIN_FLAGS",
+	CkaAlwaysAuthenticate:      "CKA_ALWAYS_AUTHENTICATE",
+	CkaWrapWithTrusted:         "CKA_WRAP_WITH_TRUSTED",
+	CkaWrapTemplate:            "CKA_WRAP_TEMPLATE",
+	CkaUnwrapTemplate:          "CKA_UNWRAP_TEMPLATE",
+	CkaDeriveTemplate:          "CKA_DERIVE_TEMPLATE",
+	CkaOtpFormat:               "CKA_OTP_FORMAT",
+	CkaOtpLength:               "CKA_OTP_LENGTH",
+	CkaOtpTimeInterval:         "CKA_OTP_TIME_INTERVAL",
+	CkaOtpUserFriendlyMode:     "CKA_OTP_USER_FRIENDLY_MODE",
+	CkaOtpChallengeRequirement: "CKA_OTP_CHALLENGE_REQUIREMENT",
+	CkaOtpTimeRequirement:      "CKA_OTP_TIME_REQUIREMENT",
+	CkaOtpCounterRequirement:   "CKA_OTP_COUNTER_REQUIREMENT",
+	CkaOtpPinRequirement:       "CKA_OTP_PIN_REQUIREMENT",
+	CkaOtpCounter:              "CKA_OTP_COUNTER",
+	CkaOtpTime:                 "CKA_OTP_TIME",
+	CkaOtpUserIdentifier:       "CKA_OTP_USER_IDENTIFIER",
+	CkaOtpServiceIdentifier:    "CKA_OTP_SERVICE_IDENTIFIER",
+	CkaOtpServiceLogo:          "CKA_OTP_SERVICE_LOGO",
+	CkaOtpServiceLogoType:      "CKA_OTP_SERVICE_LOGO_TYPE",
+	CkaGostr3410Params:         "CKA_GOSTR3410_PARAMS",
+	CkaGostr3411Params:         "CKA_GOSTR3411_PARAMS",
+	CkaGost28147Params:         "CKA_GOST28147_PARAMS",
+	CkaHWFeatureType:           "CKA_HW_FEATURE_TYPE",
+	CkaResetOnInit:             "CKA_RESET_ON_INIT",
+	CkaHasReset:                "CKA_HAS_RESET",
+	CkaPixelX:                  "CKA_PIXEL_X",
+	CkaPixelY:                  "CKA_PIXEL_Y",
+	CkaResolution:              "CKA_RESOLUTION",
+	CkaCharRows:                "CKA_CHAR_ROWS",
+	CkaCharColumns:             "CKA_CHAR_COLUMNS",
+	CkaColor:                   "CKA_COLOR",
+	CkaBitsPerPixel:            "CKA_BITS_PER_PIXEL",
+	CkaCharSets:                "CKA_CHAR_SETS",
+	CkaEncodingMethods:         "CKA_ENCODING_METHODS",
+	CkaMimeTypes:               "CKA_MIME_TYPES",
+	CkaMechanismType:           "CKA_MECHANISM_TYPE",
+	CkaRequiredCMSAttributes:   "CKA_REQUIRED_CMS_ATTRIBUTES",
+	CkaDefaultCMSAttributes:    "CKA_DEFAULT_CMS_ATTRIBUTES",
+	CkaSupportedCMSAttributes:  "CKA_SUPPORTED_CMS_ATTRIBUTES",
+	CkaAllowedMechanisms:       "CKA_ALLOWED_MECHANISMS",
+	CkaProfileID:               "CKA_PROFILE_ID",
+	CkaVendorDefined:           "CKA_VENDOR_DEFINED",
+}
+
+func (t CKAttributeType) String() string {
+	name, ok := ckaNames[t]
+	if ok {
+		return name
+	}
+	return fmt.Sprintf("{CKAttributeType %d}", t)
+}
+
+// Uint returns the attribute value as uint64 integer number. It
+// panics if the value length is not 1, 2, 4, or 8.
+func (attr CKAttribute) Uint() uint64 {
+	switch len(attr.Value) {
+	case 1:
+		return uint64(attr.Value[0])
+
+	case 2:
+		return uint64(hbo.Uint16(attr.Value))
+
+	case 4:
+		return uint64(hbo.Uint32(attr.Value))
+
+	case 8:
+		return uint64(hbo.Uint64(attr.Value))
+
+	default:
+		panic(fmt.Sprintf("CKAttribute.Uint() called for attribute length %d",
+			len(attr.Value)))
+	}
+}
