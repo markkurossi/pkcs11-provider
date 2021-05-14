@@ -736,24 +736,33 @@ func (t CKAttributeType) String() string {
 	return fmt.Sprintf("{CKAttributeType %d}", t)
 }
 
-// Uint returns the attribute value as uint64 integer number. It
-// panics if the value length is not 1, 2, 4, or 8.
-func (attr CKAttribute) Uint() uint64 {
+// Bool returns the attribute value as bool.
+func (attr CKAttribute) Bool() (bool, error) {
 	switch len(attr.Value) {
 	case 1:
-		return uint64(attr.Value[0])
-
-	case 2:
-		return uint64(hbo.Uint16(attr.Value))
-
-	case 4:
-		return uint64(hbo.Uint32(attr.Value))
-
-	case 8:
-		return uint64(hbo.Uint64(attr.Value))
+		return attr.Value[0] != 0, nil
 
 	default:
-		panic(fmt.Sprintf("CKAttribute.Uint() called for attribute length %d",
-			len(attr.Value)))
+		return false, fmt.Errorf("invalid attribute length %d", len(attr.Value))
+	}
+}
+
+// Uint returns the attribute value as uint64 integer number.
+func (attr CKAttribute) Uint() (uint64, error) {
+	switch len(attr.Value) {
+	case 1:
+		return uint64(attr.Value[0]), nil
+
+	case 2:
+		return uint64(hbo.Uint16(attr.Value)), nil
+
+	case 4:
+		return uint64(hbo.Uint32(attr.Value)), nil
+
+	case 8:
+		return uint64(hbo.Uint64(attr.Value)), nil
+
+	default:
+		return 0, fmt.Errorf("invalid attribute length %d", len(attr.Value))
 	}
 }
