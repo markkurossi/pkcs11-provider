@@ -23,7 +23,15 @@ C_GenerateKey
   CK_OBJECT_HANDLE_PTR phKey        /* gets handle of new key */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Session:
+   *                     CK_SESSION_HANDLE hSession
+   * Inputs:
+   *                     CK_MECHANISM      pMechanism
+   *   [CK_ULONG ulCount]CK_ATTRIBUTE      pTemplate
+   * Outputs:
+   *                     CK_OBJECT_HANDLE  phKey
+   */
 }
 
 /* C_GenerateKeyPair generates a public-key/private-key pair,
@@ -42,7 +50,17 @@ C_GenerateKeyPair
   CK_OBJECT_HANDLE_PTR phPrivateKey                 /* gets priv. key handle */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Session:
+   *                                       CK_SESSION_HANDLE hSession
+   * Inputs:
+   *                                       CK_MECHANISM      pMechanism
+   *   [CK_ULONG ulPublicKeyAttributeCount]CK_ATTRIBUTE      pPublicKeyTemplate
+   *  [CK_ULONG ulPrivateKeyAttributeCount]CK_ATTRIBUTE      pPrivateKeyTemplate
+   * Outputs:
+   *                                       CK_OBJECT_HANDLE  phPublicKey
+   *                                       CK_OBJECT_HANDLE  phPrivateKey
+   */
 }
 
 /* C_WrapKey wraps (i.e., encrypts) a key. */

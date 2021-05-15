@@ -296,6 +296,30 @@ type DigestFinalResp struct {
 	Digest    []CKByte
 }
 
+// GenerateKeyReq defines the arguments of C_GenerateKey.
+type GenerateKeyReq struct {
+	Mechanism CKMechanism
+	Template  []CKAttribute
+}
+
+// GenerateKeyResp defines the result of C_GenerateKey.
+type GenerateKeyResp struct {
+	Key CKObjectHandle
+}
+
+// GenerateKeyPairReq defines the arguments of C_GenerateKeyPair.
+type GenerateKeyPairReq struct {
+	Mechanism          CKMechanism
+	PublicKeyTemplate  []CKAttribute
+	PrivateKeyTemplate []CKAttribute
+}
+
+// GenerateKeyPairResp defines the result of C_GenerateKeyPair.
+type GenerateKeyPairResp struct {
+	PublicKey  CKObjectHandle
+	PrivateKey CKObjectHandle
+}
+
 // SeedRandomReq defines the arguments of C_SeedRandom.
 type SeedRandomReq struct {
 	Seed []CKByte
@@ -335,6 +359,8 @@ type Provider interface {
 	Digest(req *DigestReq) (*DigestResp, error)
 	DigestUpdate(req *DigestUpdateReq) error
 	DigestFinal(req *DigestFinalReq) (*DigestFinalResp, error)
+	GenerateKey(req *GenerateKeyReq) (*GenerateKeyResp, error)
+	GenerateKeyPair(req *GenerateKeyPairReq) (*GenerateKeyPairResp, error)
 	SeedRandom(req *SeedRandomReq) error
 	GenerateRandom(req *GenerateRandomReq) (*GenerateRandomResp, error)
 }
@@ -452,6 +478,16 @@ func (b *Base) DigestFinal(req *DigestFinalReq) (*DigestFinalResp, error) {
 	return nil, ErrFunctionNotSupported
 }
 
+// GenerateKey implements the Provider.GenerateKey().
+func (b *Base) GenerateKey(req *GenerateKeyReq) (*GenerateKeyResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
+// GenerateKeyPair implements the Provider.GenerateKeyPair().
+func (b *Base) GenerateKeyPair(req *GenerateKeyPairReq) (*GenerateKeyPairResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
 // SeedRandom implements the Provider.SeedRandom().
 func (b *Base) SeedRandom(req *SeedRandomReq) error {
 	return ErrFunctionNotSupported
@@ -485,6 +521,8 @@ var msgTypeNames = map[Type]string{
 	0xc0050c02: "Digest",
 	0xc0050c03: "DigestUpdate",
 	0xc0050c05: "DigestFinal",
+	0xc0051201: "GenerateKey",
+	0xc0051202: "GenerateKeyPair",
 	0xc0051301: "SeedRandom",
 	0xc0051302: "GenerateRandom",
 }
@@ -695,6 +733,28 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 			return nil, err
 		}
 		resp, err := p.DigestFinal(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
+
+	case 0xc0051201: // GenerateKey
+		var req GenerateKeyReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		resp, err := p.GenerateKey(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
+
+	case 0xc0051202: // GenerateKeyPair
+		var req GenerateKeyPairReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		resp, err := p.GenerateKeyPair(&req)
 		if err != nil {
 			return nil, err
 		}

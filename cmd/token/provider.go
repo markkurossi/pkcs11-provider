@@ -300,6 +300,26 @@ func (p *Provider) DigestFinal(req *ipc.DigestFinalReq) (*ipc.DigestFinalResp, e
 	return resp, nil
 }
 
+// GenerateKeyPair implements the Provider.GenerateKeyPair().
+func (p *Provider) GenerateKeyPair(req *ipc.GenerateKeyPairReq) (*ipc.GenerateKeyPairResp, error) {
+	log.Printf("GenerateKeyPair: %s", req.Mechanism)
+	log.Printf("PublicKeyTemplate:")
+	for idx, attr := range req.PublicKeyTemplate {
+		log.Printf(" - %d: %s\n", idx, attr.Type)
+		if len(attr.Value) > 0 {
+			log.Printf("%s", hex.Dump(attr.Value))
+		}
+	}
+	log.Printf("PrivateKeyTemplate:")
+	for idx, attr := range req.PrivateKeyTemplate {
+		log.Printf(" - %d: %s\n", idx, attr.Type)
+		if len(attr.Value) > 0 {
+			log.Printf("%s", hex.Dump(attr.Value))
+		}
+	}
+	return nil, ipc.ErrFunctionNotSupported
+}
+
 // SeedRandom implements the Provider.SeedRandom().
 func (p *Provider) SeedRandom(req *ipc.SeedRandomReq) error {
 	return ipc.ErrRandomSeedNotSupported

@@ -24,7 +24,55 @@ C_GenerateKey
   CK_OBJECT_HANDLE_PTR phKey        /* gets handle of new key */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  CK_RV ret;
+  VPBuffer buf;
+  int i;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
+
+  /* Lookup session by hSession */
+  conn = vp_session(hSession, &ret);
+  if (ret != CKR_OK)
+    return ret;
+
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0051201);
+  vp_buffer_add_space(&buf, 4);
+
+  {
+    CK_MECHANISM *iel = pMechanism;
+
+    vp_buffer_add_uint32(&buf, iel->mechanism);
+    vp_buffer_add_byte_arr(&buf, iel->pParameter, iel->ulParameterLen);
+  }
+  vp_buffer_add_uint32(&buf, ulCount);
+  for (i = 0; i < ulCount; i++)
+    {
+      CK_ATTRIBUTE *iel = &pTemplate[i];
+
+      vp_buffer_add_uint32(&buf, iel->type);
+      vp_buffer_add_byte_arr(&buf, iel->pValue, iel->ulValueLen);
+    }
+
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  *phKey = vp_buffer_get_uint32(&buf);
+
+  if (vp_buffer_error(&buf, &ret))
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  vp_buffer_uninit(&buf);
+
+  return ret;
 }
 
 /* C_GenerateKeyPair generates a public-key/private-key pair,
@@ -43,7 +91,64 @@ C_GenerateKeyPair
   CK_OBJECT_HANDLE_PTR phPrivateKey                 /* gets priv. key handle */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  CK_RV ret;
+  VPBuffer buf;
+  int i;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
+
+  /* Lookup session by hSession */
+  conn = vp_session(hSession, &ret);
+  if (ret != CKR_OK)
+    return ret;
+
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0051202);
+  vp_buffer_add_space(&buf, 4);
+
+  {
+    CK_MECHANISM *iel = pMechanism;
+
+    vp_buffer_add_uint32(&buf, iel->mechanism);
+    vp_buffer_add_byte_arr(&buf, iel->pParameter, iel->ulParameterLen);
+  }
+  vp_buffer_add_uint32(&buf, ulPublicKeyAttributeCount);
+  for (i = 0; i < ulPublicKeyAttributeCount; i++)
+    {
+      CK_ATTRIBUTE *iel = &pPublicKeyTemplate[i];
+
+      vp_buffer_add_uint32(&buf, iel->type);
+      vp_buffer_add_byte_arr(&buf, iel->pValue, iel->ulValueLen);
+    }
+  vp_buffer_add_uint32(&buf, ulPrivateKeyAttributeCount);
+  for (i = 0; i < ulPrivateKeyAttributeCount; i++)
+    {
+      CK_ATTRIBUTE *iel = &pPrivateKeyTemplate[i];
+
+      vp_buffer_add_uint32(&buf, iel->type);
+      vp_buffer_add_byte_arr(&buf, iel->pValue, iel->ulValueLen);
+    }
+
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  *phPublicKey = vp_buffer_get_uint32(&buf);
+  *phPrivateKey = vp_buffer_get_uint32(&buf);
+
+  if (vp_buffer_error(&buf, &ret))
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  vp_buffer_uninit(&buf);
+
+  return ret;
 }
 
 /* C_WrapKey wraps (i.e., encrypts) a key. */

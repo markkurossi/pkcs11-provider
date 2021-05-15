@@ -228,17 +228,12 @@ const (
 	CkmCAST3MAC                    CKMechanismType = 0x00000313
 	CkmCAST3MACGeneral             CKMechanismType = 0x00000314
 	CkmCAST3CBCPad                 CKMechanismType = 0x00000315
-	CkmCAST5KeyGen                 CKMechanismType = 0x00000320
 	CkmCAST128KeyGen               CKMechanismType = 0x00000320
 	CkmCAST5ECB                    CKMechanismType = 0x00000321
 	CkmCAST128ECB                  CKMechanismType = 0x00000321
-	CkmCAST5CBC                    CKMechanismType = 0x00000322
 	CkmCAST128CBC                  CKMechanismType = 0x00000322
-	CkmCAST5MAC                    CKMechanismType = 0x00000323
 	CkmCAST128MAC                  CKMechanismType = 0x00000323
-	CkmCAST5MACGeneral             CKMechanismType = 0x00000324
 	CkmCAST128MACGeneral           CKMechanismType = 0x00000324
-	CkmCAST5CBCPad                 CKMechanismType = 0x00000325
 	CkmCAST128CBCPad               CKMechanismType = 0x00000325
 	CkmRC5KeyGen                   CKMechanismType = 0x00000330
 	CkmRC5ECB                      CKMechanismType = 0x00000331
@@ -280,15 +275,13 @@ const (
 	CkmSHA3224KeyDerive            CKMechanismType = 0x00000398
 	CkmSHA3384KeyDerive            CKMechanismType = 0x00000399
 	CkmSHA3512KeyDerive            CKMechanismType = 0x0000039A
-	CkmSHAKE128KeyDerive           CKMechanismType = 0x0000039B
-	CkmSHAKE256KeyDerive           CKMechanismType = 0x0000039C
+	CkmShake128KeyDerive           CKMechanismType = 0x0000039B
+	CkmShake256KeyDerive           CKMechanismType = 0x0000039C
 	CkmPBEMD2DESCBC                CKMechanismType = 0x000003A0
 	CkmPBEMD5DESCBC                CKMechanismType = 0x000003A1
 	CkmPBEMD5CASTCBC               CKMechanismType = 0x000003A2
 	CkmPBEMD5CAST3CBC              CKMechanismType = 0x000003A3
-	CkmPBEMD5CAST5CBC              CKMechanismType = 0x000003A4
 	CkmPBEMD5CAST128CBC            CKMechanismType = 0x000003A4
-	CkmPBESHA1CAST5CBC             CKMechanismType = 0x000003A5
 	CkmPBESHA1CAST128CBC           CKMechanismType = 0x000003A5
 	CkmPBESHA1RC4128               CKMechanismType = 0x000003A6
 	CkmPBESHA1RC440                CKMechanismType = 0x000003A7
@@ -297,7 +290,7 @@ const (
 	CkmPBESHA1RC2128CBC            CKMechanismType = 0x000003AA
 	CkmPBESHA1RC240CBC             CKMechanismType = 0x000003AB
 	CkmPKCS5PBKD2                  CKMechanismType = 0x000003B0
-	CkmPBASHA1WITHSHA1HMAC         CKMechanismType = 0x000003C0
+	CkmPBASHA1WithSHA1HMAC         CKMechanismType = 0x000003C0
 	CkmWTLSPreMasterKeyGen         CKMechanismType = 0x000003D0
 	CkmWTLSMasterKeyDerive         CKMechanismType = 0x000003D1
 	CkmWTLSMasterKeyDeriveDHECC    CKMechanismType = 0x000003D2
@@ -318,7 +311,7 @@ const (
 	CkmKeyWrapSetOAEP              CKMechanismType = 0x00000401
 	CkmCMSSig                      CKMechanismType = 0x00000500
 	CkmKIPDerive                   CKMechanismType = 0x00000510
-	CkmKIPWRAP                     CKMechanismType = 0x00000511
+	CkmKIPWrap                     CKMechanismType = 0x00000511
 	CkmKIPMAC                      CKMechanismType = 0x00000512
 	CkmCamelliaKeyGen              CKMechanismType = 0x00000550
 	CkmCamelliaECB                 CKMechanismType = 0x00000551
@@ -329,45 +322,44 @@ const (
 	CkmCamelliaECBEncryptData      CKMechanismType = 0x00000556
 	CkmCamelliaCBCEncryptData      CKMechanismType = 0x00000557
 	CkmCamelliaCTR                 CKMechanismType = 0x00000558
-	CkmARIAKeyGen                  CKMechanismType = 0x00000560
-	CkmARIAECB                     CKMechanismType = 0x00000561
-	CkmARIACBC                     CKMechanismType = 0x00000562
-	CkmARIAMAC                     CKMechanismType = 0x00000563
-	CkmARIAMACGeneral              CKMechanismType = 0x00000564
-	CkmARIACBCPad                  CKMechanismType = 0x00000565
-	CkmARIAECBEncryptData          CKMechanismType = 0x00000566
-	CkmARIACBCEncryptData          CKMechanismType = 0x00000567
-	CkmSEEDKeyGen                  CKMechanismType = 0x00000650
-	CkmSEEDECB                     CKMechanismType = 0x00000651
-	CkmSEEDCBC                     CKMechanismType = 0x00000652
-	CkmSEEDMAC                     CKMechanismType = 0x00000653
-	CkmSEEDMACGeneral              CKMechanismType = 0x00000654
-	CkmSEEDCBCPad                  CKMechanismType = 0x00000655
-	CkmSEEDECBEncryptData          CKMechanismType = 0x00000656
-	CkmSEEDCBCEncryptData          CKMechanismType = 0x00000657
-	CkmSKIPJACKKeyGen              CKMechanismType = 0x00001000
-	CkmSKIPJACKECB64               CKMechanismType = 0x00001001
-	CkmSKIPJACKCBC64               CKMechanismType = 0x00001002
-	CkmSKIPJACKOFB64               CKMechanismType = 0x00001003
-	CkmSKIPJACKCFB64               CKMechanismType = 0x00001004
-	CkmSKIPJACKCFB32               CKMechanismType = 0x00001005
-	CkmSKIPJACKCFB16               CKMechanismType = 0x00001006
-	CkmSKIPJACKCFB8                CKMechanismType = 0x00001007
-	CkmSKIPJACKWRAP                CKMechanismType = 0x00001008
-	CkmSKIPJACKPRIVATEWRAP         CKMechanismType = 0x00001009
-	CkmSKIPJACKRELAYX              CKMechanismType = 0x0000100a
-	CkmKEAKeyPairGen               CKMechanismType = 0x00001010
-	CkmKEAKeyDerive                CKMechanismType = 0x00001011
-	CkmKEADerive                   CKMechanismType = 0x00001012
-	CkmFORTEZZATIMESTAMP           CKMechanismType = 0x00001020
-	CkmBATONKeyGen                 CKMechanismType = 0x00001030
-	CkmBATONECB128                 CKMechanismType = 0x00001031
-	CkmBATONECB96                  CKMechanismType = 0x00001032
-	CkmBATONCBC128                 CKMechanismType = 0x00001033
-	CkmBATONCOUNTER                CKMechanismType = 0x00001034
-	CkmBATONSHUFFLE                CKMechanismType = 0x00001035
-	CkmBATONWRAP                   CKMechanismType = 0x00001036
-	CkmECDSAKeyPairGen             CKMechanismType = 0x00001040
+	CkmAriaKeyGen                  CKMechanismType = 0x00000560
+	CkmAriaECB                     CKMechanismType = 0x00000561
+	CkmAriaCBC                     CKMechanismType = 0x00000562
+	CkmAriaMAC                     CKMechanismType = 0x00000563
+	CkmAriaMACGeneral              CKMechanismType = 0x00000564
+	CkmAriaCBCPad                  CKMechanismType = 0x00000565
+	CkmAriaECBEncryptData          CKMechanismType = 0x00000566
+	CkmAriaCBCEncryptData          CKMechanismType = 0x00000567
+	CkmSeedKeyGen                  CKMechanismType = 0x00000650
+	CkmSeedECB                     CKMechanismType = 0x00000651
+	CkmSeedCBC                     CKMechanismType = 0x00000652
+	CkmSeedMAC                     CKMechanismType = 0x00000653
+	CkmSeedMACGeneral              CKMechanismType = 0x00000654
+	CkmSeedCBCPad                  CKMechanismType = 0x00000655
+	CkmSeedECBEncryptData          CKMechanismType = 0x00000656
+	CkmSeedCBCEncryptData          CKMechanismType = 0x00000657
+	CkmSkipjackKeyGen              CKMechanismType = 0x00001000
+	CkmSkipjackECB64               CKMechanismType = 0x00001001
+	CkmSkipjackCBC64               CKMechanismType = 0x00001002
+	CkmSkipjackOFB64               CKMechanismType = 0x00001003
+	CkmSkipjackCFB64               CKMechanismType = 0x00001004
+	CkmSkipjackCFB32               CKMechanismType = 0x00001005
+	CkmSkipjackCFB16               CKMechanismType = 0x00001006
+	CkmSkipjackCFB8                CKMechanismType = 0x00001007
+	CkmSkipjackWrap                CKMechanismType = 0x00001008
+	CkmSkipjackPrivateWrap         CKMechanismType = 0x00001009
+	CkmSkipjackRelayX              CKMechanismType = 0x0000100a
+	CkmKeaKeyPairGen               CKMechanismType = 0x00001010
+	CkmKeaKeyDerive                CKMechanismType = 0x00001011
+	CkmKeaDerive                   CKMechanismType = 0x00001012
+	CkmFortezzaTimestamp           CKMechanismType = 0x00001020
+	CkmBatonKeyGen                 CKMechanismType = 0x00001030
+	CkmBatonECB128                 CKMechanismType = 0x00001031
+	CkmBatonEcb96                  CKMechanismType = 0x00001032
+	CkmBatonCBC128                 CKMechanismType = 0x00001033
+	CkmBatonCounter                CKMechanismType = 0x00001034
+	CkmBatonShuffle                CKMechanismType = 0x00001035
+	CkmBatonWrap                   CKMechanismType = 0x00001036
 	CkmECKeyPairGen                CKMechanismType = 0x00001040
 	CkmECDSA                       CKMechanismType = 0x00001041
 	CkmECDSASHA1                   CKMechanismType = 0x00001042
@@ -376,17 +368,17 @@ const (
 	CkmECDSASHA384                 CKMechanismType = 0x00001045
 	CkmECDSASHA512                 CKMechanismType = 0x00001046
 	CkmECDH1Derive                 CKMechanismType = 0x00001050
-	CkmECDH1COFACTORDerive         CKMechanismType = 0x00001051
+	CkmECDH1CofactorDerive         CKMechanismType = 0x00001051
 	CkmECMQVDerive                 CKMechanismType = 0x00001052
-	CkmECDHAESKeyWRAP              CKMechanismType = 0x00001053
-	CkmRSAAESKeyWRAP               CKMechanismType = 0x00001054
-	CkmJUNIPERKeyGen               CKMechanismType = 0x00001060
-	CkmJUNIPERECB128               CKMechanismType = 0x00001061
-	CkmJUNIPERCBC128               CKMechanismType = 0x00001062
-	CkmJUNIPERCOUNTER              CKMechanismType = 0x00001063
-	CkmJUNIPERSHUFFLE              CKMechanismType = 0x00001064
-	CkmJUNIPERWRAP                 CKMechanismType = 0x00001065
-	CkmFASTHASH                    CKMechanismType = 0x00001070
+	CkmECDHAESKeyWrap              CKMechanismType = 0x00001053
+	CkmRSAAESKeyWrap               CKMechanismType = 0x00001054
+	CkmJuniperKeyGen               CKMechanismType = 0x00001060
+	CkmJuniperECB128               CKMechanismType = 0x00001061
+	CkmJuniperCBC128               CKMechanismType = 0x00001062
+	CkmJuniperCounter              CKMechanismType = 0x00001063
+	CkmJuniperShuffle              CKMechanismType = 0x00001064
+	CkmJuniperWrap                 CKMechanismType = 0x00001065
+	CkmFasthash                    CKMechanismType = 0x00001070
 	CkmAESXTS                      CKMechanismType = 0x00001071
 	CkmAESXTSKeyGen                CKMechanismType = 0x00001072
 	CkmAESKeyGen                   CKMechanismType = 0x00001080
@@ -404,39 +396,39 @@ const (
 	CkmAESXCBCMAC                  CKMechanismType = 0x0000108C
 	CkmAESXCBCMAC96                CKMechanismType = 0x0000108D
 	CkmAESGMAC                     CKMechanismType = 0x0000108E
-	CkmBLOWFISHKeyGen              CKMechanismType = 0x00001090
-	CkmBLOWFISHCBC                 CKMechanismType = 0x00001091
-	CkmTWOFISHKeyGen               CKMechanismType = 0x00001092
-	CkmTWOFISHCBC                  CKMechanismType = 0x00001093
-	CkmBLOWFISHCBCPad              CKMechanismType = 0x00001094
-	CkmTWOFISHCBCPad               CKMechanismType = 0x00001095
+	CkmBlowfishKeyGen              CKMechanismType = 0x00001090
+	CkmBlowfishCBC                 CKMechanismType = 0x00001091
+	CkmTwofishKeyGen               CKMechanismType = 0x00001092
+	CkmTwofishCBC                  CKMechanismType = 0x00001093
+	CkmBlowfishCBCPad              CKMechanismType = 0x00001094
+	CkmTwofishCBCPad               CKMechanismType = 0x00001095
 	CkmDESECBEncryptData           CKMechanismType = 0x00001100
 	CkmDESCBCEncryptData           CKMechanismType = 0x00001101
 	CkmDES3ECBEncryptData          CKMechanismType = 0x00001102
 	CkmDES3CBCEncryptData          CKMechanismType = 0x00001103
 	CkmAESECBEncryptData           CKMechanismType = 0x00001104
 	CkmAESCBCEncryptData           CKMechanismType = 0x00001105
-	CkmGOSTR3410KeyPairGen         CKMechanismType = 0x00001200
-	CkmGOSTR3410                   CKMechanismType = 0x00001201
-	CkmGOSTR3410WithGOSTR3411      CKMechanismType = 0x00001202
-	CkmGOSTR3410KeyWrap            CKMechanismType = 0x00001203
-	CkmGOSTR3410Derive             CKMechanismType = 0x00001204
-	CkmGOSTR3411                   CKMechanismType = 0x00001210
-	CkmGOSTR3411HMAC               CKMechanismType = 0x00001211
-	CkmGOST28147KeyGen             CKMechanismType = 0x00001220
-	CkmGOST28147ECB                CKMechanismType = 0x00001221
-	CkmGOST28147                   CKMechanismType = 0x00001222
-	CkmGOST28147MAC                CKMechanismType = 0x00001223
-	CkmGOST28147KeyWrap            CKMechanismType = 0x00001224
-	CkmCHACHA20KeyGen              CKMechanismType = 0x00001225
-	CkmCHACHA20                    CKMechanismType = 0x00001226
-	CkmPOLY1305KeyGen              CKMechanismType = 0x00001227
-	CkmPOLY1305                    CKMechanismType = 0x00001228
+	CkmGostR3410KeyPairGen         CKMechanismType = 0x00001200
+	CkmGostR3410                   CKMechanismType = 0x00001201
+	CkmGostR3410WithGostr3411      CKMechanismType = 0x00001202
+	CkmGostR3410KeyWrap            CKMechanismType = 0x00001203
+	CkmGostR3410Derive             CKMechanismType = 0x00001204
+	CkmGostr3411                   CKMechanismType = 0x00001210
+	CkmGostr3411HMAC               CKMechanismType = 0x00001211
+	CkmGost28147KeyGen             CKMechanismType = 0x00001220
+	CkmGost28147ECB                CKMechanismType = 0x00001221
+	CkmGost28147                   CKMechanismType = 0x00001222
+	CkmGost28147MAC                CKMechanismType = 0x00001223
+	CkmGost28147KeyWrap            CKMechanismType = 0x00001224
+	CkmChaCha20KeyGen              CKMechanismType = 0x00001225
+	CkmChaCha20                    CKMechanismType = 0x00001226
+	CkmPoly1305KeyGen              CKMechanismType = 0x00001227
+	CkmPoly1305                    CKMechanismType = 0x00001228
 	CkmDSAParameterGen             CKMechanismType = 0x00002000
 	CkmDHPKCSParameterGen          CKMechanismType = 0x00002001
 	CkmX942DHParameterGen          CKMechanismType = 0x00002002
 	CkmDSAProbablisticParameterGen CKMechanismType = 0x00002003
-	CkmDSAShaweTaylorparameterGen  CKMechanismType = 0x00002004
+	CkmDSAShaweTaylorParameterGen  CKMechanismType = 0x00002004
 	CkmAESOFB                      CKMechanismType = 0x00002104
 	CkmAESCFB64                    CKMechanismType = 0x00002105
 	CkmAESCFB8                     CKMechanismType = 0x00002106
@@ -455,36 +447,36 @@ const (
 	CkmSHA512224KeyGen             CKMechanismType = 0x00004008
 	CkmSHA512256KeyGen             CKMechanismType = 0x00004009
 	CkmSHA512TKeyGen               CKMechanismType = 0x0000400a
-	CkmNL                          CKMechanismType = 0x0000400b
-	CkmBLAKE2B160                  CKMechanismType = 0x0000400c
-	CkmBLAKE2B160HMAC              CKMechanismType = 0x0000400d
-	CkmBLAKE2B160HMACGeneral       CKMechanismType = 0x0000400e
-	CkmBLAKE2B160KeyDerive         CKMechanismType = 0x0000400f
-	CkmBLAKE2B160KeyGen            CKMechanismType = 0x00004010
-	CkmBLAKE2B256                  CKMechanismType = 0x00004011
-	CkmBLAKE2B256HMAC              CKMechanismType = 0x00004012
-	CkmBLAKE2B256HMACGeneral       CKMechanismType = 0x00004013
-	CkmBLAKE2B256KeyDerive         CKMechanismType = 0x00004014
-	CkmBLAKE2B256KeyGen            CKMechanismType = 0x00004015
-	CkmBLAKE2B384                  CKMechanismType = 0x00004016
-	CkmBLAKE2B384HMAC              CKMechanismType = 0x00004017
-	CkmBLAKE2B384HMACGeneral       CKMechanismType = 0x00004018
-	CkmBLAKE2B384KeyDerive         CKMechanismType = 0x00004019
-	CkmBLAKE2B384KeyGen            CKMechanismType = 0x0000401a
-	CkmBLAKE2B512                  CKMechanismType = 0x0000401b
-	CkmBLAKE2B512HMAC              CKMechanismType = 0x0000401c
-	CkmBLAKE2B512HMACGeneral       CKMechanismType = 0x0000401d
-	CkmBLAKE2B512KeyDerive         CKMechanismType = 0x0000401e
-	CkmBLAKE2B512KeyGen            CKMechanismType = 0x0000401f
-	CkmSALSA20                     CKMechanismType = 0x00004020
-	CkmCHACHA20POLY1305            CKMechanismType = 0x00004021
-	CkmSALSA20POLY1305             CKMechanismType = 0x00004022
+	CkmNull                        CKMechanismType = 0x0000400b
+	CkmBlake2b160                  CKMechanismType = 0x0000400c
+	CkmBlake2b160HMAC              CKMechanismType = 0x0000400d
+	CkmBlake2b160HMACGeneral       CKMechanismType = 0x0000400e
+	CkmBlake2b160KeyDerive         CKMechanismType = 0x0000400f
+	CkmBlake2b160KeyGen            CKMechanismType = 0x00004010
+	CkmBlake2b256                  CKMechanismType = 0x00004011
+	CkmBlake2b256HMAC              CKMechanismType = 0x00004012
+	CkmBlake2b256HMACGeneral       CKMechanismType = 0x00004013
+	CkmBlake2b256KeyDerive         CKMechanismType = 0x00004014
+	CkmBlake2b256KeyGen            CKMechanismType = 0x00004015
+	CkmBlake2b384                  CKMechanismType = 0x00004016
+	CkmBlake2b384HMAC              CKMechanismType = 0x00004017
+	CkmBlake2b384HMACGeneral       CKMechanismType = 0x00004018
+	CkmBlake2b384KeyDerive         CKMechanismType = 0x00004019
+	CkmBlake2b384KeyGen            CKMechanismType = 0x0000401a
+	CkmBlake2b512                  CKMechanismType = 0x0000401b
+	CkmBlake2b512HMAC              CKMechanismType = 0x0000401c
+	CkmBlake2b512HMACGeneral       CKMechanismType = 0x0000401d
+	CkmBlake2b512KeyDerive         CKMechanismType = 0x0000401e
+	CkmBlake2b512KeyGen            CKMechanismType = 0x0000401f
+	CkmSalsa20                     CKMechanismType = 0x00004020
+	CkmChaCha20Poly1305            CKMechanismType = 0x00004021
+	CkmSalsa20Poly1305             CKMechanismType = 0x00004022
 	CkmX3DHInitialize              CKMechanismType = 0x00004023
 	CkmX3DHRespond                 CKMechanismType = 0x00004024
-	CkmX2RATCHETInitialize         CKMechanismType = 0x00004025
-	CkmX2RATCHETRespond            CKMechanismType = 0x00004026
-	CkmX2RATCHETEncrypt            CKMechanismType = 0x00004027
-	CkmX2RATCHETDecrypt            CKMechanismType = 0x00004028
+	CkmX2RatchetInitialize         CKMechanismType = 0x00004025
+	CkmX2RatchetRespond            CKMechanismType = 0x00004026
+	CkmX2RatchetEncrypt            CKMechanismType = 0x00004027
+	CkmX2RatchetDecrypt            CKMechanismType = 0x00004028
 	CkmXEDDSA                      CKMechanismType = 0x00004029
 	CkmHKDFDerive                  CKMechanismType = 0x0000402a
 	CkmHKDFData                    CKMechanismType = 0x0000402b
@@ -501,6 +493,441 @@ const (
 	CkmSP800108DoublePipelineKDF   CKMechanismType = 0x000003ae
 	CkmVendorDefined               CKMechanismType = 0x80000000
 )
+
+var ckmNames = map[CKMechanismType]string{
+	CkmRSAPKCSKeyPairGen:           "CKM_RSA_PKCS_KEY_PAIR_GEN",
+	CkmRSAPKCS:                     "CKM_RSA_PKCS",
+	CkmRSA9796:                     "CKM_RSA_9796",
+	CkmRSAX509:                     "CKM_RSA_X_509",
+	CkmMD2RSAPKCS:                  "CKM_MD2_RSA_PKCS",
+	CkmMD5RSAPKCS:                  "CKM_MD5_RSA_PKCS",
+	CkmSHA1RSAPKCS:                 "CKM_SHA1_RSA_PKCS",
+	CkmRIPEMD128RSAPKCS:            "CKM_RIPEMD128_RSA_PKCS",
+	CkmRIPEMD160RSAPKCS:            "CKM_RIPEMD160_RSA_PKCS",
+	CkmRSAPKCSOAEP:                 "CKM_RSA_PKCS_OAEP",
+	CkmRSAX931KeyPairGen:           "CKM_RSA_X9_31_KEY_PAIR_GEN",
+	CkmRSAX931:                     "CKM_RSA_X9_31",
+	CkmSHA1RSAX931:                 "CKM_SHA1_RSA_X9_31",
+	CkmRSAPKCSPSS:                  "CKM_RSA_PKCS_PSS",
+	CkmSHA1RSAPKCSPSS:              "CKM_SHA1_RSA_PKCS_PSS",
+	CkmDSAKeyPairGen:               "CKM_DSA_KEY_PAIR_GEN",
+	CkmDSA:                         "CKM_DSA",
+	CkmDSASHA1:                     "CKM_DSA_SHA1",
+	CkmDSASHA224:                   "CKM_DSA_SHA224",
+	CkmDSASHA256:                   "CKM_DSA_SHA256",
+	CkmDSASHA384:                   "CKM_DSA_SHA384",
+	CkmDSASHA512:                   "CKM_DSA_SHA512",
+	CkmDSASHA3224:                  "CKM_DSA_SHA3_224",
+	CkmDSASHA3256:                  "CKM_DSA_SHA3_256",
+	CkmDSASHA3384:                  "CKM_DSA_SHA3_384",
+	CkmDSASHA3512:                  "CKM_DSA_SHA3_512",
+	CkmDHPKCSKeyPairGen:            "CKM_DH_PKCS_KEY_PAIR_GEN",
+	CkmDHPKCSDerive:                "CKM_DH_PKCS_DERIVE",
+	CkmX942DHKeyPairGen:            "CKM_X9_42_DH_KEY_PAIR_GEN",
+	CkmX942DHDerive:                "CKM_X9_42_DH_DERIVE",
+	CkmX942DHHybridDerive:          "CKM_X9_42_DH_HYBRID_DERIVE",
+	CkmX942MQVDerive:               "CKM_X9_42_MQV_DERIVE",
+	CkmSHA256RSAPKCS:               "CKM_SHA256_RSA_PKCS",
+	CkmSHA384RSAPKCS:               "CKM_SHA384_RSA_PKCS",
+	CkmSHA512RSAPKCS:               "CKM_SHA512_RSA_PKCS",
+	CkmSHA256RSAPKCSPSS:            "CKM_SHA256_RSA_PKCS_PSS",
+	CkmSHA384RSAPKCSPSS:            "CKM_SHA384_RSA_PKCS_PSS",
+	CkmSHA512RSAPKCSPSS:            "CKM_SHA512_RSA_PKCS_PSS",
+	CkmSHA224RSAPKCS:               "CKM_SHA224_RSA_PKCS",
+	CkmSHA224RSAPKCSPSS:            "CKM_SHA224_RSA_PKCS_PSS",
+	CkmSHA512224:                   "CKM_SHA512_224",
+	CkmSHA512224HMAC:               "CKM_SHA512_224_HMAC",
+	CkmSHA512224HMACGeneral:        "CKM_SHA512_224_HMAC_GENERAL",
+	CkmSHA512224KeyDerivation:      "CKM_SHA512_224_KEY_DERIVATION",
+	CkmSHA512256:                   "CKM_SHA512_256",
+	CkmSHA512256HMAC:               "CKM_SHA512_256_HMAC",
+	CkmSHA512256HMACGeneral:        "CKM_SHA512_256_HMAC_GENERAL",
+	CkmSHA512256KeyDerivation:      "CKM_SHA512_256_KEY_DERIVATION",
+	CkmSHA512T:                     "CKM_SHA512_T",
+	CkmSHA512THMAC:                 "CKM_SHA512_T_HMAC",
+	CkmSHA512THMACGeneral:          "CKM_SHA512_T_HMAC_GENERAL",
+	CkmSHA512TKeyDerivation:        "CKM_SHA512_T_KEY_DERIVATION",
+	CkmSHA3256RSAPKCS:              "CKM_SHA3_256_RSA_PKCS",
+	CkmSHA3384RSAPKCS:              "CKM_SHA3_384_RSA_PKCS",
+	CkmSHA3512RSAPKCS:              "CKM_SHA3_512_RSA_PKCS",
+	CkmSHA3256RSAPKCSPSS:           "CKM_SHA3_256_RSA_PKCS_PSS",
+	CkmSHA3384RSAPKCSPSS:           "CKM_SHA3_384_RSA_PKCS_PSS",
+	CkmSHA3512RSAPKCSPSS:           "CKM_SHA3_512_RSA_PKCS_PSS",
+	CkmSHA3224RSAPKCS:              "CKM_SHA3_224_RSA_PKCS",
+	CkmSHA3224RSAPKCSPSS:           "CKM_SHA3_224_RSA_PKCS_PSS",
+	CkmRC2KeyGen:                   "CKM_RC2_KEY_GEN",
+	CkmRC2ECB:                      "CKM_RC2_ECB",
+	CkmRC2CBC:                      "CKM_RC2_CBC",
+	CkmRC2MAC:                      "CKM_RC2_MAC",
+	CkmRC2MACGeneral:               "CKM_RC2_MAC_GENERAL",
+	CkmRC2CBCPad:                   "CKM_RC2_CBC_PAD",
+	CkmRC4KeyGen:                   "CKM_RC4_KEY_GEN",
+	CkmRC4:                         "CKM_RC4",
+	CkmDESKeyGen:                   "CKM_DES_KEY_GEN",
+	CkmDESECB:                      "CKM_DES_ECB",
+	CkmDESCBC:                      "CKM_DES_CBC",
+	CkmDESMAC:                      "CKM_DES_MAC",
+	CkmDESMACGeneral:               "CKM_DES_MAC_GENERAL",
+	CkmDESCBCPad:                   "CKM_DES_CBC_PAD",
+	CkmDES2KeyGen:                  "CKM_DES2_KEY_GEN",
+	CkmDES3KeyGen:                  "CKM_DES3_KEY_GEN",
+	CkmDES3ECB:                     "CKM_DES3_ECB",
+	CkmDES3CBC:                     "CKM_DES3_CBC",
+	CkmDES3MAC:                     "CKM_DES3_MAC",
+	CkmDES3MACGeneral:              "CKM_DES3_MAC_GENERAL",
+	CkmDES3CBCPad:                  "CKM_DES3_CBC_PAD",
+	CkmDES3CMACGeneral:             "CKM_DES3_CMAC_GENERAL",
+	CkmDES3CMAC:                    "CKM_DES3_CMAC",
+	CkmCDMFKeyGen:                  "CKM_CDMF_KEY_GEN",
+	CkmCDMFECB:                     "CKM_CDMF_ECB",
+	CkmCDMFCBC:                     "CKM_CDMF_CBC",
+	CkmCDMFMAC:                     "CKM_CDMF_MAC",
+	CkmCDMFMACGeneral:              "CKM_CDMF_MAC_GENERAL",
+	CkmCDMFCBCPad:                  "CKM_CDMF_CBC_PAD",
+	CkmDESOFB64:                    "CKM_DES_OFB64",
+	CkmDESOFB8:                     "CKM_DES_OFB8",
+	CkmDESCFB64:                    "CKM_DES_CFB64",
+	CkmDESCFB8:                     "CKM_DES_CFB8",
+	CkmMD2:                         "CKM_MD2",
+	CkmMD2HMAC:                     "CKM_MD2_HMAC",
+	CkmMD2HMACGeneral:              "CKM_MD2_HMAC_GENERAL",
+	CkmMD5:                         "CKM_MD5",
+	CkmMD5HMAC:                     "CKM_MD5_HMAC",
+	CkmMD5HMACGeneral:              "CKM_MD5_HMAC_GENERAL",
+	CkmSHA1:                        "CKM_SHA_1",
+	CkmSHA1HMAC:                    "CKM_SHA_1_HMAC",
+	CkmSHA1HMACGeneral:             "CKM_SHA_1_HMAC_GENERAL",
+	CkmRIPEMD128:                   "CKM_RIPEMD128",
+	CkmRIPEMD128HMAC:               "CKM_RIPEMD128_HMAC",
+	CkmRIPEMD128HMACGeneral:        "CKM_RIPEMD128_HMAC_GENERAL",
+	CkmRIPEMD160:                   "CKM_RIPEMD160",
+	CkmRIPEMD160HMAC:               "CKM_RIPEMD160_HMAC",
+	CkmRIPEMD160HMACGeneral:        "CKM_RIPEMD160_HMAC_GENERAL",
+	CkmSHA256:                      "CKM_SHA256",
+	CkmSHA256HMAC:                  "CKM_SHA256_HMAC",
+	CkmSHA256HMACGeneral:           "CKM_SHA256_HMAC_GENERAL",
+	CkmSHA224:                      "CKM_SHA224",
+	CkmSHA224HMAC:                  "CKM_SHA224_HMAC",
+	CkmSHA224HMACGeneral:           "CKM_SHA224_HMAC_GENERAL",
+	CkmSHA384:                      "CKM_SHA384",
+	CkmSHA384HMAC:                  "CKM_SHA384_HMAC",
+	CkmSHA384HMACGeneral:           "CKM_SHA384_HMAC_GENERAL",
+	CkmSHA512:                      "CKM_SHA512",
+	CkmSHA512HMAC:                  "CKM_SHA512_HMAC",
+	CkmSHA512HMACGeneral:           "CKM_SHA512_HMAC_GENERAL",
+	CkmSecurIDKeyGen:               "CKM_SECURID_KEY_GEN",
+	CkmSecurID:                     "CKM_SECURID",
+	CkmHOTPKeyGen:                  "CKM_HOTP_KEY_GEN",
+	CkmHOTP:                        "CKM_HOTP",
+	CkmACTI:                        "CKM_ACTI",
+	CkmACTIKeyGen:                  "CKM_ACTI_KEY_GEN",
+	CkmSHA3256:                     "CKM_SHA3_256",
+	CkmSHA3256HMAC:                 "CKM_SHA3_256_HMAC",
+	CkmSHA3256HMACGeneral:          "CKM_SHA3_256_HMAC_GENERAL",
+	CkmSHA3256KeyGen:               "CKM_SHA3_256_KEY_GEN",
+	CkmSHA3224:                     "CKM_SHA3_224",
+	CkmSHA3224HMAC:                 "CKM_SHA3_224_HMAC",
+	CkmSHA3224HMACGeneral:          "CKM_SHA3_224_HMAC_GENERAL",
+	CkmSHA3224KeyGen:               "CKM_SHA3_224_KEY_GEN",
+	CkmSHA3384:                     "CKM_SHA3_384",
+	CkmSHA3384HMAC:                 "CKM_SHA3_384_HMAC",
+	CkmSHA3384HMACGeneral:          "CKM_SHA3_384_HMAC_GENERAL",
+	CkmSHA3384KeyGen:               "CKM_SHA3_384_KEY_GEN",
+	CkmSHA3512:                     "CKM_SHA3_512",
+	CkmSHA3512HMAC:                 "CKM_SHA3_512_HMAC",
+	CkmSHA3512HMACGeneral:          "CKM_SHA3_512_HMAC_GENERAL",
+	CkmSHA3512KeyGen:               "CKM_SHA3_512_KEY_GEN",
+	CkmCASTKeyGen:                  "CKM_CAST_KEY_GEN",
+	CkmCASTECB:                     "CKM_CAST_ECB",
+	CkmCASTCBC:                     "CKM_CAST_CBC",
+	CkmCASTMAC:                     "CKM_CAST_MAC",
+	CkmCASTMACGeneral:              "CKM_CAST_MAC_GENERAL",
+	CkmCASTCBCPad:                  "CKM_CAST_CBC_PAD",
+	CkmCAST3KeyGen:                 "CKM_CAST3_KEY_GEN",
+	CkmCAST3ECB:                    "CKM_CAST3_ECB",
+	CkmCAST3CBC:                    "CKM_CAST3_CBC",
+	CkmCAST3MAC:                    "CKM_CAST3_MAC",
+	CkmCAST3MACGeneral:             "CKM_CAST3_MAC_GENERAL",
+	CkmCAST3CBCPad:                 "CKM_CAST3_CBC_PAD",
+	CkmCAST128KeyGen:               "CKM_CAST128_KEY_GEN",
+	CkmCAST128ECB:                  "CKM_CAST128_ECB",
+	CkmCAST128CBC:                  "CKM_CAST128_CBC",
+	CkmCAST128MAC:                  "CKM_CAST128_MAC",
+	CkmCAST128MACGeneral:           "CKM_CAST128_MAC_GENERAL",
+	CkmCAST128CBCPad:               "CKM_CAST128_CBC_PAD",
+	CkmRC5KeyGen:                   "CKM_RC5_KEY_GEN",
+	CkmRC5ECB:                      "CKM_RC5_ECB",
+	CkmRC5CBC:                      "CKM_RC5_CBC",
+	CkmRC5MAC:                      "CKM_RC5_MAC",
+	CkmRC5MACGeneral:               "CKM_RC5_MAC_GENERAL",
+	CkmRC5CBCPad:                   "CKM_RC5_CBC_PAD",
+	CkmIDEAKeyGen:                  "CKM_IDEA_KEY_GEN",
+	CkmIDEAECB:                     "CKM_IDEA_ECB",
+	CkmIDEACBC:                     "CKM_IDEA_CBC",
+	CkmIDEAMAC:                     "CKM_IDEA_MAC",
+	CkmIDEAMACGeneral:              "CKM_IDEA_MAC_GENERAL",
+	CkmIDEACBCPad:                  "CKM_IDEA_CBC_PAD",
+	CkmGenericSecretKeyGen:         "CKM_GENERIC_SECRET_KEY_GEN",
+	CkmConcatenateBaseAndKey:       "CKM_CONCATENATE_BASE_AND_KEY",
+	CkmConcatenateBaseAndData:      "CKM_CONCATENATE_BASE_AND_DATA",
+	CkmConcatenateDataAndBase:      "CKM_CONCATENATE_DATA_AND_BASE",
+	CkmXORBaseAndData:              "CKM_XOR_BASE_AND_DATA",
+	CkmExtractKeyFromKey:           "CKM_EXTRACT_KEY_FROM_KEY",
+	CkmSSL3PreMasterKeyGen:         "CKM_SSL3_PRE_MASTER_KEY_GEN",
+	CkmSSL3MasterKeyDerive:         "CKM_SSL3_MASTER_KEY_DERIVE",
+	CkmSSL3KeyAndMACDerive:         "CKM_SSL3_KEY_AND_MAC_DERIVE",
+	CkmSSL3MasterKeyDeriveDH:       "CKM_SSL3_MASTER_KEY_DERIVE_DH",
+	CkmTLSPreMasterKeyGen:          "CKM_TLS_PRE_MASTER_KEY_GEN",
+	CkmTLSMasterKeyDerive:          "CKM_TLS_MASTER_KEY_DERIVE",
+	CkmTLSKeyAndMACDerive:          "CKM_TLS_KEY_AND_MAC_DERIVE",
+	CkmTLSMasterKeyDeriveDH:        "CKM_TLS_MASTER_KEY_DERIVE_DH",
+	CkmTLSPRF:                      "CKM_TLS_PRF",
+	CkmSSL3MD5MAC:                  "CKM_SSL3_MD5_MAC",
+	CkmSSL3SHA1MAC:                 "CKM_SSL3_SHA1_MAC",
+	CkmMD5KeyDerivation:            "CKM_MD5_KEY_DERIVATION",
+	CkmMD2KeyDerivation:            "CKM_MD2_KEY_DERIVATION",
+	CkmSHA1KeyDerivation:           "CKM_SHA1_KEY_DERIVATION",
+	CkmSHA256KeyDerivation:         "CKM_SHA256_KEY_DERIVATION",
+	CkmSHA384KeyDerivation:         "CKM_SHA384_KEY_DERIVATION",
+	CkmSHA512KeyDerivation:         "CKM_SHA512_KEY_DERIVATION",
+	CkmSHA224KeyDerivation:         "CKM_SHA224_KEY_DERIVATION",
+	CkmSHA3256KeyDerive:            "CKM_SHA3_256_KEY_DERIVE",
+	CkmSHA3224KeyDerive:            "CKM_SHA3_224_KEY_DERIVE",
+	CkmSHA3384KeyDerive:            "CKM_SHA3_384_KEY_DERIVE",
+	CkmSHA3512KeyDerive:            "CKM_SHA3_512_KEY_DERIVE",
+	CkmShake128KeyDerive:           "CKM_SHAKE_128_KEY_DERIVE",
+	CkmShake256KeyDerive:           "CKM_SHAKE_256_KEY_DERIVE",
+	CkmPBEMD2DESCBC:                "CKM_PBE_MD2_DES_CBC",
+	CkmPBEMD5DESCBC:                "CKM_PBE_MD5_DES_CBC",
+	CkmPBEMD5CASTCBC:               "CKM_PBE_MD5_CAST_CBC",
+	CkmPBEMD5CAST3CBC:              "CKM_PBE_MD5_CAST3_CBC",
+	CkmPBEMD5CAST128CBC:            "CKM_PBE_MD5_CAST128_CBC",
+	CkmPBESHA1CAST128CBC:           "CKM_PBE_SHA1_CAST128_CBC",
+	CkmPBESHA1RC4128:               "CKM_PBE_SHA1_RC4_128",
+	CkmPBESHA1RC440:                "CKM_PBE_SHA1_RC4_40",
+	CkmPBESHA1DES3EDECBC:           "CKM_PBE_SHA1_DES3_EDE_CBC",
+	CkmPBESHA1DES2EDECBC:           "CKM_PBE_SHA1_DES2_EDE_CBC",
+	CkmPBESHA1RC2128CBC:            "CKM_PBE_SHA1_RC2_128_CBC",
+	CkmPBESHA1RC240CBC:             "CKM_PBE_SHA1_RC2_40_CBC",
+	CkmPKCS5PBKD2:                  "CKM_PKCS5_PBKD2",
+	CkmPBASHA1WithSHA1HMAC:         "CKM_PBA_SHA1_WITH_SHA1_HMAC",
+	CkmWTLSPreMasterKeyGen:         "CKM_WTLS_PRE_MASTER_KEY_GEN",
+	CkmWTLSMasterKeyDerive:         "CKM_WTLS_MASTER_KEY_DERIVE",
+	CkmWTLSMasterKeyDeriveDHECC:    "CKM_WTLS_MASTER_KEY_DERIVE_DH_ECC",
+	CkmWTLSPRF:                     "CKM_WTLS_PRF",
+	CkmWTLSServerKeyAndMACDerive:   "CKM_WTLS_SERVER_KEY_AND_MAC_DERIVE",
+	CkmWTLSClientKeyAndMACDerive:   "CKM_WTLS_CLIENT_KEY_AND_MAC_DERIVE",
+	CkmTLS10MACServer:              "CKM_TLS10_MAC_SERVER",
+	CkmTLS10MACClient:              "CKM_TLS10_MAC_CLIENT",
+	CkmTLS12MAC:                    "CKM_TLS12_MAC",
+	CkmTLS12KDF:                    "CKM_TLS12_KDF",
+	CkmTLS12MasterKeyDerive:        "CKM_TLS12_MASTER_KEY_DERIVE",
+	CkmTLS12KeyAndMACDerive:        "CKM_TLS12_KEY_AND_MAC_DERIVE",
+	CkmTLS12MasterKeyDeriveDH:      "CKM_TLS12_MASTER_KEY_DERIVE_DH",
+	CkmTLS12KeySafeDerive:          "CKM_TLS12_KEY_SAFE_DERIVE",
+	CkmTLSMAC:                      "CKM_TLS_MAC",
+	CkmTLSKDF:                      "CKM_TLS_KDF",
+	CkmKeyWrapLYNKS:                "CKM_KEY_WRAP_LYNKS",
+	CkmKeyWrapSetOAEP:              "CKM_KEY_WRAP_SET_OAEP",
+	CkmCMSSig:                      "CKM_CMS_SIG",
+	CkmKIPDerive:                   "CKM_KIP_DERIVE",
+	CkmKIPWrap:                     "CKM_KIP_WRAP",
+	CkmKIPMAC:                      "CKM_KIP_MAC",
+	CkmCamelliaKeyGen:              "CKM_CAMELLIA_KEY_GEN",
+	CkmCamelliaECB:                 "CKM_CAMELLIA_ECB",
+	CkmCamelliaCBC:                 "CKM_CAMELLIA_CBC",
+	CkmCamelliaMAC:                 "CKM_CAMELLIA_MAC",
+	CkmCamelliaMACGeneral:          "CKM_CAMELLIA_MAC_GENERAL",
+	CkmCamelliaCBCPad:              "CKM_CAMELLIA_CBC_PAD",
+	CkmCamelliaECBEncryptData:      "CKM_CAMELLIA_ECB_ENCRYPT_DATA",
+	CkmCamelliaCBCEncryptData:      "CKM_CAMELLIA_CBC_ENCRYPT_DATA",
+	CkmCamelliaCTR:                 "CKM_CAMELLIA_CTR",
+	CkmAriaKeyGen:                  "CKM_ARIA_KEY_GEN",
+	CkmAriaECB:                     "CKM_ARIA_ECB",
+	CkmAriaCBC:                     "CKM_ARIA_CBC",
+	CkmAriaMAC:                     "CKM_ARIA_MAC",
+	CkmAriaMACGeneral:              "CKM_ARIA_MAC_GENERAL",
+	CkmAriaCBCPad:                  "CKM_ARIA_CBC_PAD",
+	CkmAriaECBEncryptData:          "CKM_ARIA_ECB_ENCRYPT_DATA",
+	CkmAriaCBCEncryptData:          "CKM_ARIA_CBC_ENCRYPT_DATA",
+	CkmSeedKeyGen:                  "CKM_SEED_KEY_GEN",
+	CkmSeedECB:                     "CKM_SEED_ECB",
+	CkmSeedCBC:                     "CKM_SEED_CBC",
+	CkmSeedMAC:                     "CKM_SEED_MAC",
+	CkmSeedMACGeneral:              "CKM_SEED_MAC_GENERAL",
+	CkmSeedCBCPad:                  "CKM_SEED_CBC_PAD",
+	CkmSeedECBEncryptData:          "CKM_SEED_ECB_ENCRYPT_DATA",
+	CkmSeedCBCEncryptData:          "CKM_SEED_CBC_ENCRYPT_DATA",
+	CkmSkipjackKeyGen:              "CKM_SKIPJACK_KEY_GEN",
+	CkmSkipjackECB64:               "CKM_SKIPJACK_ECB64",
+	CkmSkipjackCBC64:               "CKM_SKIPJACK_CBC64",
+	CkmSkipjackOFB64:               "CKM_SKIPJACK_OFB64",
+	CkmSkipjackCFB64:               "CKM_SKIPJACK_CFB64",
+	CkmSkipjackCFB32:               "CKM_SKIPJACK_CFB32",
+	CkmSkipjackCFB16:               "CKM_SKIPJACK_CFB16",
+	CkmSkipjackCFB8:                "CKM_SKIPJACK_CFB8",
+	CkmSkipjackWrap:                "CKM_SKIPJACK_WRAP",
+	CkmSkipjackPrivateWrap:         "CKM_SKIPJACK_PRIVATE_WRAP",
+	CkmSkipjackRelayX:              "CKM_SKIPJACK_RELAYX",
+	CkmKeaKeyPairGen:               "CKM_KEA_KEY_PAIR_GEN",
+	CkmKeaKeyDerive:                "CKM_KEA_KEY_DERIVE",
+	CkmKeaDerive:                   "CKM_KEA_DERIVE",
+	CkmFortezzaTimestamp:           "CKM_FORTEZZA_TIMESTAMP",
+	CkmBatonKeyGen:                 "CKM_BATON_KEY_GEN",
+	CkmBatonECB128:                 "CKM_BATON_ECB128",
+	CkmBatonEcb96:                  "CKM_BATON_ECB96",
+	CkmBatonCBC128:                 "CKM_BATON_CBC128",
+	CkmBatonCounter:                "CKM_BATON_COUNTER",
+	CkmBatonShuffle:                "CKM_BATON_SHUFFLE",
+	CkmBatonWrap:                   "CKM_BATON_WRAP",
+	CkmECKeyPairGen:                "CKM_EC_KEY_PAIR_GEN",
+	CkmECDSA:                       "CKM_ECDSA",
+	CkmECDSASHA1:                   "CKM_ECDSA_SHA1",
+	CkmECDSASHA224:                 "CKM_ECDSA_SHA224",
+	CkmECDSASHA256:                 "CKM_ECDSA_SHA256",
+	CkmECDSASHA384:                 "CKM_ECDSA_SHA384",
+	CkmECDSASHA512:                 "CKM_ECDSA_SHA512",
+	CkmECDH1Derive:                 "CKM_ECDH1_DERIVE",
+	CkmECDH1CofactorDerive:         "CKM_ECDH1_COFACTOR_DERIVE",
+	CkmECMQVDerive:                 "CKM_ECMQV_DERIVE",
+	CkmECDHAESKeyWrap:              "CKM_ECDH_AES_KEY_WRAP",
+	CkmRSAAESKeyWrap:               "CKM_RSA_AES_KEY_WRAP",
+	CkmJuniperKeyGen:               "CKM_JUNIPER_KEY_GEN",
+	CkmJuniperECB128:               "CKM_JUNIPER_ECB128",
+	CkmJuniperCBC128:               "CKM_JUNIPER_CBC128",
+	CkmJuniperCounter:              "CKM_JUNIPER_COUNTER",
+	CkmJuniperShuffle:              "CKM_JUNIPER_SHUFFLE",
+	CkmJuniperWrap:                 "CKM_JUNIPER_WRAP",
+	CkmFasthash:                    "CKM_FASTHASH",
+	CkmAESXTS:                      "CKM_AES_XTS",
+	CkmAESXTSKeyGen:                "CKM_AES_XTS_KEY_GEN",
+	CkmAESKeyGen:                   "CKM_AES_KEY_GEN",
+	CkmAESECB:                      "CKM_AES_ECB",
+	CkmAESCBC:                      "CKM_AES_CBC",
+	CkmAESMAC:                      "CKM_AES_MAC",
+	CkmAESMACGeneral:               "CKM_AES_MAC_GENERAL",
+	CkmAESCBCPad:                   "CKM_AES_CBC_PAD",
+	CkmAESCTR:                      "CKM_AES_CTR",
+	CkmAESGCM:                      "CKM_AES_GCM",
+	CkmAESCCM:                      "CKM_AES_CCM",
+	CkmAESCTS:                      "CKM_AES_CTS",
+	CkmAESCMAC:                     "CKM_AES_CMAC",
+	CkmAESCMACGeneral:              "CKM_AES_CMAC_GENERAL",
+	CkmAESXCBCMAC:                  "CKM_AES_XCBC_MAC",
+	CkmAESXCBCMAC96:                "CKM_AES_XCBC_MAC_96",
+	CkmAESGMAC:                     "CKM_AES_GMAC",
+	CkmBlowfishKeyGen:              "CKM_BLOWFISH_KEY_GEN",
+	CkmBlowfishCBC:                 "CKM_BLOWFISH_CBC",
+	CkmTwofishKeyGen:               "CKM_TWOFISH_KEY_GEN",
+	CkmTwofishCBC:                  "CKM_TWOFISH_CBC",
+	CkmBlowfishCBCPad:              "CKM_BLOWFISH_CBC_PAD",
+	CkmTwofishCBCPad:               "CKM_TWOFISH_CBC_PAD",
+	CkmDESECBEncryptData:           "CKM_DES_ECB_ENCRYPT_DATA",
+	CkmDESCBCEncryptData:           "CKM_DES_CBC_ENCRYPT_DATA",
+	CkmDES3ECBEncryptData:          "CKM_DES3_ECB_ENCRYPT_DATA",
+	CkmDES3CBCEncryptData:          "CKM_DES3_CBC_ENCRYPT_DATA",
+	CkmAESECBEncryptData:           "CKM_AES_ECB_ENCRYPT_DATA",
+	CkmAESCBCEncryptData:           "CKM_AES_CBC_ENCRYPT_DATA",
+	CkmGostR3410KeyPairGen:         "CKM_GOSTR3410_KEY_PAIR_GEN",
+	CkmGostR3410:                   "CKM_GOSTR3410",
+	CkmGostR3410WithGostr3411:      "CKM_GOSTR3410_WITH_GOSTR3411",
+	CkmGostR3410KeyWrap:            "CKM_GOSTR3410_KEY_WRAP",
+	CkmGostR3410Derive:             "CKM_GOSTR3410_DERIVE",
+	CkmGostr3411:                   "CKM_GOSTR3411",
+	CkmGostr3411HMAC:               "CKM_GOSTR3411_HMAC",
+	CkmGost28147KeyGen:             "CKM_GOST28147_KEY_GEN",
+	CkmGost28147ECB:                "CKM_GOST28147_ECB",
+	CkmGost28147:                   "CKM_GOST28147",
+	CkmGost28147MAC:                "CKM_GOST28147_MAC",
+	CkmGost28147KeyWrap:            "CKM_GOST28147_KEY_WRAP",
+	CkmChaCha20KeyGen:              "CKM_CHACHA20_KEY_GEN",
+	CkmChaCha20:                    "CKM_CHACHA20",
+	CkmPoly1305KeyGen:              "CKM_POLY1305_KEY_GEN",
+	CkmPoly1305:                    "CKM_POLY1305",
+	CkmDSAParameterGen:             "CKM_DSA_PARAMETER_GEN",
+	CkmDHPKCSParameterGen:          "CKM_DH_PKCS_PARAMETER_GEN",
+	CkmX942DHParameterGen:          "CKM_X9_42_DH_PARAMETER_GEN",
+	CkmDSAProbablisticParameterGen: "CKM_DSA_PROBABLISTIC_PARAMETER_GEN",
+	CkmDSAShaweTaylorParameterGen:  "CKM_DSA_SHAWE_TAYLOR_PARAMETER_GEN",
+	CkmAESOFB:                      "CKM_AES_OFB",
+	CkmAESCFB64:                    "CKM_AES_CFB64",
+	CkmAESCFB8:                     "CKM_AES_CFB8",
+	CkmAESCFB128:                   "CKM_AES_CFB128",
+	CkmAESCFB1:                     "CKM_AES_CFB1",
+	CkmAESKeyWrap:                  "CKM_AES_KEY_WRAP",
+	CkmAESKeyWrapPad:               "CKM_AES_KEY_WRAP_PAD",
+	CkmAESKeyWrapKWP:               "CKM_AES_KEY_WRAP_KWP",
+	CkmRSAPKCSTPM11:                "CKM_RSA_PKCS_TPM_1_1",
+	CkmRSAPKCSOAEPTPM11:            "CKM_RSA_PKCS_OAEP_TPM_1_1",
+	CkmSHA1KeyGen:                  "CKM_SHA_1_KEY_GEN",
+	CkmSHA224KeyGen:                "CKM_SHA224_KEY_GEN",
+	CkmSHA256KeyGen:                "CKM_SHA256_KEY_GEN",
+	CkmSHA384KeyGen:                "CKM_SHA384_KEY_GEN",
+	CkmSHA512KeyGen:                "CKM_SHA512_KEY_GEN",
+	CkmSHA512224KeyGen:             "CKM_SHA512_224_KEY_GEN",
+	CkmSHA512256KeyGen:             "CKM_SHA512_256_KEY_GEN",
+	CkmSHA512TKeyGen:               "CKM_SHA512_T_KEY_GEN",
+	CkmNull:                        "CKM_NULL",
+	CkmBlake2b160:                  "CKM_BLAKE2B_160",
+	CkmBlake2b160HMAC:              "CKM_BLAKE2B_160_HMAC",
+	CkmBlake2b160HMACGeneral:       "CKM_BLAKE2B_160_HMAC_GENERAL",
+	CkmBlake2b160KeyDerive:         "CKM_BLAKE2B_160_KEY_DERIVE",
+	CkmBlake2b160KeyGen:            "CKM_BLAKE2B_160_KEY_GEN",
+	CkmBlake2b256:                  "CKM_BLAKE2B_256",
+	CkmBlake2b256HMAC:              "CKM_BLAKE2B_256_HMAC",
+	CkmBlake2b256HMACGeneral:       "CKM_BLAKE2B_256_HMAC_GENERAL",
+	CkmBlake2b256KeyDerive:         "CKM_BLAKE2B_256_KEY_DERIVE",
+	CkmBlake2b256KeyGen:            "CKM_BLAKE2B_256_KEY_GEN",
+	CkmBlake2b384:                  "CKM_BLAKE2B_384",
+	CkmBlake2b384HMAC:              "CKM_BLAKE2B_384_HMAC",
+	CkmBlake2b384HMACGeneral:       "CKM_BLAKE2B_384_HMAC_GENERAL",
+	CkmBlake2b384KeyDerive:         "CKM_BLAKE2B_384_KEY_DERIVE",
+	CkmBlake2b384KeyGen:            "CKM_BLAKE2B_384_KEY_GEN",
+	CkmBlake2b512:                  "CKM_BLAKE2B_512",
+	CkmBlake2b512HMAC:              "CKM_BLAKE2B_512_HMAC",
+	CkmBlake2b512HMACGeneral:       "CKM_BLAKE2B_512_HMAC_GENERAL",
+	CkmBlake2b512KeyDerive:         "CKM_BLAKE2B_512_KEY_DERIVE",
+	CkmBlake2b512KeyGen:            "CKM_BLAKE2B_512_KEY_GEN",
+	CkmSalsa20:                     "CKM_SALSA20",
+	CkmChaCha20Poly1305:            "CKM_CHACHA20_POLY1305",
+	CkmSalsa20Poly1305:             "CKM_SALSA20_POLY1305",
+	CkmX3DHInitialize:              "CKM_X3DH_INITIALIZE",
+	CkmX3DHRespond:                 "CKM_X3DH_RESPOND",
+	CkmX2RatchetInitialize:         "CKM_X2RATCHET_INITIALIZE",
+	CkmX2RatchetRespond:            "CKM_X2RATCHET_RESPOND",
+	CkmX2RatchetEncrypt:            "CKM_X2RATCHET_ENCRYPT",
+	CkmX2RatchetDecrypt:            "CKM_X2RATCHET_DECRYPT",
+	CkmXEDDSA:                      "CKM_XEDDSA",
+	CkmHKDFDerive:                  "CKM_HKDF_DERIVE",
+	CkmHKDFData:                    "CKM_HKDF_DATA",
+	CkmHKDFKeyGen:                  "CKM_HKDF_KEY_GEN",
+	CkmECDSASHA3224:                "CKM_ECDSA_SHA3_224",
+	CkmECDSASHA3256:                "CKM_ECDSA_SHA3_256",
+	CkmECDSASHA3384:                "CKM_ECDSA_SHA3_384",
+	CkmECDSASHA3512:                "CKM_ECDSA_SHA3_512",
+	CkmECEdwardsKeyPairGen:         "CKM_EC_EDWARDS_KEY_PAIR_GEN",
+	CkmECMontgomeryKeyPairGen:      "CKM_EC_MONTGOMERY_KEY_PAIR_GEN",
+	CkmEDDSA:                       "CKM_EDDSA",
+	CkmSP800108CounterKDF:          "CKM_SP800_108_COUNTER_KDF",
+	CkmSP800108FeedbackKDF:         "CKM_SP800_108_FEEDBACK_KDF",
+	CkmSP800108DoublePipelineKDF:   "CKM_SP800_108_DOUBLE_PIPELINE_KDF",
+	CkmVendorDefined:               "CKM_VENDOR_DEFINED",
+}
+
+func (t CKMechanismType) String() string {
+	name, ok := ckmNames[t]
+	if ok {
+		return name
+	}
+	return fmt.Sprintf("{CKMechanismType %d}", t)
+}
+
+func (m CKMechanism) String() string {
+	if len(m.Parameter) > 0 {
+		return fmt.Sprintf("%s: %x", m.Mechanism, m.Parameter)
+	}
+	return fmt.Sprintf("%s", m.Mechanism)
+}
 
 // Attribute types.
 const (
