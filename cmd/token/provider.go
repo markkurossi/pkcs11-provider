@@ -317,6 +317,14 @@ func (p *Provider) GenerateKeyPair(req *ipc.GenerateKeyPairReq) (*ipc.GenerateKe
 			log.Printf("%s", hex.Dump(attr.Value))
 		}
 	}
+
+	switch req.Mechanism.Mechanism {
+	case ipc.CkmRSAPKCSKeyPairGen, ipc.CkmRSAX931KeyPairGen:
+
+	default:
+		return nil, ipc.ErrMechanismInvalid
+	}
+
 	return nil, ipc.ErrFunctionNotSupported
 }
 
