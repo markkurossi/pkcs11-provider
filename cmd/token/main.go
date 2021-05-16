@@ -17,7 +17,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/markkurossi/pkcs11-provider/ipc"
+	"github.com/markkurossi/pkcs11-provider/pkcs11"
 )
 
 const (
@@ -27,8 +27,8 @@ const (
 var (
 	m         sync.Mutex
 	bo        = binary.BigEndian
-	providers = make(map[ipc.CKUlong]*Provider)
-	sessions  = make(map[ipc.CKSessionHandle]*Session)
+	providers = make(map[pkcs11.CKUlong]*Provider)
+	sessions  = make(map[pkcs11.CKSessionHandle]*Session)
 )
 
 // NewProvider creates a new provider instance.
@@ -41,9 +41,9 @@ func NewProvider() (*Provider, error) {
 	for {
 		_, err := rand.Read(buf[:])
 		if err != nil {
-			return nil, ipc.ErrDeviceError
+			return nil, pkcs11.ErrDeviceError
 		}
-		id := ipc.CKUlong(bo.Uint32(buf[:]))
+		id := pkcs11.CKUlong(bo.Uint32(buf[:]))
 
 		_, ok := providers[id]
 		if ok {
@@ -58,13 +58,13 @@ func NewProvider() (*Provider, error) {
 }
 
 // LookupProvider finds provider by its ID.
-func LookupProvider(id ipc.CKUlong) (*Provider, error) {
+func LookupProvider(id pkcs11.CKUlong) (*Provider, error) {
 	m.Lock()
 	defer m.Unlock()
 
 	provider, ok := providers[id]
 	if !ok {
-		return nil, ipc.ErrArgumentsBad
+		return nil, pkcs11.ErrArgumentsBad
 	}
 
 	return provider, nil
@@ -72,8 +72,8 @@ func LookupProvider(id ipc.CKUlong) (*Provider, error) {
 
 // Session implements a session with the token.
 type Session struct {
-	ID     ipc.CKSessionHandle
-	Flags  ipc.CKFlags
+	ID     pkcs11.CKSessionHandle
+	Flags  pkcs11.CKFlags
 	Digest hash.Hash
 }
 
@@ -87,9 +87,9 @@ func NewSession() (*Session, error) {
 	for {
 		_, err := rand.Read(buf[:])
 		if err != nil {
-			return nil, ipc.ErrDeviceError
+			return nil, pkcs11.ErrDeviceError
 		}
-		id := ipc.CKSessionHandle(bo.Uint32(buf[:]))
+		id := pkcs11.CKSessionHandle(bo.Uint32(buf[:]))
 
 		_, ok := sessions[id]
 		if ok {
@@ -104,13 +104,13 @@ func NewSession() (*Session, error) {
 }
 
 // LookupSession finds a session by its id.
-func LookupSession(id ipc.CKSessionHandle) (*Session, error) {
+func LookupSession(id pkcs11.CKSessionHandle) (*Session, error) {
 	m.Lock()
 	defer m.Unlock()
 
 	session, ok := sessions[id]
 	if !ok {
-		return nil, ipc.ErrSessionHandleInvalid
+		return nil, pkcs11.ErrSessionHandleInvalid
 	}
 
 	return session, nil
@@ -161,7 +161,7 @@ func messageLoop(conn net.Conn) error {
 			return err
 		}
 
-		msgType := ipc.Type(bo.Uint32(hdr[0:4]))
+		msgType := pkcs11.Type(bo.Uint32(hdr[0:4]))
 		length := bo.Uint32(hdr[4:8])
 		log.Printf("\u250C\u2500%s:\n", msgType.Name())
 
@@ -180,7 +180,7 @@ func messageLoop(conn net.Conn) error {
 			}
 		}
 
-		ret, data := ipc.Dispatch(provider, msgType, msg)
+		ret, data := pkcs11.Dispatch(provider, msgType, msg)
 		if len(data) > 32 {
 			log.Printf("\u2514>%s: length=%d:\n%s",
 				ret, len(data), hex.Dump(data))

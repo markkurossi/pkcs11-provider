@@ -18,7 +18,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/markkurossi/pkcs11-provider/ipc"
+	"github.com/markkurossi/pkcs11-provider/pkcs11"
 )
 
 var (
@@ -96,7 +96,7 @@ func main() {
 // All rights reserved.
 //
 
-package ipc
+package pkcs11
 
 import (
 	"log"
@@ -322,7 +322,7 @@ func processFile(in *Input) error {
 			}
 		}
 
-		msgType := ipc.NewType(vMajor, vMinor, s0, s1, s2)
+		msgType := pkcs11.NewType(vMajor, vMinor, s0, s1, s2)
 
 		if outputC && fHeader {
 			print(`  CK_RV ret;
@@ -484,7 +484,7 @@ var goMessages []GoMessage
 
 // GoMessage defines a Go RPC message.
 type GoMessage struct {
-	Type    ipc.Type
+	Type    pkcs11.Type
 	Name    string
 	Inputs  []Field
 	Outputs []Field

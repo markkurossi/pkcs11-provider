@@ -6,7 +6,7 @@
 // All rights reserved.
 //
 
-package ipc
+package pkcs11
 
 import (
 	"encoding/binary"

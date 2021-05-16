@@ -17,162 +17,165 @@ import (
 	"runtime"
 	"strconv"
 
-	"github.com/markkurossi/pkcs11-provider/ipc"
+	"github.com/markkurossi/pkcs11-provider/pkcs11"
 )
 
 var (
 	reVersion = regexp.MustCompilePOSIX(`^[[:^digit:]]*([[:digit:]]+)\.([[:digit:]]+)`)
 
-	fwVersion = ipc.CKVersion{
+	fwVersion = pkcs11.CKVersion{
 		Major: 0,
 		Minor: 1,
 	}
 )
 
-var mechanisms = map[ipc.CKMechanismType]ipc.CKMechanismInfo{
-	ipc.CkmRSAPKCSKeyPairGen: {
+var mechanisms = map[pkcs11.CKMechanismType]pkcs11.CKMechanismInfo{
+	pkcs11.CkmRSAPKCSKeyPairGen: {
 		MinKeySize: 2048,
 		MaxKeySize: 8192,
-		Flags:      ipc.CkfGenerateKeyPair,
+		Flags:      pkcs11.CkfGenerateKeyPair,
 	},
-	ipc.CkmRSAPKCS: {
+	pkcs11.CkmRSAPKCS: {
 		MinKeySize: 2048,
 		MaxKeySize: 8192,
-		Flags: ipc.CkfMessageEncrypt | ipc.CkfMessageDecrypt |
-			ipc.CkfMessageSign | ipc.CkfMessageVerify | ipc.CkfEncrypt |
-			ipc.CkfDecrypt | ipc.CkfSign | ipc.CkfVerify,
+		Flags: pkcs11.CkfMessageEncrypt | pkcs11.CkfMessageDecrypt |
+			pkcs11.CkfMessageSign | pkcs11.CkfMessageVerify |
+			pkcs11.CkfEncrypt | pkcs11.CkfDecrypt | pkcs11.CkfSign |
+			pkcs11.CkfVerify,
 	},
-	ipc.CkmSHA256RSAPKCS: {
+	pkcs11.CkmSHA256RSAPKCS: {
 		MinKeySize: 2048,
 		MaxKeySize: 8192,
-		Flags: ipc.CkfMessageEncrypt | ipc.CkfMessageDecrypt |
-			ipc.CkfMessageSign | ipc.CkfMessageVerify | ipc.CkfEncrypt |
-			ipc.CkfDecrypt | ipc.CkfSign | ipc.CkfVerify,
+		Flags: pkcs11.CkfMessageEncrypt | pkcs11.CkfMessageDecrypt |
+			pkcs11.CkfMessageSign | pkcs11.CkfMessageVerify |
+			pkcs11.CkfEncrypt | pkcs11.CkfDecrypt | pkcs11.CkfSign |
+			pkcs11.CkfVerify,
 	},
-	ipc.CkmSHA512RSAPKCS: {
+	pkcs11.CkmSHA512RSAPKCS: {
 		MinKeySize: 2048,
 		MaxKeySize: 8192,
-		Flags: ipc.CkfMessageEncrypt | ipc.CkfMessageDecrypt |
-			ipc.CkfMessageSign | ipc.CkfMessageVerify | ipc.CkfEncrypt |
-			ipc.CkfDecrypt | ipc.CkfSign | ipc.CkfVerify,
+		Flags: pkcs11.CkfMessageEncrypt | pkcs11.CkfMessageDecrypt |
+			pkcs11.CkfMessageSign | pkcs11.CkfMessageVerify |
+			pkcs11.CkfEncrypt | pkcs11.CkfDecrypt | pkcs11.CkfSign |
+			pkcs11.CkfVerify,
 	},
-	ipc.CkmSHA256: {
-		Flags: ipc.CkfDigest,
+	pkcs11.CkmSHA256: {
+		Flags: pkcs11.CkfDigest,
 	},
-	ipc.CkmSHA384: {
-		Flags: ipc.CkfDigest,
+	pkcs11.CkmSHA384: {
+		Flags: pkcs11.CkfDigest,
 	},
-	ipc.CkmSHA512: {
-		Flags: ipc.CkfDigest,
+	pkcs11.CkmSHA512: {
+		Flags: pkcs11.CkfDigest,
 	},
 }
 
-func goVersion() ipc.CKVersion {
+func goVersion() pkcs11.CKVersion {
 	v := runtime.Version()
 	log.Printf("runtime.Version: %s", v)
 	m := reVersion.FindStringSubmatch(v)
 	if m != nil {
 		major, _ := strconv.ParseUint(m[1], 10, 8)
 		minor, _ := strconv.ParseUint(m[2], 10, 8)
-		return ipc.CKVersion{
-			Major: ipc.CKByte(major),
-			Minor: ipc.CKByte(minor),
+		return pkcs11.CKVersion{
+			Major: pkcs11.CKByte(major),
+			Minor: pkcs11.CKByte(minor),
 		}
 	}
-	return ipc.CKVersion{}
+	return pkcs11.CKVersion{}
 }
 
-// Provider implements ipc.Provider interface.
+// Provider implements pkcs11.Provider interface.
 type Provider struct {
-	ipc.Base
-	id      ipc.CKUlong
+	pkcs11.Base
+	id      pkcs11.CKUlong
 	parent  *Provider
 	session *Session
 }
 
-// Initialize implements ipc.Provider.Initialize().
-func (p *Provider) Initialize() (*ipc.InitializeResp, error) {
-	return &ipc.InitializeResp{
+// Initialize implements pkcs11.Provider.Initialize().
+func (p *Provider) Initialize() (*pkcs11.InitializeResp, error) {
+	return &pkcs11.InitializeResp{
 		ProviderID: p.id,
 	}, nil
 }
 
 // GetSlotList implements the Provider.GetSlotList().
-func (p *Provider) GetSlotList(req *ipc.GetSlotListReq) (*ipc.GetSlotListResp, error) {
-	return &ipc.GetSlotListResp{
+func (p *Provider) GetSlotList(req *pkcs11.GetSlotListReq) (*pkcs11.GetSlotListResp, error) {
+	return &pkcs11.GetSlotListResp{
 		SlotListLen: 1,
-		SlotList:    []ipc.CKSlotID{0},
+		SlotList:    []pkcs11.CKSlotID{0},
 	}, nil
 }
 
 // GetSlotInfo implements the Provider.GetSlotInfo().
-func (p *Provider) GetSlotInfo(req *ipc.GetSlotInfoReq) (*ipc.GetSlotInfoResp, error) {
+func (p *Provider) GetSlotInfo(req *pkcs11.GetSlotInfoReq) (*pkcs11.GetSlotInfoResp, error) {
 	if req.SlotID != 0 {
-		return nil, ipc.ErrSlotIDInvalid
+		return nil, pkcs11.ErrSlotIDInvalid
 	}
 
-	result := &ipc.GetSlotInfoResp{
-		Info: ipc.CKSlotInfo{
-			Flags:           ipc.CkfTokenPresent,
+	result := &pkcs11.GetSlotInfoResp{
+		Info: pkcs11.CKSlotInfo{
+			Flags:           pkcs11.CkfTokenPresent,
 			HardwareVersion: goVersion(),
 			FirmwareVersion: fwVersion,
 		},
 	}
-	copy(result.Info.SlotDescription[:], []ipc.CKUTF8Char("Go crypto library"))
-	copy(result.Info.ManufacturerID[:], []ipc.CKUTF8Char("mtr@iki.fi"))
+	copy(result.Info.SlotDescription[:], []pkcs11.CKUTF8Char("Go crypto library"))
+	copy(result.Info.ManufacturerID[:], []pkcs11.CKUTF8Char("mtr@iki.fi"))
 	return result, nil
 }
 
 // GetTokenInfo implements the Provider.GetTokenInfo().
-func (p *Provider) GetTokenInfo(req *ipc.GetTokenInfoReq) (*ipc.GetTokenInfoResp, error) {
+func (p *Provider) GetTokenInfo(req *pkcs11.GetTokenInfoReq) (*pkcs11.GetTokenInfoResp, error) {
 	if req.SlotID != 0 {
-		return nil, ipc.ErrSlotIDInvalid
+		return nil, pkcs11.ErrSlotIDInvalid
 	}
 
-	result := &ipc.GetTokenInfoResp{
-		Info: ipc.CKTokenInfo{
-			Flags:           ipc.CkfRNG | ipc.CkfClockOnToken,
+	result := &pkcs11.GetTokenInfoResp{
+		Info: pkcs11.CKTokenInfo{
+			Flags:           pkcs11.CkfRNG | pkcs11.CkfClockOnToken,
 			HardwareVersion: goVersion(),
 			FirmwareVersion: fwVersion,
 		},
 	}
-	copy(result.Info.ManufacturerID[:], []ipc.CKUTF8Char("www.golang.org"))
-	copy(result.Info.Model[:], []ipc.CKUTF8Char("Software"))
+	copy(result.Info.ManufacturerID[:], []pkcs11.CKUTF8Char("www.golang.org"))
+	copy(result.Info.Model[:], []pkcs11.CKUTF8Char("Software"))
 	return result, nil
 }
 
 // GetMechanismList implements the Provider.GetMechanismList().
-func (p *Provider) GetMechanismList(req *ipc.GetMechanismListReq) (*ipc.GetMechanismListResp, error) {
-	var result []ipc.CKMechanismType
+func (p *Provider) GetMechanismList(req *pkcs11.GetMechanismListReq) (*pkcs11.GetMechanismListResp, error) {
+	var result []pkcs11.CKMechanismType
 
 	for k := range mechanisms {
 		result = append(result, k)
 	}
 
-	return &ipc.GetMechanismListResp{
+	return &pkcs11.GetMechanismListResp{
 		MechanismListLen: len(result),
 		MechanismList:    result,
 	}, nil
 }
 
 // GetMechanismInfo implements the Provider.GetMechanismInfo().
-func (p *Provider) GetMechanismInfo(req *ipc.GetMechanismInfoReq) (*ipc.GetMechanismInfoResp, error) {
+func (p *Provider) GetMechanismInfo(req *pkcs11.GetMechanismInfoReq) (*pkcs11.GetMechanismInfoResp, error) {
 	if req.SlotID != 0 {
-		return nil, ipc.ErrSlotIDInvalid
+		return nil, pkcs11.ErrSlotIDInvalid
 	}
 	info, ok := mechanisms[req.Type]
 	if !ok {
-		return nil, ipc.ErrMechanismInvalid
+		return nil, pkcs11.ErrMechanismInvalid
 	}
-	return &ipc.GetMechanismInfoResp{
+	return &pkcs11.GetMechanismInfoResp{
 		Info: info,
 	}, nil
 }
 
 // OpenSession implements the Provider.OpenSession().
-func (p *Provider) OpenSession(req *ipc.OpenSessionReq) (*ipc.OpenSessionResp, error) {
+func (p *Provider) OpenSession(req *pkcs11.OpenSessionReq) (*pkcs11.OpenSessionResp, error) {
 	if req.SlotID != 0 {
-		return nil, ipc.ErrSlotIDInvalid
+		return nil, pkcs11.ErrSlotIDInvalid
 	}
 	session, err := NewSession()
 	if err != nil {
@@ -180,13 +183,13 @@ func (p *Provider) OpenSession(req *ipc.OpenSessionReq) (*ipc.OpenSessionResp, e
 	}
 	session.Flags = req.Flags
 
-	return &ipc.OpenSessionResp{
+	return &pkcs11.OpenSessionResp{
 		Session: session.ID,
 	}, nil
 }
 
 // ImplOpenSession implements the Provider.ImplOpenSession().
-func (p *Provider) ImplOpenSession(req *ipc.ImplOpenSessionReq) error {
+func (p *Provider) ImplOpenSession(req *pkcs11.ImplOpenSessionReq) error {
 	parent, err := LookupProvider(req.ProviderID)
 	if err != nil {
 		return err
@@ -202,13 +205,13 @@ func (p *Provider) ImplOpenSession(req *ipc.ImplOpenSessionReq) error {
 }
 
 // Login implements the Provider.Login().
-func (p *Provider) Login(req *ipc.LoginReq) error {
+func (p *Provider) Login(req *pkcs11.LoginReq) error {
 	log.Printf("Login: UserType=%v, Pin=%v", req.UserType, string(req.Pin))
 	return nil
 }
 
 // CreateObject implements the Provider.CreateObject().
-func (p *Provider) CreateObject(req *ipc.CreateObjectReq) (*ipc.CreateObjectResp, error) {
+func (p *Provider) CreateObject(req *pkcs11.CreateObjectReq) (*pkcs11.CreateObjectResp, error) {
 	for idx, attr := range req.Template {
 		fmt.Printf("%d:\t%s\n", idx, attr.Type)
 		if len(attr.Value) > 0 {
@@ -216,43 +219,43 @@ func (p *Provider) CreateObject(req *ipc.CreateObjectReq) (*ipc.CreateObjectResp
 		}
 	}
 
-	return nil, ipc.ErrFunctionNotSupported
+	return nil, pkcs11.ErrFunctionNotSupported
 }
 
 // DigestInit implements the Provider.DigestInit().
-func (p *Provider) DigestInit(req *ipc.DigestInitReq) error {
+func (p *Provider) DigestInit(req *pkcs11.DigestInitReq) error {
 	if p.session == nil {
-		return ipc.ErrSessionHandleInvalid
+		return pkcs11.ErrSessionHandleInvalid
 	}
 	if p.session.Digest != nil {
-		return ipc.ErrOperationActive
+		return pkcs11.ErrOperationActive
 	}
 
 	switch req.Mechanism.Mechanism {
-	case ipc.CkmSHA256:
+	case pkcs11.CkmSHA256:
 		p.session.Digest = sha256.New()
 		return nil
 
-	case ipc.CkmSHA512:
+	case pkcs11.CkmSHA512:
 		p.session.Digest = sha512.New()
 		return nil
 
 	default:
 		log.Printf("DigestInit: Mechanism=%x", req.Mechanism.Mechanism)
-		return ipc.ErrMechanismInvalid
+		return pkcs11.ErrMechanismInvalid
 	}
 }
 
 // Digest implements the Provider.Digest().
-func (p *Provider) Digest(req *ipc.DigestReq) (*ipc.DigestResp, error) {
+func (p *Provider) Digest(req *pkcs11.DigestReq) (*pkcs11.DigestResp, error) {
 	if p.session == nil {
-		return nil, ipc.ErrSessionHandleInvalid
+		return nil, pkcs11.ErrSessionHandleInvalid
 	}
 	hash := p.session.Digest
 	if hash == nil {
-		return nil, ipc.ErrOperationNotInitialized
+		return nil, pkcs11.ErrOperationNotInitialized
 	}
-	resp := &ipc.DigestResp{
+	resp := &pkcs11.DigestResp{
 		DigestLen: hash.Size(),
 	}
 	if req.DigestSize == 0 {
@@ -266,13 +269,13 @@ func (p *Provider) Digest(req *ipc.DigestReq) (*ipc.DigestResp, error) {
 }
 
 // DigestUpdate implements the Provider.DigestUpdate().
-func (p *Provider) DigestUpdate(req *ipc.DigestUpdateReq) error {
+func (p *Provider) DigestUpdate(req *pkcs11.DigestUpdateReq) error {
 	if p.session == nil {
-		return ipc.ErrSessionHandleInvalid
+		return pkcs11.ErrSessionHandleInvalid
 	}
 	hash := p.session.Digest
 	if hash == nil {
-		return ipc.ErrOperationNotInitialized
+		return pkcs11.ErrOperationNotInitialized
 	}
 	hash.Write(req.Part)
 
@@ -280,15 +283,15 @@ func (p *Provider) DigestUpdate(req *ipc.DigestUpdateReq) error {
 }
 
 // DigestFinal implements the Provider.DigestFinal().
-func (p *Provider) DigestFinal(req *ipc.DigestFinalReq) (*ipc.DigestFinalResp, error) {
+func (p *Provider) DigestFinal(req *pkcs11.DigestFinalReq) (*pkcs11.DigestFinalResp, error) {
 	if p.session == nil {
-		return nil, ipc.ErrSessionHandleInvalid
+		return nil, pkcs11.ErrSessionHandleInvalid
 	}
 	hash := p.session.Digest
 	if hash == nil {
-		return nil, ipc.ErrOperationNotInitialized
+		return nil, pkcs11.ErrOperationNotInitialized
 	}
-	resp := &ipc.DigestFinalResp{
+	resp := &pkcs11.DigestFinalResp{
 		DigestLen: hash.Size(),
 	}
 	if req.DigestSize == 0 {
@@ -301,7 +304,7 @@ func (p *Provider) DigestFinal(req *ipc.DigestFinalReq) (*ipc.DigestFinalResp, e
 }
 
 // GenerateKeyPair implements the Provider.GenerateKeyPair().
-func (p *Provider) GenerateKeyPair(req *ipc.GenerateKeyPairReq) (*ipc.GenerateKeyPairResp, error) {
+func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.GenerateKeyPairResp, error) {
 	log.Printf("GenerateKeyPair: %s", req.Mechanism)
 	log.Printf("PublicKeyTemplate:")
 	for idx, attr := range req.PublicKeyTemplate {
@@ -319,31 +322,31 @@ func (p *Provider) GenerateKeyPair(req *ipc.GenerateKeyPairReq) (*ipc.GenerateKe
 	}
 
 	switch req.Mechanism.Mechanism {
-	case ipc.CkmRSAPKCSKeyPairGen, ipc.CkmRSAX931KeyPairGen:
+	case pkcs11.CkmRSAPKCSKeyPairGen, pkcs11.CkmRSAX931KeyPairGen:
 
 	default:
-		return nil, ipc.ErrMechanismInvalid
+		return nil, pkcs11.ErrMechanismInvalid
 	}
 
-	return nil, ipc.ErrFunctionNotSupported
+	return nil, pkcs11.ErrFunctionNotSupported
 }
 
 // SeedRandom implements the Provider.SeedRandom().
-func (p *Provider) SeedRandom(req *ipc.SeedRandomReq) error {
-	return ipc.ErrRandomSeedNotSupported
+func (p *Provider) SeedRandom(req *pkcs11.SeedRandomReq) error {
+	return pkcs11.ErrRandomSeedNotSupported
 }
 
 // GenerateRandom implements the Provider.GenerateRandom().
-func (p *Provider) GenerateRandom(req *ipc.GenerateRandomReq) (*ipc.GenerateRandomResp, error) {
+func (p *Provider) GenerateRandom(req *pkcs11.GenerateRandomReq) (*pkcs11.GenerateRandomResp, error) {
 	if p.session == nil {
-		return nil, ipc.ErrSessionHandleInvalid
+		return nil, pkcs11.ErrSessionHandleInvalid
 	}
-	resp := &ipc.GenerateRandomResp{
+	resp := &pkcs11.GenerateRandomResp{
 		RandomData: make([]byte, req.RandomLen),
 	}
 	_, err := rand.Reader.Read(resp.RandomData)
 	if err != nil {
-		return nil, ipc.ErrDeviceError
+		return nil, pkcs11.ErrDeviceError
 	}
 	return resp, nil
 }
