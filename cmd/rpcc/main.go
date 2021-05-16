@@ -446,6 +446,9 @@ func goTypes() error {
 	var arr []TypeInfo
 
 	for _, t := range types {
+		if t.IsRename {
+			continue
+		}
 		arr = append(arr, t)
 	}
 	sort.Slice(arr, func(i, j int) bool {

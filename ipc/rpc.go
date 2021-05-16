@@ -229,7 +229,7 @@ type LoginReq struct {
 
 // CreateObjectReq defines the arguments of C_CreateObject.
 type CreateObjectReq struct {
-	Template []CKAttribute
+	Template Template
 }
 
 // CreateObjectResp defines the result of C_CreateObject.
@@ -240,7 +240,7 @@ type CreateObjectResp struct {
 // CopyObjectReq defines the arguments of C_CopyObject.
 type CopyObjectReq struct {
 	Object   CKObjectHandle
-	Template []CKAttribute
+	Template Template
 }
 
 // CopyObjectResp defines the result of C_CopyObject.
@@ -299,7 +299,7 @@ type DigestFinalResp struct {
 // GenerateKeyReq defines the arguments of C_GenerateKey.
 type GenerateKeyReq struct {
 	Mechanism CKMechanism
-	Template  []CKAttribute
+	Template  Template
 }
 
 // GenerateKeyResp defines the result of C_GenerateKey.
@@ -310,8 +310,8 @@ type GenerateKeyResp struct {
 // GenerateKeyPairReq defines the arguments of C_GenerateKeyPair.
 type GenerateKeyPairReq struct {
 	Mechanism          CKMechanism
-	PublicKeyTemplate  []CKAttribute
-	PrivateKeyTemplate []CKAttribute
+	PublicKeyTemplate  Template
+	PrivateKeyTemplate Template
 }
 
 // GenerateKeyPairResp defines the result of C_GenerateKeyPair.

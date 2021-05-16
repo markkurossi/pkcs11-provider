@@ -1193,3 +1193,6 @@ func (attr CKAttribute) Uint() (uint64, error) {
 		return 0, fmt.Errorf("invalid attribute length %d", len(attr.Value))
 	}
 }
+
+// Template defines attributes for objects.
+type Template []CKAttribute

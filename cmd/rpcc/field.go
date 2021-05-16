@@ -20,7 +20,7 @@ import (
 var (
 	types         = make(map[string]TypeInfo)
 	reComment     = regexp.MustCompilePOSIX(`^[[:space:]]*//`)
-	reBasic       = regexp.MustCompilePOSIX(`^[[:space:]]*type[[:space:]]+([[:^space:]]+)[[:space:]]+(=[[:space:]]*)?([[:^space:]]+)[[:space:]]*$`)
+	reBasic       = regexp.MustCompilePOSIX(`^[[:space:]]*type[[:space:]]+([[:^space:]]+)[[:space:]]+(=>?[[:space:]]*)?([[:^space:]]+)[[:space:]]*$`)
 	reStructStart = regexp.MustCompilePOSIX(`^[[:space:]]*type[[:space:]]+([[:^space:]]+)[[:space:]]+struct[[:space:]]*{[[:space:]]*$`)
 	reStructField = regexp.MustCompilePOSIX(`^[[:space:]]*(.+)[[:space:]]+([[:^space:]]+)[[:space:]]*$`)
 	reStructEnd   = regexp.MustCompilePOSIX(`^[[:space:]]*}[[:space:]]*$`)
@@ -31,6 +31,7 @@ var (
 type TypeInfo struct {
 	Name      string
 	IsAlias   bool
+	IsRename  bool
 	IsBasic   bool
 	IsPointer bool
 	Basic     string
@@ -52,7 +53,7 @@ func (t TypeInfo) GoTypeName() string {
 // GoType returns the Go type definition for the type.
 func (t TypeInfo) GoType() string {
 	if t.IsBasic {
-		if t.IsAlias {
+		if t.IsAlias || t.IsRename {
 			return fmt.Sprintf("type %s = %s",
 				GoTypeName(t.Name), GoType(t.Basic))
 		}
@@ -157,8 +158,12 @@ func readTypes(file string) error {
 		m := reBasic.FindStringSubmatch(line)
 		if m != nil {
 			var alias bool
-			if len(m[2]) > 0 {
+			var rename bool
+			switch strings.TrimSpace(m[2]) {
+			case "=":
 				alias = true
+			case "=>":
+				rename = true
 			}
 
 			var ptr bool
@@ -169,6 +174,7 @@ func readTypes(file string) error {
 			}
 			types[m[1]] = TypeInfo{
 				IsAlias:   alias,
+				IsRename:  rename,
 				IsBasic:   true,
 				IsPointer: ptr,
 				Name:      m[1],
@@ -257,8 +263,13 @@ func (f Field) GoType(req bool) string {
 		if err == nil {
 			sizeType = f.SizeType
 		}
-		return fmt.Sprintf("%s [%s]%s",
-			GoFieldName(f.Name), sizeType, f.Type.GoTypeName())
+		typeString := fmt.Sprintf("[%s]%s", sizeType, f.Type.GoTypeName())
+		// Alias for arrays?
+		t, ok := types[typeString]
+		if ok && t.IsRename {
+			typeString = GoType(t.Basic)
+		}
+		return fmt.Sprintf("%s %s", GoFieldName(f.Name), typeString)
 	}
 	return fmt.Sprintf("%s %s", GoFieldName(f.Name), f.Type.GoTypeName())
 }
