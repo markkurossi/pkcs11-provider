@@ -90,7 +90,9 @@ func GoTypeName(name string) string {
 
 	for _, part := range strings.Split(name, "_") {
 		switch part {
-		case "CK", "ID":
+		case "CK":
+
+		case "ID":
 			parts = append(parts, part)
 
 		case "UTF8CHAR":

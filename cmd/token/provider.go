@@ -23,13 +23,13 @@ import (
 var (
 	reVersion = regexp.MustCompilePOSIX(`^[[:^digit:]]*([[:digit:]]+)\.([[:digit:]]+)`)
 
-	fwVersion = pkcs11.CKVersion{
+	fwVersion = pkcs11.Version{
 		Major: 0,
 		Minor: 1,
 	}
 )
 
-var mechanisms = map[pkcs11.CKMechanismType]pkcs11.CKMechanismInfo{
+var mechanisms = map[pkcs11.MechanismType]pkcs11.MechanismInfo{
 	pkcs11.CkmRSAPKCSKeyPairGen: {
 		MinKeySize: 2048,
 		MaxKeySize: 8192,
@@ -70,25 +70,25 @@ var mechanisms = map[pkcs11.CKMechanismType]pkcs11.CKMechanismInfo{
 	},
 }
 
-func goVersion() pkcs11.CKVersion {
+func goVersion() pkcs11.Version {
 	v := runtime.Version()
 	log.Printf("runtime.Version: %s", v)
 	m := reVersion.FindStringSubmatch(v)
 	if m != nil {
 		major, _ := strconv.ParseUint(m[1], 10, 8)
 		minor, _ := strconv.ParseUint(m[2], 10, 8)
-		return pkcs11.CKVersion{
-			Major: pkcs11.CKByte(major),
-			Minor: pkcs11.CKByte(minor),
+		return pkcs11.Version{
+			Major: pkcs11.Byte(major),
+			Minor: pkcs11.Byte(minor),
 		}
 	}
-	return pkcs11.CKVersion{}
+	return pkcs11.Version{}
 }
 
 // Provider implements pkcs11.Provider interface.
 type Provider struct {
 	pkcs11.Base
-	id      pkcs11.CKUlong
+	id      pkcs11.Ulong
 	parent  *Provider
 	session *Session
 }
@@ -104,7 +104,7 @@ func (p *Provider) Initialize() (*pkcs11.InitializeResp, error) {
 func (p *Provider) GetSlotList(req *pkcs11.GetSlotListReq) (*pkcs11.GetSlotListResp, error) {
 	return &pkcs11.GetSlotListResp{
 		SlotListLen: 1,
-		SlotList:    []pkcs11.CKSlotID{0},
+		SlotList:    []pkcs11.SlotID{0},
 	}, nil
 }
 
@@ -115,14 +115,14 @@ func (p *Provider) GetSlotInfo(req *pkcs11.GetSlotInfoReq) (*pkcs11.GetSlotInfoR
 	}
 
 	result := &pkcs11.GetSlotInfoResp{
-		Info: pkcs11.CKSlotInfo{
+		Info: pkcs11.SlotInfo{
 			Flags:           pkcs11.CkfTokenPresent,
 			HardwareVersion: goVersion(),
 			FirmwareVersion: fwVersion,
 		},
 	}
-	copy(result.Info.SlotDescription[:], []pkcs11.CKUTF8Char("Go crypto library"))
-	copy(result.Info.ManufacturerID[:], []pkcs11.CKUTF8Char("mtr@iki.fi"))
+	copy(result.Info.SlotDescription[:], []pkcs11.UTF8Char("Go crypto library"))
+	copy(result.Info.ManufacturerID[:], []pkcs11.UTF8Char("mtr@iki.fi"))
 	return result, nil
 }
 
@@ -133,20 +133,20 @@ func (p *Provider) GetTokenInfo(req *pkcs11.GetTokenInfoReq) (*pkcs11.GetTokenIn
 	}
 
 	result := &pkcs11.GetTokenInfoResp{
-		Info: pkcs11.CKTokenInfo{
+		Info: pkcs11.TokenInfo{
 			Flags:           pkcs11.CkfRNG | pkcs11.CkfClockOnToken,
 			HardwareVersion: goVersion(),
 			FirmwareVersion: fwVersion,
 		},
 	}
-	copy(result.Info.ManufacturerID[:], []pkcs11.CKUTF8Char("www.golang.org"))
-	copy(result.Info.Model[:], []pkcs11.CKUTF8Char("Software"))
+	copy(result.Info.ManufacturerID[:], []pkcs11.UTF8Char("www.golang.org"))
+	copy(result.Info.Model[:], []pkcs11.UTF8Char("Software"))
 	return result, nil
 }
 
 // GetMechanismList implements the Provider.GetMechanismList().
 func (p *Provider) GetMechanismList(req *pkcs11.GetMechanismListReq) (*pkcs11.GetMechanismListResp, error) {
-	var result []pkcs11.CKMechanismType
+	var result []pkcs11.MechanismType
 
 	for k := range mechanisms {
 		result = append(result, k)

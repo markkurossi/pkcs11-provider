@@ -27,8 +27,8 @@ const (
 var (
 	m         sync.Mutex
 	bo        = binary.BigEndian
-	providers = make(map[pkcs11.CKUlong]*Provider)
-	sessions  = make(map[pkcs11.CKSessionHandle]*Session)
+	providers = make(map[pkcs11.Ulong]*Provider)
+	sessions  = make(map[pkcs11.SessionHandle]*Session)
 )
 
 // NewProvider creates a new provider instance.
@@ -43,7 +43,7 @@ func NewProvider() (*Provider, error) {
 		if err != nil {
 			return nil, pkcs11.ErrDeviceError
 		}
-		id := pkcs11.CKUlong(bo.Uint32(buf[:]))
+		id := pkcs11.Ulong(bo.Uint32(buf[:]))
 
 		_, ok := providers[id]
 		if ok {
@@ -58,7 +58,7 @@ func NewProvider() (*Provider, error) {
 }
 
 // LookupProvider finds provider by its ID.
-func LookupProvider(id pkcs11.CKUlong) (*Provider, error) {
+func LookupProvider(id pkcs11.Ulong) (*Provider, error) {
 	m.Lock()
 	defer m.Unlock()
 
@@ -72,8 +72,8 @@ func LookupProvider(id pkcs11.CKUlong) (*Provider, error) {
 
 // Session implements a session with the token.
 type Session struct {
-	ID     pkcs11.CKSessionHandle
-	Flags  pkcs11.CKFlags
+	ID     pkcs11.SessionHandle
+	Flags  pkcs11.Flags
 	Digest hash.Hash
 }
 
@@ -89,7 +89,7 @@ func NewSession() (*Session, error) {
 		if err != nil {
 			return nil, pkcs11.ErrDeviceError
 		}
-		id := pkcs11.CKSessionHandle(bo.Uint32(buf[:]))
+		id := pkcs11.SessionHandle(bo.Uint32(buf[:]))
 
 		_, ok := sessions[id]
 		if ok {
@@ -104,7 +104,7 @@ func NewSession() (*Session, error) {
 }
 
 // LookupSession finds a session by its id.
-func LookupSession(id pkcs11.CKSessionHandle) (*Session, error) {
+func LookupSession(id pkcs11.SessionHandle) (*Session, error) {
 	m.Lock()
 	defer m.Unlock()
 

@@ -11,278 +11,278 @@ import (
 	"log"
 )
 
-// CKAttributeType defines basic protocol type CK_ATTRIBUTE_TYPE.
-type CKAttributeType uint32
+// AttributeType defines basic protocol type CK_ATTRIBUTE_TYPE.
+type AttributeType uint32
 
-// CKBbool defines basic protocol type CK_BBOOL.
-type CKBbool bool
+// Bbool defines basic protocol type CK_BBOOL.
+type Bbool bool
 
-// CKByte defines basic protocol type CK_BYTE.
-type CKByte = byte
+// Byte defines basic protocol type CK_BYTE.
+type Byte = byte
 
-// CKChar defines basic protocol type CK_CHAR.
-type CKChar = byte
+// Char defines basic protocol type CK_CHAR.
+type Char = byte
 
-// CKFlags defines basic protocol type CK_FLAGS.
-type CKFlags uint32
+// Flags defines basic protocol type CK_FLAGS.
+type Flags uint32
 
-// CKMechanismType defines basic protocol type CK_MECHANISM_TYPE.
-type CKMechanismType uint32
+// MechanismType defines basic protocol type CK_MECHANISM_TYPE.
+type MechanismType uint32
 
-// CKObjectHandle defines basic protocol type CK_OBJECT_HANDLE.
-type CKObjectHandle uint32
+// ObjectHandle defines basic protocol type CK_OBJECT_HANDLE.
+type ObjectHandle uint32
 
-// CKSessionHandle defines basic protocol type CK_SESSION_HANDLE.
-type CKSessionHandle uint32
+// SessionHandle defines basic protocol type CK_SESSION_HANDLE.
+type SessionHandle uint32
 
-// CKSlotID defines basic protocol type CK_SLOT_ID.
-type CKSlotID uint32
+// SlotID defines basic protocol type CK_SLOT_ID.
+type SlotID uint32
 
-// CKSlotIDPtr defines basic protocol type CK_SLOT_ID_PTR.
-type CKSlotIDPtr uint32
+// SlotIDPtr defines basic protocol type CK_SLOT_ID_PTR.
+type SlotIDPtr uint32
 
-// CKUlong defines basic protocol type CK_ULONG.
-type CKUlong uint32
+// Ulong defines basic protocol type CK_ULONG.
+type Ulong uint32
 
-// CKUlongPtr defines basic protocol type CK_ULONG_PTR.
-type CKUlongPtr uint32
+// UlongPtr defines basic protocol type CK_ULONG_PTR.
+type UlongPtr uint32
 
-// CKUserType defines basic protocol type CK_USER_TYPE.
-type CKUserType uint32
+// UserType defines basic protocol type CK_USER_TYPE.
+type UserType uint32
 
-// CKUTF8Char defines basic protocol type CK_UTF8CHAR.
-type CKUTF8Char = byte
+// UTF8Char defines basic protocol type CK_UTF8CHAR.
+type UTF8Char = byte
 
-// CKVoidPtr defines basic protocol type CK_VOID_PTR.
-type CKVoidPtr = byte
+// VoidPtr defines basic protocol type CK_VOID_PTR.
+type VoidPtr = byte
 
-// CKAttribute defines compound protocol type CK_ATTRIBUTE.
-type CKAttribute struct {
-	Type  CKAttributeType
-	Value []CKByte
+// Attribute defines compound protocol type CK_ATTRIBUTE.
+type Attribute struct {
+	Type  AttributeType
+	Value []Byte
 }
 
-// CKInfo defines compound protocol type CK_INFO.
-type CKInfo struct {
-	CryptokiVersion    CKVersion
-	ManufacturerID     [32]CKUTF8Char
-	Flags              CKFlags
-	LibraryDescription [32]CKUTF8Char
-	LibraryVersion     CKVersion
+// Info defines compound protocol type CK_INFO.
+type Info struct {
+	CryptokiVersion    Version
+	ManufacturerID     [32]UTF8Char
+	Flags              Flags
+	LibraryDescription [32]UTF8Char
+	LibraryVersion     Version
 }
 
-// CKMechanism defines compound protocol type CK_MECHANISM.
-type CKMechanism struct {
-	Mechanism CKMechanismType
-	Parameter []CKVoidPtr
+// Mechanism defines compound protocol type CK_MECHANISM.
+type Mechanism struct {
+	Mechanism MechanismType
+	Parameter []VoidPtr
 }
 
-// CKMechanismInfo defines compound protocol type CK_MECHANISM_INFO.
-type CKMechanismInfo struct {
-	MinKeySize CKUlong
-	MaxKeySize CKUlong
-	Flags      CKFlags
+// MechanismInfo defines compound protocol type CK_MECHANISM_INFO.
+type MechanismInfo struct {
+	MinKeySize Ulong
+	MaxKeySize Ulong
+	Flags      Flags
 }
 
-// CKSlotInfo defines compound protocol type CK_SLOT_INFO.
-type CKSlotInfo struct {
-	SlotDescription [64]CKUTF8Char
-	ManufacturerID  [32]CKUTF8Char
-	Flags           CKFlags
-	HardwareVersion CKVersion
-	FirmwareVersion CKVersion
+// SlotInfo defines compound protocol type CK_SLOT_INFO.
+type SlotInfo struct {
+	SlotDescription [64]UTF8Char
+	ManufacturerID  [32]UTF8Char
+	Flags           Flags
+	HardwareVersion Version
+	FirmwareVersion Version
 }
 
-// CKTokenInfo defines compound protocol type CK_TOKEN_INFO.
-type CKTokenInfo struct {
-	Label              [32]CKUTF8Char
-	ManufacturerID     [32]CKUTF8Char
-	Model              [16]CKUTF8Char
-	SerialNumber       [16]CKChar
-	Flags              CKFlags
-	MaxSessionCount    CKUlong
-	SessionCount       CKUlong
-	MaxRwSessionCount  CKUlong
-	RwSessionCount     CKUlong
-	MaxPinLen          CKUlong
-	MinPinLen          CKUlong
-	TotalPublicMemory  CKUlong
-	FreePublicMemory   CKUlong
-	TotalPrivateMemory CKUlong
-	FreePrivateMemory  CKUlong
-	HardwareVersion    CKVersion
-	FirmwareVersion    CKVersion
-	UtcTime            [16]CKChar
+// TokenInfo defines compound protocol type CK_TOKEN_INFO.
+type TokenInfo struct {
+	Label              [32]UTF8Char
+	ManufacturerID     [32]UTF8Char
+	Model              [16]UTF8Char
+	SerialNumber       [16]Char
+	Flags              Flags
+	MaxSessionCount    Ulong
+	SessionCount       Ulong
+	MaxRwSessionCount  Ulong
+	RwSessionCount     Ulong
+	MaxPinLen          Ulong
+	MinPinLen          Ulong
+	TotalPublicMemory  Ulong
+	FreePublicMemory   Ulong
+	TotalPrivateMemory Ulong
+	FreePrivateMemory  Ulong
+	HardwareVersion    Version
+	FirmwareVersion    Version
+	UtcTime            [16]Char
 }
 
-// CKVersion defines compound protocol type CK_VERSION.
-type CKVersion struct {
-	Major CKByte
-	Minor CKByte
+// Version defines compound protocol type CK_VERSION.
+type Version struct {
+	Major Byte
+	Minor Byte
 }
 
 // ImplOpenSessionReq defines the arguments of C_ImplOpenSession.
 type ImplOpenSessionReq struct {
-	ProviderID CKUlong
-	Session    CKSessionHandle
+	ProviderID Ulong
+	Session    SessionHandle
 }
 
 // ImplCloseSessionReq defines the arguments of C_ImplCloseSession.
 type ImplCloseSessionReq struct {
-	Session CKSessionHandle
+	Session SessionHandle
 }
 
 // InitializeResp defines the result of C_Initialize.
 type InitializeResp struct {
-	ProviderID CKUlong
+	ProviderID Ulong
 }
 
 // GetSlotListReq defines the arguments of C_GetSlotList.
 type GetSlotListReq struct {
-	TokenPresent CKBbool
+	TokenPresent Bbool
 	SlotListSize uint32
 }
 
 // GetSlotListResp defines the result of C_GetSlotList.
 type GetSlotListResp struct {
 	SlotListLen int
-	SlotList    []CKSlotID
+	SlotList    []SlotID
 }
 
 // GetSlotInfoReq defines the arguments of C_GetSlotInfo.
 type GetSlotInfoReq struct {
-	SlotID CKSlotID
+	SlotID SlotID
 }
 
 // GetSlotInfoResp defines the result of C_GetSlotInfo.
 type GetSlotInfoResp struct {
-	Info CKSlotInfo
+	Info SlotInfo
 }
 
 // GetTokenInfoReq defines the arguments of C_GetTokenInfo.
 type GetTokenInfoReq struct {
-	SlotID CKSlotID
+	SlotID SlotID
 }
 
 // GetTokenInfoResp defines the result of C_GetTokenInfo.
 type GetTokenInfoResp struct {
-	Info CKTokenInfo
+	Info TokenInfo
 }
 
 // GetMechanismListReq defines the arguments of C_GetMechanismList.
 type GetMechanismListReq struct {
-	SlotID            CKSlotID
+	SlotID            SlotID
 	MechanismListSize uint32
 }
 
 // GetMechanismListResp defines the result of C_GetMechanismList.
 type GetMechanismListResp struct {
 	MechanismListLen int
-	MechanismList    []CKMechanismType
+	MechanismList    []MechanismType
 }
 
 // GetMechanismInfoReq defines the arguments of C_GetMechanismInfo.
 type GetMechanismInfoReq struct {
-	SlotID CKSlotID
-	Type   CKMechanismType
+	SlotID SlotID
+	Type   MechanismType
 }
 
 // GetMechanismInfoResp defines the result of C_GetMechanismInfo.
 type GetMechanismInfoResp struct {
-	Info CKMechanismInfo
+	Info MechanismInfo
 }
 
 // InitTokenReq defines the arguments of C_InitToken.
 type InitTokenReq struct {
-	SlotID CKSlotID
-	Pin    []CKUTF8Char
-	Label  [32]CKUTF8Char
+	SlotID SlotID
+	Pin    []UTF8Char
+	Label  [32]UTF8Char
 }
 
 // InitPINReq defines the arguments of C_InitPIN.
 type InitPINReq struct {
-	Pin []CKUTF8Char
+	Pin []UTF8Char
 }
 
 // SetPINReq defines the arguments of C_SetPIN.
 type SetPINReq struct {
-	OldPin []CKUTF8Char
-	NewPin []CKUTF8Char
+	OldPin []UTF8Char
+	NewPin []UTF8Char
 }
 
 // OpenSessionReq defines the arguments of C_OpenSession.
 type OpenSessionReq struct {
-	SlotID CKSlotID
-	Flags  CKFlags
+	SlotID SlotID
+	Flags  Flags
 }
 
 // OpenSessionResp defines the result of C_OpenSession.
 type OpenSessionResp struct {
-	Session CKSessionHandle
+	Session SessionHandle
 }
 
 // LoginReq defines the arguments of C_Login.
 type LoginReq struct {
-	UserType CKUserType
-	Pin      []CKUTF8Char
+	UserType UserType
+	Pin      []UTF8Char
 }
 
 // CreateObjectReq defines the arguments of C_CreateObject.
 type CreateObjectReq struct {
-	Template Template
+	Template []Attribute
 }
 
 // CreateObjectResp defines the result of C_CreateObject.
 type CreateObjectResp struct {
-	Object CKObjectHandle
+	Object ObjectHandle
 }
 
 // CopyObjectReq defines the arguments of C_CopyObject.
 type CopyObjectReq struct {
-	Object   CKObjectHandle
-	Template Template
+	Object   ObjectHandle
+	Template []Attribute
 }
 
 // CopyObjectResp defines the result of C_CopyObject.
 type CopyObjectResp struct {
-	NewObject CKObjectHandle
+	NewObject ObjectHandle
 }
 
 // DestroyObjectReq defines the arguments of C_DestroyObject.
 type DestroyObjectReq struct {
-	Object CKObjectHandle
+	Object ObjectHandle
 }
 
 // GetObjectSizeReq defines the arguments of C_GetObjectSize.
 type GetObjectSizeReq struct {
-	Object CKObjectHandle
+	Object ObjectHandle
 }
 
 // GetObjectSizeResp defines the result of C_GetObjectSize.
 type GetObjectSizeResp struct {
-	Size CKUlong
+	Size Ulong
 }
 
 // DigestInitReq defines the arguments of C_DigestInit.
 type DigestInitReq struct {
-	Mechanism CKMechanism
+	Mechanism Mechanism
 }
 
 // DigestReq defines the arguments of C_Digest.
 type DigestReq struct {
-	Data       []CKByte
+	Data       []Byte
 	DigestSize uint32
 }
 
 // DigestResp defines the result of C_Digest.
 type DigestResp struct {
 	DigestLen int
-	Digest    []CKByte
+	Digest    []Byte
 }
 
 // DigestUpdateReq defines the arguments of C_DigestUpdate.
 type DigestUpdateReq struct {
-	Part []CKByte
+	Part []Byte
 }
 
 // DigestFinalReq defines the arguments of C_DigestFinal.
@@ -293,46 +293,46 @@ type DigestFinalReq struct {
 // DigestFinalResp defines the result of C_DigestFinal.
 type DigestFinalResp struct {
 	DigestLen int
-	Digest    []CKByte
+	Digest    []Byte
 }
 
 // GenerateKeyReq defines the arguments of C_GenerateKey.
 type GenerateKeyReq struct {
-	Mechanism CKMechanism
-	Template  Template
+	Mechanism Mechanism
+	Template  []Attribute
 }
 
 // GenerateKeyResp defines the result of C_GenerateKey.
 type GenerateKeyResp struct {
-	Key CKObjectHandle
+	Key ObjectHandle
 }
 
 // GenerateKeyPairReq defines the arguments of C_GenerateKeyPair.
 type GenerateKeyPairReq struct {
-	Mechanism          CKMechanism
-	PublicKeyTemplate  Template
-	PrivateKeyTemplate Template
+	Mechanism          Mechanism
+	PublicKeyTemplate  []Attribute
+	PrivateKeyTemplate []Attribute
 }
 
 // GenerateKeyPairResp defines the result of C_GenerateKeyPair.
 type GenerateKeyPairResp struct {
-	PublicKey  CKObjectHandle
-	PrivateKey CKObjectHandle
+	PublicKey  ObjectHandle
+	PrivateKey ObjectHandle
 }
 
 // SeedRandomReq defines the arguments of C_SeedRandom.
 type SeedRandomReq struct {
-	Seed []CKByte
+	Seed []Byte
 }
 
 // GenerateRandomReq defines the arguments of C_GenerateRandom.
 type GenerateRandomReq struct {
-	RandomLen CKUlong
+	RandomLen Ulong
 }
 
 // GenerateRandomResp defines the result of C_GenerateRandom.
 type GenerateRandomResp struct {
-	RandomData []CKByte
+	RandomData []Byte
 }
 
 // Provider defines the PKCS #11 provider interface.
