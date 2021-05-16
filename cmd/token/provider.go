@@ -30,6 +30,7 @@ var (
 	}
 )
 
+// Mechanimsm parameters.
 const (
 	RSAMinKeySize = 512
 	RSAMaxKeySize = 8192
@@ -311,6 +312,10 @@ func (p *Provider) DigestFinal(req *pkcs11.DigestFinalReq) (*pkcs11.DigestFinalR
 
 // GenerateKeyPair implements the Provider.GenerateKeyPair().
 func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.GenerateKeyPairResp, error) {
+	info, ok := mechanisms[req.Mechanism.Mechanism]
+	if !ok {
+		return nil, pkcs11.ErrMechanismInvalid
+	}
 	switch req.Mechanism.Mechanism {
 	case pkcs11.CkmRSAPKCSKeyPairGen, pkcs11.CkmRSAX931KeyPairGen:
 		bits, err := req.PublicKeyTemplate.Uint(pkcs11.CkaModulusBits)
@@ -329,11 +334,6 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 			log.Printf("bits:\t%d\n", bits)
 			log.Printf("e:\t%s\n", e)
 			log.Printf("token:\t%v\n", token)
-		}
-
-		info, ok := mechanisms[req.Mechanism.Mechanism]
-		if !ok {
-			return nil, pkcs11.ErrMechanismInvalid
 		}
 		if bits < uint64(info.MinKeySize) || bits > uint64(info.MaxKeySize) {
 			return nil, pkcs11.ErrMechanismParamInvalid
@@ -369,8 +369,6 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 
 		return nil, pkcs11.ErrMechanismInvalid
 	}
-
-	return nil, pkcs11.ErrFunctionNotSupported
 }
 
 // SeedRandom implements the Provider.SeedRandom().
