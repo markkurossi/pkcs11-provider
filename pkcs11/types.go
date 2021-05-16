@@ -8,6 +8,8 @@ package pkcs11
 
 import (
 	"fmt"
+	"log"
+	"math/big"
 )
 
 // Flags that describe capabilities of a slot.
@@ -1194,5 +1196,63 @@ func (attr Attribute) Uint() (uint64, error) {
 	}
 }
 
+// BigInt returns the attribute valiue as *big.Int.
+func (attr Attribute) BigInt() (*big.Int, error) {
+	return new(big.Int).SetBytes(attr.Value), nil
+}
+
 // Template defines attributes for objects.
 type Template []Attribute
+
+// Bool returns attribute value as bool.
+func (tmpl Template) Bool(t AttributeType) (bool, error) {
+	for _, attr := range tmpl {
+		if attr.Type == t {
+			return attr.Bool()
+		}
+	}
+	return false, ErrArgumentsBad
+}
+
+// OptBool returns an optional attribute value as bool. The PKCS #11
+// standard default values will be used for attributes which has not
+// been set in the template.
+func (tmpl Template) OptBool(t AttributeType) (bool, error) {
+	for _, attr := range tmpl {
+		if attr.Type == t {
+			return attr.Bool()
+		}
+	}
+	// Default values.
+	switch t {
+	case CkaToken, CkaPrivate:
+		return false, nil
+
+	case CkaModifiable, CkaCopyable, CkaDestroyable:
+		return true, nil
+
+	default:
+		log.Printf("no default value for attribute %s", t)
+		return false, ErrArgumentsBad
+	}
+}
+
+// Uint returns the attribute value as uint64 integer number.
+func (tmpl Template) Uint(t AttributeType) (uint64, error) {
+	for _, attr := range tmpl {
+		if attr.Type == t {
+			return attr.Uint()
+		}
+	}
+	return 0, ErrArgumentsBad
+}
+
+// BigInt returns the attribute valiue as *big.Int.
+func (tmpl Template) BigInt(t AttributeType) (*big.Int, error) {
+	for _, attr := range tmpl {
+		if attr.Type == t {
+			return attr.BigInt()
+		}
+	}
+	return nil, ErrArgumentsBad
+}

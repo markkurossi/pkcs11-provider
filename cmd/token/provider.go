@@ -323,6 +323,21 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 
 	switch req.Mechanism.Mechanism {
 	case pkcs11.CkmRSAPKCSKeyPairGen, pkcs11.CkmRSAX931KeyPairGen:
+		bits, err := req.PublicKeyTemplate.Uint(pkcs11.CkaModulusBits)
+		if err != nil {
+			return nil, err
+		}
+		e, err := req.PublicKeyTemplate.BigInt(pkcs11.CkaPublicExponent)
+		if err != nil {
+			return nil, err
+		}
+		token, err := req.PrivateKeyTemplate.OptBool(pkcs11.CkaToken)
+		if err != nil {
+			return nil, err
+		}
+		log.Printf("bits:\t%d\n", bits)
+		log.Printf("e:\t%s\n", e)
+		log.Printf("token:\t%v\n", token)
 
 	default:
 		return nil, pkcs11.ErrMechanismInvalid

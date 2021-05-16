@@ -25,7 +25,7 @@ type CK_ATTRIBUTE struct {
   [CK_ULONG ulValueLen]CK_BYTE           pValue
 }
 
-type []CKAttribute => Template
+type []Attribute => Template
 
 type CK_VERSION struct {
   CK_BYTE major
