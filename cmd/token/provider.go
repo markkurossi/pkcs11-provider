@@ -8,6 +8,7 @@ package main
 
 import (
 	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/hex"
@@ -29,31 +30,36 @@ var (
 	}
 )
 
+const (
+	RSAMinKeySize = 512
+	RSAMaxKeySize = 8192
+)
+
 var mechanisms = map[pkcs11.MechanismType]pkcs11.MechanismInfo{
 	pkcs11.CkmRSAPKCSKeyPairGen: {
-		MinKeySize: 2048,
-		MaxKeySize: 8192,
+		MinKeySize: RSAMinKeySize,
+		MaxKeySize: RSAMaxKeySize,
 		Flags:      pkcs11.CkfGenerateKeyPair,
 	},
 	pkcs11.CkmRSAPKCS: {
-		MinKeySize: 2048,
-		MaxKeySize: 8192,
+		MinKeySize: RSAMinKeySize,
+		MaxKeySize: RSAMaxKeySize,
 		Flags: pkcs11.CkfMessageEncrypt | pkcs11.CkfMessageDecrypt |
 			pkcs11.CkfMessageSign | pkcs11.CkfMessageVerify |
 			pkcs11.CkfEncrypt | pkcs11.CkfDecrypt | pkcs11.CkfSign |
 			pkcs11.CkfVerify,
 	},
 	pkcs11.CkmSHA256RSAPKCS: {
-		MinKeySize: 2048,
-		MaxKeySize: 8192,
+		MinKeySize: RSAMinKeySize,
+		MaxKeySize: RSAMaxKeySize,
 		Flags: pkcs11.CkfMessageEncrypt | pkcs11.CkfMessageDecrypt |
 			pkcs11.CkfMessageSign | pkcs11.CkfMessageVerify |
 			pkcs11.CkfEncrypt | pkcs11.CkfDecrypt | pkcs11.CkfSign |
 			pkcs11.CkfVerify,
 	},
 	pkcs11.CkmSHA512RSAPKCS: {
-		MinKeySize: 2048,
-		MaxKeySize: 8192,
+		MinKeySize: RSAMinKeySize,
+		MaxKeySize: RSAMaxKeySize,
 		Flags: pkcs11.CkfMessageEncrypt | pkcs11.CkfMessageDecrypt |
 			pkcs11.CkfMessageSign | pkcs11.CkfMessageVerify |
 			pkcs11.CkfEncrypt | pkcs11.CkfDecrypt | pkcs11.CkfSign |
@@ -305,22 +311,6 @@ func (p *Provider) DigestFinal(req *pkcs11.DigestFinalReq) (*pkcs11.DigestFinalR
 
 // GenerateKeyPair implements the Provider.GenerateKeyPair().
 func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.GenerateKeyPairResp, error) {
-	log.Printf("GenerateKeyPair: %s", req.Mechanism)
-	log.Printf("PublicKeyTemplate:")
-	for idx, attr := range req.PublicKeyTemplate {
-		log.Printf(" - %d: %s\n", idx, attr.Type)
-		if len(attr.Value) > 0 {
-			log.Printf("%s", hex.Dump(attr.Value))
-		}
-	}
-	log.Printf("PrivateKeyTemplate:")
-	for idx, attr := range req.PrivateKeyTemplate {
-		log.Printf(" - %d: %s\n", idx, attr.Type)
-		if len(attr.Value) > 0 {
-			log.Printf("%s", hex.Dump(attr.Value))
-		}
-	}
-
 	switch req.Mechanism.Mechanism {
 	case pkcs11.CkmRSAPKCSKeyPairGen, pkcs11.CkmRSAX931KeyPairGen:
 		bits, err := req.PublicKeyTemplate.Uint(pkcs11.CkaModulusBits)
@@ -335,11 +325,48 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 		if err != nil {
 			return nil, err
 		}
-		log.Printf("bits:\t%d\n", bits)
-		log.Printf("e:\t%s\n", e)
-		log.Printf("token:\t%v\n", token)
+		if false {
+			log.Printf("bits:\t%d\n", bits)
+			log.Printf("e:\t%s\n", e)
+			log.Printf("token:\t%v\n", token)
+		}
+
+		info, ok := mechanisms[req.Mechanism.Mechanism]
+		if !ok {
+			return nil, pkcs11.ErrMechanismInvalid
+		}
+		if bits < uint64(info.MinKeySize) || bits > uint64(info.MaxKeySize) {
+			return nil, pkcs11.ErrMechanismParamInvalid
+		}
+
+		key, err := rsa.GenerateKey(rand.Reader, int(bits))
+		if err != nil {
+			log.Printf("rsa.GenerateKey failed: %s", err)
+			return nil, pkcs11.ErrDeviceError
+		}
+		_ = key
+		return &pkcs11.GenerateKeyPairResp{
+			PublicKey:  42,
+			PrivateKey: 43,
+		}, nil
 
 	default:
+		log.Printf("GenerateKeyPair: %s", req.Mechanism)
+		log.Printf("PublicKeyTemplate:")
+		for idx, attr := range req.PublicKeyTemplate {
+			log.Printf(" - %d: %s\n", idx, attr.Type)
+			if len(attr.Value) > 0 {
+				log.Printf("%s", hex.Dump(attr.Value))
+			}
+		}
+		log.Printf("PrivateKeyTemplate:")
+		for idx, attr := range req.PrivateKeyTemplate {
+			log.Printf(" - %d: %s\n", idx, attr.Type)
+			if len(attr.Value) > 0 {
+				log.Printf("%s", hex.Dump(attr.Value))
+			}
+		}
+
 		return nil, pkcs11.ErrMechanismInvalid
 	}
 
