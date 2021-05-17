@@ -97,6 +97,7 @@ type Provider struct {
 	pkcs11.Base
 	id      pkcs11.Ulong
 	parent  *Provider
+	storage pkcs11.Storage
 	session *Session
 }
 
@@ -229,6 +230,14 @@ func (p *Provider) CreateObject(req *pkcs11.CreateObjectReq) (*pkcs11.CreateObje
 	return nil, pkcs11.ErrFunctionNotSupported
 }
 
+// DestroyObject implements the Provider.DestroyObject().
+func (p *Provider) DestroyObject(req *pkcs11.DestroyObjectReq) error {
+	if req.Object&FlagToken != 0 {
+		return p.parent.storage.Delete(req.Object)
+	}
+	return p.session.storage.Delete(req.Object)
+}
+
 // DigestInit implements the Provider.DigestInit().
 func (p *Provider) DigestInit(req *pkcs11.DigestInitReq) error {
 	if p.session == nil {
@@ -339,15 +348,37 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 			return nil, pkcs11.ErrMechanismParamInvalid
 		}
 
+		var storage pkcs11.Storage
+		if token {
+			storage = p.parent.storage
+		} else {
+			storage = p.session.storage
+		}
+
 		key, err := rsa.GenerateKey(rand.Reader, int(bits))
 		if err != nil {
 			log.Printf("rsa.GenerateKey failed: %s", err)
 			return nil, pkcs11.ErrDeviceError
 		}
-		_ = key
+		pubHandle, err := storage.Create(&pkcs11.Object{
+			Attrs:  req.PublicKeyTemplate,
+			Native: &key.PublicKey,
+		})
+		if err != nil {
+			return nil, err
+		}
+		privHandle, err := storage.Create(&pkcs11.Object{
+			Attrs:  req.PrivateKeyTemplate,
+			Native: key,
+		})
+		if err != nil {
+			storage.Delete(pubHandle)
+			return nil, err
+		}
+
 		return &pkcs11.GenerateKeyPairResp{
-			PublicKey:  42,
-			PrivateKey: 43,
+			PublicKey:  pubHandle,
+			PrivateKey: privHandle,
 		}, nil
 
 	default:

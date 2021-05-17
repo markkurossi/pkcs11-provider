@@ -31,6 +31,22 @@ var (
 	sessions  = make(map[pkcs11.SessionHandle]*Session)
 )
 
+const (
+	// FlagToken specifies that the object is stored on token storage
+	// instead of session storage.
+	FlagToken pkcs11.ObjectHandle = 0x1
+)
+
+func allocObjectHandle() (pkcs11.ObjectHandle, error) {
+	var buf [8]byte
+
+	_, err := rand.Read(buf[:])
+	if err != nil {
+		return 0, pkcs11.ErrDeviceError
+	}
+	return pkcs11.ObjectHandle(bo.Uint64(buf[:])), nil
+}
+
 // NewProvider creates a new provider instance.
 func NewProvider() (*Provider, error) {
 	var buf [4]byte
@@ -51,6 +67,15 @@ func NewProvider() (*Provider, error) {
 		}
 		provider := &Provider{
 			id: id,
+			storage: pkcs11.NewMemoryStorage(func() (
+				pkcs11.ObjectHandle, error) {
+				h, err := allocObjectHandle()
+				if err != nil {
+					return 0, err
+				}
+				h |= FlagToken
+				return h, nil
+			}),
 		}
 		providers[id] = provider
 		return provider, nil
@@ -72,9 +97,10 @@ func LookupProvider(id pkcs11.Ulong) (*Provider, error) {
 
 // Session implements a session with the token.
 type Session struct {
-	ID     pkcs11.SessionHandle
-	Flags  pkcs11.Flags
-	Digest hash.Hash
+	ID      pkcs11.SessionHandle
+	Flags   pkcs11.Flags
+	storage pkcs11.Storage
+	Digest  hash.Hash
 }
 
 // NewSession creates a new session instance.
@@ -97,6 +123,15 @@ func NewSession() (*Session, error) {
 		}
 		session := &Session{
 			ID: id,
+			storage: pkcs11.NewMemoryStorage(func() (
+				pkcs11.ObjectHandle, error) {
+				h, err := allocObjectHandle()
+				if err != nil {
+					return 0, err
+				}
+				h &^= FlagToken
+				return h, nil
+			}),
 		}
 		sessions[id] = session
 		return session, nil
