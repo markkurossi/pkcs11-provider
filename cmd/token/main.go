@@ -10,6 +10,7 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"encoding/hex"
+	"flag"
 	"hash"
 	"io"
 	"log"
@@ -25,6 +26,7 @@ const (
 )
 
 var (
+	debug     bool
 	m         sync.Mutex
 	bo        = binary.BigEndian
 	providers = make(map[pkcs11.Ulong]*Provider)
@@ -152,6 +154,8 @@ func LookupSession(id pkcs11.SessionHandle) (*Session, error) {
 }
 
 func main() {
+	flag.BoolVar(&debug, "D", false, "enable debug output")
+	flag.Parse()
 	log.SetFlags(0)
 
 	log.Printf("Token starting\n")
@@ -208,8 +212,12 @@ func messageLoop(conn net.Conn) error {
 				return err
 			}
 			if length > 32 {
-				log.Printf("\u251c\u2500\u2500\u2574req: length=%d:\n%s",
-					length, hex.Dump(msg))
+				if debug {
+					log.Printf("\u251c\u2500\u2500\u2574req: length=%d:\n%s",
+						length, hex.Dump(msg))
+				} else {
+					log.Printf("\u251c\u2500\u2500\u2574req: length=%d", length)
+				}
 			} else {
 				log.Printf("\u251c\u2500\u2500\u2574req: %x\n", msg)
 			}
@@ -217,8 +225,12 @@ func messageLoop(conn net.Conn) error {
 
 		ret, data := pkcs11.Dispatch(provider, msgType, msg)
 		if len(data) > 32 {
-			log.Printf("\u2514>%s: length=%d:\n%s",
-				ret, len(data), hex.Dump(data))
+			if debug {
+				log.Printf("\u2514>%s: length=%d:\n%s",
+					ret, len(data), hex.Dump(data))
+			} else {
+				log.Printf("\u2514>%s: length=%d\n", ret, len(data))
+			}
 		} else if len(data) > 0 {
 			log.Printf("\u2514>%s: %x\n", ret, data)
 		} else {

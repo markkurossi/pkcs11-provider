@@ -220,10 +220,12 @@ func (p *Provider) Login(req *pkcs11.LoginReq) error {
 
 // CreateObject implements the Provider.CreateObject().
 func (p *Provider) CreateObject(req *pkcs11.CreateObjectReq) (*pkcs11.CreateObjectResp, error) {
-	for _, attr := range req.Template {
-		fmt.Printf("\u251c\u2500\u2500\u2500\u2500\u2574%s:\n", attr.Type)
-		if len(attr.Value) > 0 {
-			fmt.Printf("%s", hex.Dump(attr.Value))
+	if debug {
+		for _, attr := range req.Template {
+			fmt.Printf("\u251c\u2500\u2500\u2500\u2500\u2574%s:\n", attr.Type)
+			if len(attr.Value) > 0 {
+				fmt.Printf("%s", hex.Dump(attr.Value))
+			}
 		}
 	}
 	token, err := req.Template.OptBool(pkcs11.CkaToken)
