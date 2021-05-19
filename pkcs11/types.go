@@ -1433,11 +1433,21 @@ func (tmpl Template) Uint(t AttributeType) (uint64, error) {
 	return 0, ErrTemplateIncomplete
 }
 
-// BigInt returns the attribute valiue as *big.Int.
+// BigInt returns the attribute value as *big.Int.
 func (tmpl Template) BigInt(t AttributeType) (*big.Int, error) {
 	for _, attr := range tmpl {
 		if attr.Type == t {
 			return attr.BigInt()
+		}
+	}
+	return nil, ErrTemplateIncomplete
+}
+
+// OptBytes returns an optional attribute value as byte array.
+func (tmpl Template) OptBytes(t AttributeType) ([]byte, error) {
+	for _, attr := range tmpl {
+		if attr.Type == t {
+			return attr.Value, nil
 		}
 	}
 	return nil, ErrTemplateIncomplete
