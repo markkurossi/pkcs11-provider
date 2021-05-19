@@ -1201,8 +1201,194 @@ func (attr Attribute) BigInt() (*big.Int, error) {
 	return new(big.Int).SetBytes(attr.Value), nil
 }
 
+// Object classes.
+const (
+	CkoData             ObjectClass = 0x00000000
+	CkoCertificate      ObjectClass = 0x00000001
+	CkoPublicKey        ObjectClass = 0x00000002
+	CkoPrivateKey       ObjectClass = 0x00000003
+	CkoSecretKey        ObjectClass = 0x00000004
+	CkoHWFeature        ObjectClass = 0x00000005
+	CkoDomainParameters ObjectClass = 0x00000006
+	CkoMechanism        ObjectClass = 0x00000007
+	CkoOtpKey           ObjectClass = 0x00000008
+	CkoProfile          ObjectClass = 0x00000009
+	CkoVendorDefined    ObjectClass = 0x80000000
+)
+
+var ckoNames = map[ObjectClass]string{
+	CkoData:             "CKO_DATA",
+	CkoCertificate:      "CKO_CERTIFICATE",
+	CkoPublicKey:        "CKO_PUBLIC_KEY",
+	CkoPrivateKey:       "CKO_PRIVATE_KEY",
+	CkoSecretKey:        "CKO_SECRET_KEY",
+	CkoHWFeature:        "CKO_HW_FEATURE",
+	CkoDomainParameters: "CKO_DOMAIN_PARAMETERS",
+	CkoMechanism:        "CKO_MECHANISM",
+	CkoOtpKey:           "CKO_OTP_KEY",
+	CkoProfile:          "CKO_PROFILE",
+	CkoVendorDefined:    "CKO_VENDOR_DEFINED",
+}
+
+func (c ObjectClass) String() string {
+	name, ok := ckoNames[c]
+	if ok {
+		return name
+	}
+	return fmt.Sprintf("{ObjectClass %d}", c)
+}
+
+// Key types.
+const (
+	CkkRSA            KeyType = 0x00000000
+	CkkDSA            KeyType = 0x00000001
+	CkkDH             KeyType = 0x00000002
+	CkkEC             KeyType = 0x00000003
+	CkkX942DH         KeyType = 0x00000004
+	CkkKea            KeyType = 0x00000005
+	CkkGenericSecret  KeyType = 0x00000010
+	CkkRC2            KeyType = 0x00000011
+	CkkRC4            KeyType = 0x00000012
+	CkkDES            KeyType = 0x00000013
+	CkkDES2           KeyType = 0x00000014
+	CkkDES3           KeyType = 0x00000015
+	CkkCAST           KeyType = 0x00000016
+	CkkCAST3          KeyType = 0x00000017
+	CkkCAST128        KeyType = 0x00000018
+	CkkRC5            KeyType = 0x00000019
+	CkkIDEA           KeyType = 0x0000001A
+	CkkSkipjack       KeyType = 0x0000001B
+	CkkBaton          KeyType = 0x0000001C
+	CkkJuniper        KeyType = 0x0000001D
+	CkkCDMF           KeyType = 0x0000001E
+	CkkAES            KeyType = 0x0000001F
+	CkkBlowfish       KeyType = 0x00000020
+	CkkTwofish        KeyType = 0x00000021
+	CkkSecurID        KeyType = 0x00000022
+	CkkHOTP           KeyType = 0x00000023
+	CkkACTI           KeyType = 0x00000024
+	CkkCamellia       KeyType = 0x00000025
+	CkkAria           KeyType = 0x00000026
+	CkkMD5HMAC        KeyType = 0x00000027
+	CkkSHA1HMAC       KeyType = 0x00000028
+	CkkRIPEMD128HMAC  KeyType = 0x00000029
+	CkkRIPEMD160HMAC  KeyType = 0x0000002A
+	CkkSHA256HMAC     KeyType = 0x0000002B
+	CkkSHA384HMAC     KeyType = 0x0000002C
+	CkkSHA512HMAC     KeyType = 0x0000002D
+	CkkSHA224HMAC     KeyType = 0x0000002E
+	CkkSeed           KeyType = 0x0000002F
+	CkkGostR3410      KeyType = 0x00000030
+	CkkGostr3411      KeyType = 0x00000031
+	CkkGost28147      KeyType = 0x00000032
+	CkkChaCha20       KeyType = 0x00000033
+	CkkPoly1305       KeyType = 0x00000034
+	CkkAESXTS         KeyType = 0x00000035
+	CkkSHA3224HMAC    KeyType = 0x00000036
+	CkkSHA3256HMAC    KeyType = 0x00000037
+	CkkSHA3384HMAC    KeyType = 0x00000038
+	CkkSHA3512HMAC    KeyType = 0x00000039
+	CkkBlake2b160HMAC KeyType = 0x0000003a
+	CkkBlake2b256HMAC KeyType = 0x0000003b
+	CkkBlake2b384HMAC KeyType = 0x0000003c
+	CkkBlake2b512HMAC KeyType = 0x0000003d
+	CkkSalsa20        KeyType = 0x0000003e
+	CkkX2Ratchet      KeyType = 0x0000003f
+	CkkECEdwards      KeyType = 0x00000040
+	CkkECMontgomery   KeyType = 0x00000041
+	CkkHKDF           KeyType = 0x00000042
+	CkkVendorDefined  KeyType = 0x80000000
+)
+
+var ckkNames = map[KeyType]string{
+	CkkRSA:            "CKK_RSA",
+	CkkDSA:            "CKK_DSA",
+	CkkDH:             "CKK_DH",
+	CkkEC:             "CKK_EC",
+	CkkX942DH:         "CKK_X9_42_DH",
+	CkkKea:            "CKK_KEA",
+	CkkGenericSecret:  "CKK_GENERIC_SECRET",
+	CkkRC2:            "CKK_RC2",
+	CkkRC4:            "CKK_RC4",
+	CkkDES:            "CKK_DES",
+	CkkDES2:           "CKK_DES2",
+	CkkDES3:           "CKK_DES3",
+	CkkCAST:           "CKK_CAST",
+	CkkCAST3:          "CKK_CAST3",
+	CkkCAST128:        "CKK_CAST128",
+	CkkRC5:            "CKK_RC5",
+	CkkIDEA:           "CKK_IDEA",
+	CkkSkipjack:       "CKK_SKIPJACK",
+	CkkBaton:          "CKK_BATON",
+	CkkJuniper:        "CKK_JUNIPER",
+	CkkCDMF:           "CKK_CDMF",
+	CkkAES:            "CKK_AES",
+	CkkBlowfish:       "CKK_BLOWFISH",
+	CkkTwofish:        "CKK_TWOFISH",
+	CkkSecurID:        "CKK_SECURID",
+	CkkHOTP:           "CKK_HOTP",
+	CkkACTI:           "CKK_ACTI",
+	CkkCamellia:       "CKK_CAMELLIA",
+	CkkAria:           "CKK_ARIA",
+	CkkMD5HMAC:        "CKK_MD5_HMAC",
+	CkkSHA1HMAC:       "CKK_SHA_1_HMAC",
+	CkkRIPEMD128HMAC:  "CKK_RIPEMD128_HMAC",
+	CkkRIPEMD160HMAC:  "CKK_RIPEMD160_HMAC",
+	CkkSHA256HMAC:     "CKK_SHA256_HMAC",
+	CkkSHA384HMAC:     "CKK_SHA384_HMAC",
+	CkkSHA512HMAC:     "CKK_SHA512_HMAC",
+	CkkSHA224HMAC:     "CKK_SHA224_HMAC",
+	CkkSeed:           "CKK_SEED",
+	CkkGostR3410:      "CKK_GOSTR3410",
+	CkkGostr3411:      "CKK_GOSTR3411",
+	CkkGost28147:      "CKK_GOST28147",
+	CkkChaCha20:       "CKK_CHACHA20",
+	CkkPoly1305:       "CKK_POLY1305",
+	CkkAESXTS:         "CKK_AES_XTS",
+	CkkSHA3224HMAC:    "CKK_SHA3_224_HMAC",
+	CkkSHA3256HMAC:    "CKK_SHA3_256_HMAC",
+	CkkSHA3384HMAC:    "CKK_SHA3_384_HMAC",
+	CkkSHA3512HMAC:    "CKK_SHA3_512_HMAC",
+	CkkBlake2b160HMAC: "CKK_BLAKE2B_160_HMAC",
+	CkkBlake2b256HMAC: "CKK_BLAKE2B_256_HMAC",
+	CkkBlake2b384HMAC: "CKK_BLAKE2B_384_HMAC",
+	CkkBlake2b512HMAC: "CKK_BLAKE2B_512_HMAC",
+	CkkSalsa20:        "CKK_SALSA20",
+	CkkX2Ratchet:      "CKK_X2RATCHET",
+	CkkECEdwards:      "CKK_EC_EDWARDS",
+	CkkECMontgomery:   "CKK_EC_MONTGOMERY",
+	CkkHKDF:           "CKK_HKDF",
+	CkkVendorDefined:  "CKK_VENDOR_DEFINED",
+}
+
+func (t KeyType) String() string {
+	name, ok := ckkNames[t]
+	if ok {
+		return name
+	}
+	return fmt.Sprintf("{KeyType %d}", t)
+}
+
 // Template defines attributes for objects.
 type Template []Attribute
+
+// Set sets the value of the attribute t to value v in the
+// template. The function returns a new template.
+func (tmpl Template) Set(t AttributeType, v []Byte) Template {
+	var result Template
+
+	// Filter attribute from template.
+	for _, attr := range tmpl {
+		if attr.Type != t {
+			result = append(result, attr)
+		}
+	}
+	// Add new type-value pair.
+	return append(result, Attribute{
+		Type:  t,
+		Value: v,
+	})
+}
 
 // Bool returns attribute value as bool.
 func (tmpl Template) Bool(t AttributeType) (bool, error) {
@@ -1211,7 +1397,7 @@ func (tmpl Template) Bool(t AttributeType) (bool, error) {
 			return attr.Bool()
 		}
 	}
-	return false, ErrArgumentsBad
+	return false, ErrTemplateIncomplete
 }
 
 // OptBool returns an optional attribute value as bool. The PKCS #11
@@ -1233,7 +1419,7 @@ func (tmpl Template) OptBool(t AttributeType) (bool, error) {
 
 	default:
 		log.Printf("no default value for attribute %s", t)
-		return false, ErrArgumentsBad
+		return false, ErrTemplateIncomplete
 	}
 }
 
@@ -1244,7 +1430,7 @@ func (tmpl Template) Uint(t AttributeType) (uint64, error) {
 			return attr.Uint()
 		}
 	}
-	return 0, ErrArgumentsBad
+	return 0, ErrTemplateIncomplete
 }
 
 // BigInt returns the attribute valiue as *big.Int.
@@ -1254,5 +1440,5 @@ func (tmpl Template) BigInt(t AttributeType) (*big.Int, error) {
 			return attr.BigInt()
 		}
 	}
-	return nil, ErrArgumentsBad
+	return nil, ErrTemplateIncomplete
 }

@@ -198,7 +198,7 @@ func messageLoop(conn net.Conn) error {
 
 		msgType := pkcs11.Type(bo.Uint32(hdr[0:4]))
 		length := bo.Uint32(hdr[4:8])
-		log.Printf("\u250C\u2500%s:\n", msgType.Name())
+		log.Printf("\u250C\u2574%s:\n", msgType.Name())
 
 		var msg []byte
 		if length > 0 {
@@ -208,10 +208,10 @@ func messageLoop(conn net.Conn) error {
 				return err
 			}
 			if length > 32 {
-				log.Printf("\u251c\u2500\u2500\u2500\u2500req: length=%d:\n%s",
+				log.Printf("\u251c\u2500\u2500\u2574req: length=%d:\n%s",
 					length, hex.Dump(msg))
 			} else {
-				log.Printf("\u251c\u2500\u2500\u2500\u2500req: %x\n", msg)
+				log.Printf("\u251c\u2500\u2500\u2574req: %x\n", msg)
 			}
 		}
 

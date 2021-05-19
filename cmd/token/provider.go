@@ -220,14 +220,42 @@ func (p *Provider) Login(req *pkcs11.LoginReq) error {
 
 // CreateObject implements the Provider.CreateObject().
 func (p *Provider) CreateObject(req *pkcs11.CreateObjectReq) (*pkcs11.CreateObjectResp, error) {
-	for idx, attr := range req.Template {
-		fmt.Printf("%d:\t%s\n", idx, attr.Type)
+	for _, attr := range req.Template {
+		fmt.Printf("\u251c\u2500\u2500\u2500\u2500\u2574%s:\n", attr.Type)
 		if len(attr.Value) > 0 {
 			fmt.Printf("%s", hex.Dump(attr.Value))
 		}
 	}
+	token, err := req.Template.OptBool(pkcs11.CkaToken)
+	if err != nil {
+		return nil, err
+	}
+	var storage pkcs11.Storage
+	if token {
+		storage = p.parent.storage
+	} else {
+		storage = p.session.storage
+	}
 
-	return nil, pkcs11.ErrFunctionNotSupported
+	obj := &pkcs11.Object{
+		Attrs: req.Template,
+	}
+	err = obj.Inflate()
+	if err != nil {
+		return nil, err
+	}
+
+	handle, err := storage.Create(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	// XXX Whenever an object is created, a value for CKA_UNIQUE_ID is
+	// generated and assigned to the new object (See Section 4.4.1).
+
+	return &pkcs11.CreateObjectResp{
+		Object: handle,
+	}, nil
 }
 
 // DestroyObject implements the Provider.DestroyObject().
@@ -360,6 +388,16 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 			log.Printf("rsa.GenerateKey failed: %s", err)
 			return nil, pkcs11.ErrDeviceError
 		}
+
+		// Store private key prime factors.
+		if len(key.Primes) != 2 {
+			log.Printf("rsa.GenerateKey: #primes != 2: %d", len(key.Primes))
+			return nil, pkcs11.ErrDeviceError
+		}
+		privTmpl := req.PrivateKeyTemplate
+		privTmpl = privTmpl.Set(pkcs11.CkaPrime1, key.Primes[0].Bytes())
+		privTmpl = privTmpl.Set(pkcs11.CkaPrime2, key.Primes[1].Bytes())
+
 		pubHandle, err := storage.Create(&pkcs11.Object{
 			Attrs:  req.PublicKeyTemplate,
 			Native: &key.PublicKey,
@@ -368,7 +406,7 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 			return nil, err
 		}
 		privHandle, err := storage.Create(&pkcs11.Object{
-			Attrs:  req.PrivateKeyTemplate,
+			Attrs:  privTmpl,
 			Native: key,
 		})
 		if err != nil {

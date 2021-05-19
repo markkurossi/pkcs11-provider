@@ -26,8 +26,14 @@ type Char = byte
 // Flags defines basic protocol type CK_FLAGS.
 type Flags uint32
 
+// KeyType defines basic protocol type CK_KEY_TYPE.
+type KeyType uint32
+
 // MechanismType defines basic protocol type CK_MECHANISM_TYPE.
 type MechanismType uint32
+
+// ObjectClass defines basic protocol type CK_OBJECT_CLASS.
+type ObjectClass uint32
 
 // ObjectHandle defines basic protocol type CK_OBJECT_HANDLE.
 type ObjectHandle uint32
