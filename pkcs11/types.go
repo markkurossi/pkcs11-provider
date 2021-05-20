@@ -7,6 +7,7 @@
 package pkcs11
 
 import (
+	"encoding/hex"
 	"fmt"
 	"log"
 	"math/big"
@@ -1183,13 +1184,13 @@ func (attr Attribute) Uint() (uint64, error) {
 		return uint64(attr.Value[0]), nil
 
 	case 2:
-		return uint64(hbo.Uint16(attr.Value)), nil
+		return uint64(HBO.Uint16(attr.Value)), nil
 
 	case 4:
-		return uint64(hbo.Uint32(attr.Value)), nil
+		return uint64(HBO.Uint32(attr.Value)), nil
 
 	case 8:
-		return uint64(hbo.Uint64(attr.Value)), nil
+		return uint64(HBO.Uint64(attr.Value)), nil
 
 	default:
 		return 0, fmt.Errorf("invalid attribute length %d", len(attr.Value))
@@ -1371,6 +1372,16 @@ func (t KeyType) String() string {
 
 // Template defines attributes for objects.
 type Template []Attribute
+
+// Debug prints the template to standard output.
+func (tmpl Template) Debug() {
+	for _, attr := range tmpl {
+		fmt.Printf("\u251c\u2500\u2500\u2500\u2500\u2574%s:\n", attr.Type)
+		if len(attr.Value) > 0 {
+			fmt.Printf("%s", hex.Dump(attr.Value))
+		}
+	}
+}
 
 // Set sets the value of the attribute t to value v in the
 // template. The function returns a new template.

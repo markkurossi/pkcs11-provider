@@ -106,7 +106,7 @@ C_Initialize
 {
   CK_ULONG *pulProviderID = &vp_provider_id;
 
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
 

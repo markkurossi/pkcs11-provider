@@ -22,7 +22,7 @@ C_SeedRandom
   CK_ULONG          ulSeedLen  /* length of seed material */
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
 
@@ -60,7 +60,7 @@ C_GenerateRandom
   CK_ULONG          ulRandomLen  /* # of bytes to generate */
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
 

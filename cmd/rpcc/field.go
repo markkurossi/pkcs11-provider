@@ -454,6 +454,61 @@ func (f *Field) Output(level, indent int) error {
 					rvCtx, f.Name,
 					rvCtx, f.SizeName)
 			}
+		} else if f.Type.Name == "CK_ATTRIBUTE" {
+			// Attribute array.
+			printf(indent, `{
+  uint32_t count;
+
+  count = vp_buffer_get_uint32(&buf);
+  if (count != ulCount)
+    {
+      vp_buffer_uninit(&buf);
+      return CKR_DEVICE_ERROR;
+    }
+
+  for (%s = 0; %s < %s; %s++)
+    {
+      CK_ATTRIBUTE *iel = &pTemplate[%s];
+      uint32_t val;
+
+      val = vp_buffer_get_uint32(&buf);
+      if (val != iel->type)
+        {
+          vp_buffer_uninit(&buf);
+          return CKR_DEVICE_ERROR;
+        }
+
+      val = vp_buffer_get_uint32(&buf);
+      if (val == 0)
+        {
+          iel->ulValueLen = CK_UNAVAILABLE_INFORMATION;
+          ret = CKR_ATTRIBUTE_TYPE_INVALID;
+        }
+      else if (iel->pValue == NULL)
+        {
+          vp_buffer_get_data(&buf, val);
+          iel->ulValueLen = val;
+        }
+      else
+        {
+          unsigned char *data = vp_buffer_get_data(&buf, val);
+
+          if (val > iel->ulValueLen)
+            {
+              ret = CKR_BUFFER_TOO_SMALL;
+              iel->ulValueLen = CK_UNAVAILABLE_INFORMATION;
+            }
+          else if (data != NULL)
+            {
+              memcpy(iel->pValue, data, val);
+              iel->ulValueLen = val;
+            }
+        }
+    }
+}
+`,
+				idxName, idxName, f.SizeName, idxName,
+				idxName)
 		} else {
 			// Array of compound type.
 			printf(indent, "%s%s = vp_buffer_get_uint32(&buf);\n",
@@ -465,7 +520,7 @@ func (f *Field) Output(level, indent int) error {
 				f.Type, lvCtx, idxElName, rvCtx, f.Name, idxName)
 
 			for _, c := range f.Type.Compound {
-				err := c.Input(level+1, indent+4)
+				err := c.Output(level+1, indent+4)
 				if err != nil {
 					return err
 				}

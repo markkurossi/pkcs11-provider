@@ -12,4 +12,5 @@ import (
 	"encoding/binary"
 )
 
-var hbo = binary.LittleEndian
+// HBO defines the host byte order.
+var HBO = binary.LittleEndian

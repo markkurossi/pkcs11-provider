@@ -24,7 +24,7 @@ C_GenerateKey
   CK_OBJECT_HANDLE_PTR phKey        /* gets handle of new key */
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   int i;
   VPIPCConn *conn = NULL;
@@ -91,7 +91,7 @@ C_GenerateKeyPair
   CK_OBJECT_HANDLE_PTR phPrivateKey                 /* gets priv. key handle */
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   int i;
   VPIPCConn *conn = NULL;

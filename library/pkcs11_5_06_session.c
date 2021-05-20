@@ -97,7 +97,7 @@ C_OpenSession
 {
   VPIPCConn *session;
 
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
 
@@ -247,7 +247,7 @@ C_Login
   CK_ULONG          ulPinLen   /* the length of the PIN */
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
 

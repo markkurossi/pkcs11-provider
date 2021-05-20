@@ -18,7 +18,7 @@ C_ImplOpenSession
   CK_SESSION_HANDLE hSession
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
 
@@ -54,7 +54,7 @@ C_ImplCloseSession
   CK_SESSION_HANDLE hSession
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
 

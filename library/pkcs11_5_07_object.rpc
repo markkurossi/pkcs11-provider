@@ -101,16 +101,14 @@ C_GetAttributeValue
   CK_ULONG          ulCount     /* attributes in template */
 )
 {
-  /*
+  /**
    * Session:
-   *            CK_SESSION_HANDLE hSession
+   *                     CK_SESSION_HANDLE hSession
    * Inputs:
-   *            CK_OBJECT_HANDLE  hObject
-   *   [ulCount]CK_ATTRIBUTE      pTemplate
-   * Outputs:
-   *   [ulCount]CK_ATTRIBUTE      pTemplate
+   *                     CK_OBJECT_HANDLE  hObject
+   * InOutputs:
+   *   [CK_ULONG ulCount]CK_ATTRIBUTE      pTemplate
    */
-  VP_FUNCTION_NOT_SUPPORTED;
 }
 
 /* C_SetAttributeValue modifies the value of one or more object

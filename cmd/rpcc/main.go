@@ -325,7 +325,7 @@ func processFile(in *Input) error {
 		msgType := pkcs11.NewType(vMajor, vMinor, s0, s1, s2)
 
 		if outputC && fHeader {
-			print(`  CK_RV ret;
+			print(`  CK_RV ret = CKR_OK;
   VPBuffer buf;
 `)
 			var depth int

@@ -21,7 +21,7 @@ C_CreateObject
   CK_OBJECT_HANDLE_PTR phObject  /* gets new object's handle. */
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   int i;
   VPIPCConn *conn = NULL;
@@ -79,7 +79,7 @@ C_CopyObject
   CK_OBJECT_HANDLE_PTR phNewObject  /* receives handle of copy */
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   int i;
   VPIPCConn *conn = NULL;
@@ -133,7 +133,7 @@ C_DestroyObject
   CK_OBJECT_HANDLE  hObject    /* the object's handle */
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
 
@@ -171,7 +171,7 @@ C_GetObjectSize
   CK_ULONG_PTR      pulSize    /* receives size of object */
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
 
@@ -220,16 +220,99 @@ C_GetAttributeValue
   CK_ULONG          ulCount     /* attributes in template */
 )
 {
-  /*
-   * Session:
-   *            CK_SESSION_HANDLE hSession
-   * Inputs:
-   *            CK_OBJECT_HANDLE  hObject
-   *   [ulCount]CK_ATTRIBUTE      pTemplate
-   * Outputs:
-   *   [ulCount]CK_ATTRIBUTE      pTemplate
-   */
-  VP_FUNCTION_NOT_SUPPORTED;
+  CK_RV ret = CKR_OK;
+  VPBuffer buf;
+  int i;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
+
+  /* Lookup session by hSession */
+  conn = vp_session(hSession, &ret);
+  if (ret != CKR_OK)
+    return ret;
+
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0050705);
+  vp_buffer_add_space(&buf, 4);
+
+  vp_buffer_add_uint32(&buf, hObject);
+  vp_buffer_add_uint32(&buf, ulCount);
+  for (i = 0; i < ulCount; i++)
+    {
+      CK_ATTRIBUTE *iel = &pTemplate[i];
+
+      vp_buffer_add_uint32(&buf, iel->type);
+      vp_buffer_add_byte_arr(&buf, iel->pValue, iel->ulValueLen);
+    }
+
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  {
+    uint32_t count;
+
+    count = vp_buffer_get_uint32(&buf);
+    if (count != ulCount)
+      {
+        vp_buffer_uninit(&buf);
+        return CKR_DEVICE_ERROR;
+      }
+
+    for (i = 0; i < ulCount; i++)
+      {
+        CK_ATTRIBUTE *iel = &pTemplate[i];
+        uint32_t val;
+
+        val = vp_buffer_get_uint32(&buf);
+        if (val != iel->type)
+          {
+            vp_buffer_uninit(&buf);
+            return CKR_DEVICE_ERROR;
+          }
+
+        val = vp_buffer_get_uint32(&buf);
+        if (val == 0)
+          {
+            iel->ulValueLen = CK_UNAVAILABLE_INFORMATION;
+            ret = CKR_ATTRIBUTE_TYPE_INVALID;
+          }
+        else if (iel->pValue == NULL)
+          {
+            vp_buffer_get_data(&buf, val);
+            iel->ulValueLen = val;
+          }
+        else
+          {
+            unsigned char *data = vp_buffer_get_data(&buf, val);
+
+            if (val > iel->ulValueLen)
+              {
+                ret = CKR_BUFFER_TOO_SMALL;
+                iel->ulValueLen = CK_UNAVAILABLE_INFORMATION;
+              }
+            else if (data != NULL)
+              {
+                memcpy(iel->pValue, data, val);
+                iel->ulValueLen = val;
+              }
+          }
+      }
+  }
+
+  if (vp_buffer_error(&buf, &ret))
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  vp_buffer_uninit(&buf);
+
+  return ret;
 }
 
 /* C_SetAttributeValue modifies the value of one or more object
@@ -307,7 +390,7 @@ C_FindObjectsFinal
   CK_SESSION_HANDLE hSession  /* the session's handle */
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
 

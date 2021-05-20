@@ -30,9 +30,13 @@ vp_buffer_reset(VPBuffer *buf)
 bool
 vp_buffer_error(VPBuffer *buf, CK_RV *error)
 {
+  /* Do not modify error if buffer does not have an error. */
+  if (buf->error == CKR_OK)
+    return false;
+
   *error = buf->error;
 
-  return buf->error != CKR_OK;
+  return true;
 }
 
 unsigned char *
@@ -174,6 +178,22 @@ vp_buffer_get_uint32(VPBuffer *buf)
   buf->offset += 4;
 
   return VP_GET_UINT32(ucp);
+}
+
+unsigned char *
+vp_buffer_get_data(VPBuffer *buf, size_t len)
+{
+  unsigned char *ucp;
+
+  if (buf->offset + len > buf->used)
+    {
+      buf->error = CKR_DATA_LEN_RANGE;
+      return NULL;
+    }
+  ucp = buf->data + buf->offset;
+  buf->offset += len;
+
+  return ucp;
 }
 
 bool

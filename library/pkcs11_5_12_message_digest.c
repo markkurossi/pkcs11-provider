@@ -19,7 +19,7 @@ C_DigestInit
   CK_MECHANISM_PTR  pMechanism  /* the digesting mechanism */
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
 
@@ -64,7 +64,7 @@ C_Digest
   CK_ULONG_PTR      pulDigestLen  /* gets digest length */
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
 
@@ -135,7 +135,7 @@ C_DigestUpdate
   CK_ULONG          ulPartLen  /* bytes of data to be digested */
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
 
@@ -189,7 +189,7 @@ C_DigestFinal
   CK_ULONG_PTR      pulDigestLen  /* gets byte count of digest */
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
 

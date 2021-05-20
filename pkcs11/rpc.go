@@ -269,6 +269,17 @@ type GetObjectSizeResp struct {
 	Size Ulong
 }
 
+// GetAttributeValueReq defines the arguments of C_GetAttributeValue.
+type GetAttributeValueReq struct {
+	Object   ObjectHandle
+	Template Template
+}
+
+// GetAttributeValueResp defines the result of C_GetAttributeValue.
+type GetAttributeValueResp struct {
+	Template Template
+}
+
 // DigestInitReq defines the arguments of C_DigestInit.
 type DigestInitReq struct {
 	Mechanism Mechanism
@@ -360,6 +371,7 @@ type Provider interface {
 	CopyObject(req *CopyObjectReq) (*CopyObjectResp, error)
 	DestroyObject(req *DestroyObjectReq) error
 	GetObjectSize(req *GetObjectSizeReq) (*GetObjectSizeResp, error)
+	GetAttributeValue(req *GetAttributeValueReq) (*GetAttributeValueResp, error)
 	FindObjectsFinal() error
 	DigestInit(req *DigestInitReq) error
 	Digest(req *DigestReq) (*DigestResp, error)
@@ -459,6 +471,11 @@ func (b *Base) GetObjectSize(req *GetObjectSizeReq) (*GetObjectSizeResp, error) 
 	return nil, ErrFunctionNotSupported
 }
 
+// GetAttributeValue implements the Provider.GetAttributeValue().
+func (b *Base) GetAttributeValue(req *GetAttributeValueReq) (*GetAttributeValueResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
 // FindObjectsFinal implements the Provider.FindObjectsFinal().
 func (b *Base) FindObjectsFinal() error {
 	return ErrFunctionNotSupported
@@ -522,6 +539,7 @@ var msgTypeNames = map[Type]string{
 	0xc0050702: "CopyObject",
 	0xc0050703: "DestroyObject",
 	0xc0050704: "GetObjectSize",
+	0xc0050705: "GetAttributeValue",
 	0xc0050709: "FindObjectsFinal",
 	0xc0050c01: "DigestInit",
 	0xc0050c02: "Digest",
@@ -700,6 +718,17 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 			return nil, err
 		}
 		resp, err := p.GetObjectSize(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
+
+	case 0xc0050705: // GetAttributeValue
+		var req GetAttributeValueReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		resp, err := p.GetAttributeValue(&req)
 		if err != nil {
 			return nil, err
 		}

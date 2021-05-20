@@ -20,7 +20,7 @@ C_GetSlotList
   CK_ULONG_PTR   pulCount       /* receives number of slots */
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
 
@@ -88,7 +88,7 @@ C_GetSlotInfo
   CK_SLOT_INFO_PTR pInfo    /* receives the slot information */
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
 
@@ -151,7 +151,7 @@ C_GetTokenInfo
   CK_TOKEN_INFO_PTR pInfo    /* receives the token information */
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
 
@@ -242,7 +242,7 @@ C_GetMechanismList
   CK_ULONG_PTR          pulCount         /* gets # of mechs. */
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
 
@@ -311,7 +311,7 @@ C_GetMechanismInfo
   CK_MECHANISM_INFO_PTR pInfo    /* receives mechanism info */
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
 
@@ -363,7 +363,7 @@ C_InitToken
   CK_UTF8CHAR_PTR pLabel     /* 32-byte token label (blank padded) */
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
 
@@ -401,7 +401,7 @@ C_InitPIN
   CK_ULONG          ulPinLen   /* length in bytes of the PIN */
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
 
@@ -441,7 +441,7 @@ C_SetPIN
   CK_ULONG          ulNewLen   /* length of the new PIN */
 )
 {
-  CK_RV ret;
+  CK_RV ret = CKR_OK;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
 
