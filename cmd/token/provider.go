@@ -432,37 +432,45 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 			log.Printf("rsa.GenerateKey: #primes != 2: %d", len(key.Primes))
 			return nil, pkcs11.ErrDeviceError
 		}
-		var bitsBuf [4]byte
-		pkcs11.HBO.PutUint32(bitsBuf[:], uint32(bits))
-
-		var eBuf [4]byte
-		pkcs11.HBO.PutUint32(eBuf[:], uint32(key.PublicKey.E))
 
 		privTmpl := req.PrivateKeyTemplate
 		privTmpl = privTmpl.Set(pkcs11.CkaPrime1, key.Primes[0].Bytes())
 		privTmpl = privTmpl.Set(pkcs11.CkaPrime2, key.Primes[1].Bytes())
 		privTmpl = privTmpl.Set(pkcs11.CkaModulus, key.PublicKey.N.Bytes())
-		privTmpl = privTmpl.Set(pkcs11.CkaModulusBits, bitsBuf[:])
-		privTmpl = privTmpl.Set(pkcs11.CkaPublicExponent, eBuf[:])
+		privTmpl = privTmpl.Set(pkcs11.CkaPublicExponent, e.Bytes())
+		privTmpl = privTmpl.Set(pkcs11.CkaPrivateExponent, key.D.Bytes())
+		privTmpl = privTmpl.SetInt(pkcs11.CkaClass, uint32(pkcs11.CkoPrivateKey))
+		privTmpl = privTmpl.SetInt(pkcs11.CkaKeyType, uint32(pkcs11.CkkRSA))
 
-		pubTmpl := req.PublicKeyTemplate
-		pubTmpl = pubTmpl.Set(pkcs11.CkaModulus, key.PublicKey.N.Bytes())
-		pubTmpl = pubTmpl.Set(pkcs11.CkaModulusBits, bitsBuf[:])
-		pubTmpl = pubTmpl.Set(pkcs11.CkaPublicExponent, eBuf[:])
-
-		pubHandle, err := storage.Create(&pkcs11.Object{
-			Attrs:  pubTmpl,
-			Native: &key.PublicKey,
-		})
+		privObj := &pkcs11.Object{
+			Attrs: privTmpl,
+		}
+		err = privObj.Inflate()
 		if err != nil {
 			return nil, err
 		}
-		privHandle, err := storage.Create(&pkcs11.Object{
-			Attrs:  privTmpl,
-			Native: key,
-		})
+		privHandle, err := storage.Create(privObj)
 		if err != nil {
-			storage.Delete(pubHandle)
+			return nil, err
+		}
+
+		pubTmpl := req.PublicKeyTemplate
+		pubTmpl = pubTmpl.Set(pkcs11.CkaModulus, key.PublicKey.N.Bytes())
+		pubTmpl = pubTmpl.Set(pkcs11.CkaPublicExponent, e.Bytes())
+		pubTmpl = pubTmpl.SetInt(pkcs11.CkaClass, uint32(pkcs11.CkoPublicKey))
+		pubTmpl = pubTmpl.SetInt(pkcs11.CkaKeyType, uint32(pkcs11.CkkRSA))
+
+		pubObj := &pkcs11.Object{
+			Attrs: pubTmpl,
+		}
+		err = pubObj.Inflate()
+		if err != nil {
+			storage.Delete(privHandle)
+			return nil, err
+		}
+		pubHandle, err := storage.Create(pubObj)
+		if err != nil {
+			storage.Delete(privHandle)
 			return nil, err
 		}
 

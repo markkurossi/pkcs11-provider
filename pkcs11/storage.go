@@ -54,6 +54,8 @@ func (obj *Object) inflatePublicKey() error {
 		if err != nil {
 			return err
 		}
+		obj.Attrs = obj.Attrs.SetInt(CkaModulusBits, uint32(n.BitLen()))
+
 		obj.Native = &rsa.PublicKey{
 			N: n,
 			E: int(e.Int64()),
@@ -86,6 +88,7 @@ func (obj *Object) inflatePrivateKey() error {
 		if err != nil {
 			return err
 		}
+
 		prime1, err := obj.Attrs.BigInt(CkaPrime1)
 		if err != nil {
 			return err
@@ -94,6 +97,8 @@ func (obj *Object) inflatePrivateKey() error {
 		if err != nil {
 			return err
 		}
+		obj.Attrs = obj.Attrs.SetInt(CkaModulusBits, uint32(n.BitLen()))
+
 		key := &rsa.PrivateKey{
 			PublicKey: rsa.PublicKey{
 				N: n,

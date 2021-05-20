@@ -500,6 +500,7 @@ func (f *Field) Output(level, indent int) error {
             }
           else if (data != NULL)
             {
+              memset(iel->pValue, 0, iel->ulValueLen);
               memcpy(iel->pValue, data, val);
               iel->ulValueLen = val;
             }

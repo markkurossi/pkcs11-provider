@@ -1401,6 +1401,15 @@ func (tmpl Template) Set(t AttributeType, v []Byte) Template {
 	})
 }
 
+// SetInt sets the integer value of the attribute.
+func (tmpl Template) SetInt(t AttributeType, v uint32) Template {
+	var buf [4]byte
+
+	HBO.PutUint32(buf[:], uint32(v))
+
+	return tmpl.Set(t, buf[:])
+}
+
 // Bool returns attribute value as bool.
 func (tmpl Template) Bool(t AttributeType) (bool, error) {
 	for _, attr := range tmpl {
