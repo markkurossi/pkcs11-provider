@@ -1,7 +1,7 @@
 /* This file is auto-generated from pkcs11_0_01_implementation.rpc by rpcc. */
 /* -*- c -*-
  *
- * Copyright (C) 2021 Markku Rossi.
+ * Copyright (c) 2021 Markku Rossi.
  *
  * All rights reserved.
  */

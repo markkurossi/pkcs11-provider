@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021 Markku Rossi.
+// Copyright (c) 2021 Markku Rossi.
 //
 // All rights reserved.
 //
