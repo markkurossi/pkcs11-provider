@@ -29,7 +29,8 @@ $ cd cmd/token
 $ ./token
 ```
 
-Run client program:
+Run [pkcs11-testing](https://github.com/markkurossi/pkcs11-testing)
+test program:
 
 ```sh
 $ cd ~/work/pkcs11-testing
