@@ -67,6 +67,9 @@ var mechanisms = map[pkcs11.MechanismType]pkcs11.MechanismInfo{
 			pkcs11.CkfEncrypt | pkcs11.CkfDecrypt | pkcs11.CkfSign |
 			pkcs11.CkfVerify,
 	},
+	pkcs11.CkmSHA224: {
+		Flags: pkcs11.CkfDigest,
+	},
 	pkcs11.CkmSHA256: {
 		Flags: pkcs11.CkfDigest,
 	},
@@ -318,8 +321,16 @@ func (p *Provider) DigestInit(req *pkcs11.DigestInitReq) error {
 	}
 
 	switch req.Mechanism.Mechanism {
+	case pkcs11.CkmSHA224:
+		p.session.Digest = sha256.New224()
+		return nil
+
 	case pkcs11.CkmSHA256:
 		p.session.Digest = sha256.New()
+		return nil
+
+	case pkcs11.CkmSHA384:
+		p.session.Digest = sha512.New384()
 		return nil
 
 	case pkcs11.CkmSHA512:
