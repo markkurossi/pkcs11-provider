@@ -7,14 +7,12 @@
 package main
 
 import (
-	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/hex"
 	"fmt"
-	"hash"
 	"log"
 	"regexp"
 	"runtime"
@@ -400,37 +398,19 @@ func (p *Provider) SignInit(req *pkcs11.SignInitReq) error {
 		return pkcs11.ErrOperationActive
 	}
 
-	var hashAlg crypto.Hash
-	var digest hash.Hash
-	switch req.Mechanism.Mechanism {
-	case pkcs11.CkmRSAPKCS:
-		hashAlg = 0
-		digest = new(HashNone)
-
-	case pkcs11.CkmDSASHA256, pkcs11.CkmSHA256RSAPKCS,
-		pkcs11.CkmSHA256RSAPKCSPSS, pkcs11.CkmECDSASHA256:
-		hashAlg = crypto.SHA256
-		digest = sha256.New()
-
-	case pkcs11.CkmDSASHA512, pkcs11.CkmSHA512RSAPKCS,
-		pkcs11.CkmSHA512RSAPKCSPSS, pkcs11.CkmECDSASHA512:
-		hashAlg = crypto.SHA512
-		digest = sha512.New()
-
-	default:
-		return pkcs11.ErrMechanismInvalid
+	sign, err := NewSignVerify(req.Mechanism)
+	if err != nil {
+		return err
 	}
+
 	obj, err := p.readObject(req.Key)
 	if err != nil {
 		return err
 	}
 	// XXX Check object is valid for the operation.
-	p.session.Sign = &SignVerify{
-		Hash:      hashAlg,
-		Digest:    digest,
-		Mechanism: req.Mechanism,
-		Key:       obj.Native,
-	}
+	sign.Key = obj.Native
+
+	p.session.Sign = sign
 
 	return nil
 }
@@ -466,6 +446,7 @@ func (p *Provider) Sign(req *pkcs11.SignReq) (*pkcs11.SignResp, error) {
 
 	default:
 		log.Printf("Sign not supported for key %T", priv)
+		p.session.Sign = nil
 		return nil, pkcs11.ErrDeviceError
 	}
 
@@ -473,6 +454,64 @@ func (p *Provider) Sign(req *pkcs11.SignReq) (*pkcs11.SignResp, error) {
 	p.session.Sign = nil
 
 	return resp, nil
+}
+
+// VerifyInit implements the Provider.VerifyInit().
+func (p *Provider) VerifyInit(req *pkcs11.VerifyInitReq) error {
+	if p.session == nil {
+		return pkcs11.ErrSessionHandleInvalid
+	}
+	if p.session.Verify != nil {
+		return pkcs11.ErrOperationActive
+	}
+
+	verify, err := NewSignVerify(req.Mechanism)
+	if err != nil {
+		return err
+	}
+
+	obj, err := p.readObject(req.Key)
+	if err != nil {
+		return err
+	}
+	// XXX Check object is valid for the operation.
+	verify.Key = obj.Native
+
+	p.session.Verify = verify
+
+	return nil
+}
+
+// Verify implements the Provider.Verify().
+func (p *Provider) Verify(req *pkcs11.VerifyReq) error {
+	if p.session == nil {
+		return pkcs11.ErrSessionHandleInvalid
+	}
+	verify := p.session.Verify
+	if verify == nil {
+		return pkcs11.ErrOperationNotInitialized
+	}
+
+	switch pub := verify.Key.(type) {
+	case *rsa.PublicKey:
+		verify.Digest.Write(req.Data)
+		digest := verify.Digest.Sum(nil)
+		err := rsa.VerifyPKCS1v15(pub, verify.Hash, digest, req.Signature)
+		if err != nil {
+			log.Printf("rsa.VerifyPKCS1v15: %s", err)
+			p.session.Verify = nil
+			return pkcs11.ErrSignatureInvalid
+		}
+
+	default:
+		log.Printf("Verify not supported for key %T", pub)
+		p.session.Verify = nil
+		return pkcs11.ErrDeviceError
+	}
+
+	p.session.Verify = nil
+
+	return nil
 }
 
 // GenerateKeyPair implements the Provider.GenerateKeyPair().

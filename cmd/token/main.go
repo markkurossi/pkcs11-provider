@@ -9,6 +9,8 @@ package main
 import (
 	"crypto"
 	"crypto/rand"
+	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/binary"
 	"encoding/hex"
 	"flag"
@@ -105,6 +107,7 @@ type Session struct {
 	storage pkcs11.Storage
 	Digest  hash.Hash
 	Sign    *SignVerify
+	Verify  *SignVerify
 }
 
 // SignVerify implements keypair sign and verify operations.
@@ -113,6 +116,37 @@ type SignVerify struct {
 	Digest    hash.Hash
 	Mechanism pkcs11.Mechanism
 	Key       interface{}
+}
+
+// NewSignVerify creates a sign/verify object from the mechanism.
+func NewSignVerify(mechanism pkcs11.Mechanism) (*SignVerify, error) {
+	var hashAlg crypto.Hash
+	var digest hash.Hash
+
+	switch mechanism.Mechanism {
+	case pkcs11.CkmRSAPKCS:
+		hashAlg = 0
+		digest = new(HashNone)
+
+	case pkcs11.CkmDSASHA256, pkcs11.CkmSHA256RSAPKCS,
+		pkcs11.CkmSHA256RSAPKCSPSS, pkcs11.CkmECDSASHA256:
+		hashAlg = crypto.SHA256
+		digest = sha256.New()
+
+	case pkcs11.CkmDSASHA512, pkcs11.CkmSHA512RSAPKCS,
+		pkcs11.CkmSHA512RSAPKCSPSS, pkcs11.CkmECDSASHA512:
+		hashAlg = crypto.SHA512
+		digest = sha512.New()
+
+	default:
+		return nil, pkcs11.ErrMechanismInvalid
+	}
+
+	return &SignVerify{
+		Hash:      hashAlg,
+		Digest:    digest,
+		Mechanism: mechanism,
+	}, nil
 }
 
 // NewSession creates a new session instance.
