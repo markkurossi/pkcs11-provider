@@ -439,13 +439,66 @@ func (p *Provider) Sign(req *pkcs11.SignReq) (*pkcs11.SignResp, error) {
 		digest := sign.Digest.Sum(nil)
 		signature, err = rsa.SignPKCS1v15(rand.Reader, priv, sign.Hash, digest)
 		if err != nil {
-			log.Printf("rsa.SignPKCS1v15: %s", err)
+			log.Printf("Sign: rsa.SignPKCS1v15: %s", err)
 			p.session.Sign = nil
 			return nil, pkcs11.ErrFunctionFailed
 		}
 
 	default:
-		log.Printf("Sign not supported for key %T", priv)
+		log.Printf("Sign: sign not supported for key %T", priv)
+		p.session.Sign = nil
+		return nil, pkcs11.ErrDeviceError
+	}
+
+	resp.Signature = signature
+	p.session.Sign = nil
+
+	return resp, nil
+}
+
+// SignUpdate implements the Provider.SignUpdate().
+func (p *Provider) SignUpdate(req *pkcs11.SignUpdateReq) error {
+	if p.session == nil {
+		return pkcs11.ErrSessionHandleInvalid
+	}
+	sign := p.session.Sign
+	if sign == nil {
+		return pkcs11.ErrOperationNotInitialized
+	}
+	sign.Digest.Write(req.Part)
+	return nil
+}
+
+// SignFinal implements the Provider.SignFinal().
+func (p *Provider) SignFinal(req *pkcs11.SignFinalReq) (*pkcs11.SignFinalResp, error) {
+	if p.session == nil {
+		return nil, pkcs11.ErrSessionHandleInvalid
+	}
+	sign := p.session.Sign
+	if sign == nil {
+		return nil, pkcs11.ErrOperationNotInitialized
+	}
+
+	resp := new(pkcs11.SignFinalResp)
+	var signature []byte
+	var err error
+
+	switch priv := sign.Key.(type) {
+	case *rsa.PrivateKey:
+		resp.SignatureLen = priv.PublicKey.Size()
+		if req.SignatureSize == 0 {
+			return resp, nil
+		}
+		digest := sign.Digest.Sum(nil)
+		signature, err = rsa.SignPKCS1v15(rand.Reader, priv, sign.Hash, digest)
+		if err != nil {
+			log.Printf("SignFinal: rsa.SignPKCS1v15: %s", err)
+			p.session.Sign = nil
+			return nil, pkcs11.ErrFunctionFailed
+		}
+
+	default:
+		log.Printf("SignFinal: sign not supported for key %T", priv)
 		p.session.Sign = nil
 		return nil, pkcs11.ErrDeviceError
 	}

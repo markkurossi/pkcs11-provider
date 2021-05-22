@@ -331,6 +331,22 @@ type SignResp struct {
 	Signature    []Byte
 }
 
+// SignUpdateReq defines the arguments of C_SignUpdate.
+type SignUpdateReq struct {
+	Part []Byte
+}
+
+// SignFinalReq defines the arguments of C_SignFinal.
+type SignFinalReq struct {
+	SignatureSize uint32
+}
+
+// SignFinalResp defines the result of C_SignFinal.
+type SignFinalResp struct {
+	SignatureLen int
+	Signature    []Byte
+}
+
 // VerifyInitReq defines the arguments of C_VerifyInit.
 type VerifyInitReq struct {
 	Mechanism Mechanism
@@ -409,6 +425,8 @@ type Provider interface {
 	DigestFinal(req *DigestFinalReq) (*DigestFinalResp, error)
 	SignInit(req *SignInitReq) error
 	Sign(req *SignReq) (*SignResp, error)
+	SignUpdate(req *SignUpdateReq) error
+	SignFinal(req *SignFinalReq) (*SignFinalResp, error)
 	VerifyInit(req *VerifyInitReq) error
 	Verify(req *VerifyReq) error
 	GenerateKey(req *GenerateKeyReq) (*GenerateKeyResp, error)
@@ -545,6 +563,16 @@ func (b *Base) Sign(req *SignReq) (*SignResp, error) {
 	return nil, ErrFunctionNotSupported
 }
 
+// SignUpdate implements the Provider.SignUpdate().
+func (b *Base) SignUpdate(req *SignUpdateReq) error {
+	return ErrFunctionNotSupported
+}
+
+// SignFinal implements the Provider.SignFinal().
+func (b *Base) SignFinal(req *SignFinalReq) (*SignFinalResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
 // VerifyInit implements the Provider.VerifyInit().
 func (b *Base) VerifyInit(req *VerifyInitReq) error {
 	return ErrFunctionNotSupported
@@ -601,6 +629,8 @@ var msgTypeNames = map[Type]string{
 	0xc0050c05: "DigestFinal",
 	0xc0050d01: "SignInit",
 	0xc0050d02: "Sign",
+	0xc0050d03: "SignUpdate",
+	0xc0050d04: "SignFinal",
 	0xc0050f01: "VerifyInit",
 	0xc0050f02: "Verify",
 	0xc0051201: "GenerateKey",
@@ -844,6 +874,24 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 			return nil, err
 		}
 		resp, err := p.Sign(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
+
+	case 0xc0050d03: // SignUpdate
+		var req SignUpdateReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		return nil, p.SignUpdate(&req)
+
+	case 0xc0050d04: // SignFinal
+		var req SignFinalReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		resp, err := p.SignFinal(&req)
 		if err != nil {
 			return nil, err
 		}

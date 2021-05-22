@@ -68,7 +68,12 @@ C_SignUpdate
   CK_ULONG          ulPartLen  /* count of bytes to sign */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Session:
+   *                       CK_SESSION_HANDLE hSession
+   * Inputs:
+   *   [CK_ULONG ulPartLen]CK_BYTE           pPart
+   */
 }
 
 /* C_SignFinal finishes a multiple-part signature operation,
@@ -82,7 +87,12 @@ C_SignFinal
   CK_ULONG_PTR      pulSignatureLen  /* gets signature length */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Session:
+   *                                 CK_SESSION_HANDLE hSession
+   * InOutputs:
+   *   [CK_ULONG_PTR pulSignatureLen]CK_BYTE           pSignature?
+   */
 }
 
 /* C_SignRecoverInit initializes a signature operation, where
