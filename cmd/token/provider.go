@@ -551,13 +551,59 @@ func (p *Provider) Verify(req *pkcs11.VerifyReq) error {
 		digest := verify.Digest.Sum(nil)
 		err := rsa.VerifyPKCS1v15(pub, verify.Hash, digest, req.Signature)
 		if err != nil {
-			log.Printf("rsa.VerifyPKCS1v15: %s", err)
+			log.Printf("Verify: rsa.VerifyPKCS1v15: %s", err)
 			p.session.Verify = nil
 			return pkcs11.ErrSignatureInvalid
 		}
 
 	default:
-		log.Printf("Verify not supported for key %T", pub)
+		log.Printf("Verify: verify not supported for key %T", pub)
+		p.session.Verify = nil
+		return pkcs11.ErrDeviceError
+	}
+
+	p.session.Verify = nil
+
+	return nil
+}
+
+// VerifyUpdate implements the Provider.VerifyUpdate().
+func (p *Provider) VerifyUpdate(req *pkcs11.VerifyUpdateReq) error {
+	if p.session == nil {
+		return pkcs11.ErrSessionHandleInvalid
+	}
+	verify := p.session.Verify
+	if verify == nil {
+		return pkcs11.ErrOperationNotInitialized
+	}
+
+	verify.Digest.Write(req.Part)
+
+	return nil
+}
+
+// VerifyFinal implements the Provider.VerifyFinal().
+func (p *Provider) VerifyFinal(req *pkcs11.VerifyFinalReq) error {
+	if p.session == nil {
+		return pkcs11.ErrSessionHandleInvalid
+	}
+	verify := p.session.Verify
+	if verify == nil {
+		return pkcs11.ErrOperationNotInitialized
+	}
+
+	switch pub := verify.Key.(type) {
+	case *rsa.PublicKey:
+		digest := verify.Digest.Sum(nil)
+		err := rsa.VerifyPKCS1v15(pub, verify.Hash, digest, req.Signature)
+		if err != nil {
+			log.Printf("VerifyFinal: rsa.VerifyPKCS1v15: %s", err)
+			p.session.Verify = nil
+			return pkcs11.ErrSignatureInvalid
+		}
+
+	default:
+		log.Printf("VerifyFinal: verify not supported for key %T", pub)
 		p.session.Verify = nil
 		return pkcs11.ErrDeviceError
 	}

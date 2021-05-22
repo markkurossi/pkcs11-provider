@@ -66,7 +66,12 @@ C_VerifyUpdate
   CK_ULONG          ulPartLen  /* length of signed data */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Session:
+   *                       CK_SESSION_HANDLE hSession
+   * Inputs:
+   *   [CK_ULONG ulPartLen]CK_BYTE           pPart
+   */
 }
 
 /* C_VerifyFinal finishes a multiple-part verification
@@ -80,7 +85,12 @@ C_VerifyFinal
   CK_ULONG          ulSignatureLen  /* signature length */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Session:
+   *                            CK_SESSION_HANDLE hSession
+   * Inputs:
+   *   [CK_ULONG ulSignatureLen]CK_BYTE           pSignature
+   */
 }
 
 /* C_VerifyRecoverInit initializes a signature verification

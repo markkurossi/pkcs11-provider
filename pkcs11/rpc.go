@@ -359,6 +359,16 @@ type VerifyReq struct {
 	Signature []Byte
 }
 
+// VerifyUpdateReq defines the arguments of C_VerifyUpdate.
+type VerifyUpdateReq struct {
+	Part []Byte
+}
+
+// VerifyFinalReq defines the arguments of C_VerifyFinal.
+type VerifyFinalReq struct {
+	Signature []Byte
+}
+
 // GenerateKeyReq defines the arguments of C_GenerateKey.
 type GenerateKeyReq struct {
 	Mechanism Mechanism
@@ -429,6 +439,8 @@ type Provider interface {
 	SignFinal(req *SignFinalReq) (*SignFinalResp, error)
 	VerifyInit(req *VerifyInitReq) error
 	Verify(req *VerifyReq) error
+	VerifyUpdate(req *VerifyUpdateReq) error
+	VerifyFinal(req *VerifyFinalReq) error
 	GenerateKey(req *GenerateKeyReq) (*GenerateKeyResp, error)
 	GenerateKeyPair(req *GenerateKeyPairReq) (*GenerateKeyPairResp, error)
 	SeedRandom(req *SeedRandomReq) error
@@ -583,6 +595,16 @@ func (b *Base) Verify(req *VerifyReq) error {
 	return ErrFunctionNotSupported
 }
 
+// VerifyUpdate implements the Provider.VerifyUpdate().
+func (b *Base) VerifyUpdate(req *VerifyUpdateReq) error {
+	return ErrFunctionNotSupported
+}
+
+// VerifyFinal implements the Provider.VerifyFinal().
+func (b *Base) VerifyFinal(req *VerifyFinalReq) error {
+	return ErrFunctionNotSupported
+}
+
 // GenerateKey implements the Provider.GenerateKey().
 func (b *Base) GenerateKey(req *GenerateKeyReq) (*GenerateKeyResp, error) {
 	return nil, ErrFunctionNotSupported
@@ -633,6 +655,8 @@ var msgTypeNames = map[Type]string{
 	0xc0050d04: "SignFinal",
 	0xc0050f01: "VerifyInit",
 	0xc0050f02: "Verify",
+	0xc0050f03: "VerifyUpdate",
+	0xc0050f04: "VerifyFinal",
 	0xc0051201: "GenerateKey",
 	0xc0051202: "GenerateKeyPair",
 	0xc0051301: "SeedRandom",
@@ -910,6 +934,20 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 			return nil, err
 		}
 		return nil, p.Verify(&req)
+
+	case 0xc0050f03: // VerifyUpdate
+		var req VerifyUpdateReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		return nil, p.VerifyUpdate(&req)
+
+	case 0xc0050f04: // VerifyFinal
+		var req VerifyFinalReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		return nil, p.VerifyFinal(&req)
 
 	case 0xc0051201: // GenerateKey
 		var req GenerateKeyReq

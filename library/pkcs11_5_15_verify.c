@@ -114,7 +114,33 @@ C_VerifyUpdate
   CK_ULONG          ulPartLen  /* length of signed data */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  CK_RV ret = CKR_OK;
+  VPBuffer buf;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
+
+  /* Lookup session by hSession */
+  conn = vp_session(hSession, &ret);
+  if (ret != CKR_OK)
+    return ret;
+
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0050f03);
+  vp_buffer_add_space(&buf, 4);
+
+  vp_buffer_add_byte_arr(&buf, pPart, ulPartLen);
+
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  vp_buffer_uninit(&buf);
+
+  return ret;
 }
 
 /* C_VerifyFinal finishes a multiple-part verification
@@ -128,7 +154,33 @@ C_VerifyFinal
   CK_ULONG          ulSignatureLen  /* signature length */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  CK_RV ret = CKR_OK;
+  VPBuffer buf;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
+
+  /* Lookup session by hSession */
+  conn = vp_session(hSession, &ret);
+  if (ret != CKR_OK)
+    return ret;
+
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0050f04);
+  vp_buffer_add_space(&buf, 4);
+
+  vp_buffer_add_byte_arr(&buf, pSignature, ulSignatureLen);
+
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  vp_buffer_uninit(&buf);
+
+  return ret;
 }
 
 /* C_VerifyRecoverInit initializes a signature verification
