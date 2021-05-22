@@ -23,7 +23,13 @@ C_SignInit
   CK_OBJECT_HANDLE  hKey         /* handle of signature key */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Session:
+   *   CK_SESSION_HANDLE hSession
+   * Inputs:
+   *   CK_MECHANISM      pMechanism
+   *   CK_OBJECT_HANDLE  hKey
+   */
 }
 
 /* C_Sign signs (encrypts with private key) data in a single
@@ -40,7 +46,14 @@ C_Sign
   CK_ULONG_PTR      pulSignatureLen  /* gets signature length */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Session:
+   *                                 CK_SESSION_HANDLE hSession
+   * Inputs:
+   *             [CK_ULONG ulDataLen]CK_BYTE           pData
+   * InOutputs:
+   *   [CK_ULONG_PTR pulSignatureLen]CK_BYTE           pSignature?
+   */
 }
 
 /* C_SignUpdate continues a multiple-part signature operation,

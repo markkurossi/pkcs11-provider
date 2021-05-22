@@ -313,6 +313,24 @@ type DigestFinalResp struct {
 	Digest    []Byte
 }
 
+// SignInitReq defines the arguments of C_SignInit.
+type SignInitReq struct {
+	Mechanism Mechanism
+	Key       ObjectHandle
+}
+
+// SignReq defines the arguments of C_Sign.
+type SignReq struct {
+	Data          []Byte
+	SignatureSize uint32
+}
+
+// SignResp defines the result of C_Sign.
+type SignResp struct {
+	SignatureLen int
+	Signature    []Byte
+}
+
 // GenerateKeyReq defines the arguments of C_GenerateKey.
 type GenerateKeyReq struct {
 	Mechanism Mechanism
@@ -377,6 +395,8 @@ type Provider interface {
 	Digest(req *DigestReq) (*DigestResp, error)
 	DigestUpdate(req *DigestUpdateReq) error
 	DigestFinal(req *DigestFinalReq) (*DigestFinalResp, error)
+	SignInit(req *SignInitReq) error
+	Sign(req *SignReq) (*SignResp, error)
 	GenerateKey(req *GenerateKeyReq) (*GenerateKeyResp, error)
 	GenerateKeyPair(req *GenerateKeyPairReq) (*GenerateKeyPairResp, error)
 	SeedRandom(req *SeedRandomReq) error
@@ -501,6 +521,16 @@ func (b *Base) DigestFinal(req *DigestFinalReq) (*DigestFinalResp, error) {
 	return nil, ErrFunctionNotSupported
 }
 
+// SignInit implements the Provider.SignInit().
+func (b *Base) SignInit(req *SignInitReq) error {
+	return ErrFunctionNotSupported
+}
+
+// Sign implements the Provider.Sign().
+func (b *Base) Sign(req *SignReq) (*SignResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
 // GenerateKey implements the Provider.GenerateKey().
 func (b *Base) GenerateKey(req *GenerateKeyReq) (*GenerateKeyResp, error) {
 	return nil, ErrFunctionNotSupported
@@ -545,6 +575,8 @@ var msgTypeNames = map[Type]string{
 	0xc0050c02: "Digest",
 	0xc0050c03: "DigestUpdate",
 	0xc0050c05: "DigestFinal",
+	0xc0050d01: "SignInit",
+	0xc0050d02: "Sign",
 	0xc0051201: "GenerateKey",
 	0xc0051202: "GenerateKeyPair",
 	0xc0051301: "SeedRandom",
@@ -768,6 +800,24 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 			return nil, err
 		}
 		resp, err := p.DigestFinal(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
+
+	case 0xc0050d01: // SignInit
+		var req SignInitReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		return nil, p.SignInit(&req)
+
+	case 0xc0050d02: // Sign
+		var req SignReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		resp, err := p.Sign(&req)
 		if err != nil {
 			return nil, err
 		}

@@ -24,7 +24,39 @@ C_SignInit
   CK_OBJECT_HANDLE  hKey         /* handle of signature key */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  CK_RV ret = CKR_OK;
+  VPBuffer buf;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
+
+  /* Lookup session by hSession */
+  conn = vp_session(hSession, &ret);
+  if (ret != CKR_OK)
+    return ret;
+
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0050d01);
+  vp_buffer_add_space(&buf, 4);
+
+  {
+    CK_MECHANISM *iel = pMechanism;
+
+    vp_buffer_add_uint32(&buf, iel->mechanism);
+    vp_buffer_add_byte_arr(&buf, iel->pParameter, iel->ulParameterLen);
+  }
+  vp_buffer_add_uint32(&buf, hKey);
+
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  vp_buffer_uninit(&buf);
+
+  return ret;
 }
 
 /* C_Sign signs (encrypts with private key) data in a single
@@ -41,7 +73,64 @@ C_Sign
   CK_ULONG_PTR      pulSignatureLen  /* gets signature length */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  CK_RV ret = CKR_OK;
+  VPBuffer buf;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
+
+  /* Lookup session by hSession */
+  conn = vp_session(hSession, &ret);
+  if (ret != CKR_OK)
+    return ret;
+
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0050d02);
+  vp_buffer_add_space(&buf, 4);
+
+  vp_buffer_add_byte_arr(&buf, pData, ulDataLen);
+
+  if (pSignature == NULL)
+    vp_buffer_add_uint32(&buf, 0);
+  else
+    vp_buffer_add_uint32(&buf, *pulSignatureLen);
+
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  {
+    uint32_t count = vp_buffer_get_uint32(&buf);
+
+    if (pSignature == NULL)
+      {
+        *pulSignatureLen = count;
+      }
+    else if (count > *pulSignatureLen)
+      {
+        *pulSignatureLen = count;
+        vp_buffer_uninit(&buf);
+        return CKR_BUFFER_TOO_SMALL;
+      }
+    else
+      {
+        *pulSignatureLen = count;
+        vp_buffer_get_byte_arr(&buf, pSignature, count);
+      }
+  }
+
+  if (vp_buffer_error(&buf, &ret))
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  vp_buffer_uninit(&buf);
+
+  return ret;
 }
 
 /* C_SignUpdate continues a multiple-part signature operation,

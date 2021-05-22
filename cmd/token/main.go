@@ -7,6 +7,7 @@
 package main
 
 import (
+	"crypto"
 	"crypto/rand"
 	"encoding/binary"
 	"encoding/hex"
@@ -103,6 +104,15 @@ type Session struct {
 	Flags   pkcs11.Flags
 	storage pkcs11.Storage
 	Digest  hash.Hash
+	Sign    *SignVerify
+}
+
+// SignVerify implements keypair sign and verify operations.
+type SignVerify struct {
+	Hash      crypto.Hash
+	Digest    hash.Hash
+	Mechanism pkcs11.Mechanism
+	Key       interface{}
 }
 
 // NewSession creates a new session instance.

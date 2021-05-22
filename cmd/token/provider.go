@@ -7,12 +7,15 @@
 package main
 
 import (
+	"bytes"
+	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/hex"
 	"fmt"
+	"hash"
 	"log"
 	"regexp"
 	"runtime"
@@ -276,16 +279,20 @@ func (p *Provider) DestroyObject(req *pkcs11.DestroyObjectReq) error {
 	return p.session.storage.Delete(req.Object)
 }
 
-// GetAttributeValue implements the Provider.GetAttributeValue().
-func (p *Provider) GetAttributeValue(req *pkcs11.GetAttributeValueReq) (*pkcs11.GetAttributeValueResp, error) {
+func (p *Provider) readObject(h pkcs11.ObjectHandle) (*pkcs11.Object, error) {
 	var storage pkcs11.Storage
-	if req.Object&FlagToken != 0 {
+	if h&FlagToken != 0 {
 		storage = p.parent.storage
 	} else {
 		storage = p.session.storage
 	}
 
-	obj, err := storage.Read(req.Object)
+	return storage.Read(h)
+}
+
+// GetAttributeValue implements the Provider.GetAttributeValue().
+func (p *Provider) GetAttributeValue(req *pkcs11.GetAttributeValueReq) (*pkcs11.GetAttributeValueResp, error) {
+	obj, err := p.readObject(req.Object)
 	if err != nil {
 		return nil, err
 	}
@@ -381,6 +388,124 @@ func (p *Provider) DigestFinal(req *pkcs11.DigestFinalReq) (*pkcs11.DigestFinalR
 	}
 	resp.Digest = hash.Sum(nil)
 	p.session.Digest = nil
+
+	return resp, nil
+}
+
+var (
+	_ hash.Hash = &HashNone{}
+)
+
+// HashNone implements hash.Hash interface as identity operation.
+type HashNone struct {
+	buf bytes.Buffer
+}
+
+// Write implements io.Writer interface.
+func (hash *HashNone) Write(p []byte) (int, error) {
+	return hash.buf.Write(p)
+}
+
+// Sum implements the Hash.Sum().
+func (hash *HashNone) Sum(b []byte) []byte {
+	return hash.buf.Bytes()
+}
+
+// Reset implements the Hash.Reset().
+func (hash *HashNone) Reset() {
+	hash.buf.Reset()
+}
+
+// Size implements the hash.Size().
+func (hash *HashNone) Size() int {
+	return hash.buf.Len()
+}
+
+// BlockSize implements the hash.BlockSize().
+func (hash *HashNone) BlockSize() int {
+	return 1
+}
+
+// SignInit implements the Provider.SignInit().
+func (p *Provider) SignInit(req *pkcs11.SignInitReq) error {
+	if p.session == nil {
+		return pkcs11.ErrSessionHandleInvalid
+	}
+	if p.session.Sign != nil {
+		return pkcs11.ErrOperationActive
+	}
+
+	var hashAlg crypto.Hash
+	var digest hash.Hash
+	switch req.Mechanism.Mechanism {
+	case pkcs11.CkmRSAPKCS:
+		hashAlg = 0
+		digest = new(HashNone)
+
+	case pkcs11.CkmDSASHA256, pkcs11.CkmSHA256RSAPKCS,
+		pkcs11.CkmSHA256RSAPKCSPSS, pkcs11.CkmECDSASHA256:
+		hashAlg = crypto.SHA256
+		digest = sha256.New()
+
+	case pkcs11.CkmDSASHA512, pkcs11.CkmSHA512RSAPKCS,
+		pkcs11.CkmSHA512RSAPKCSPSS, pkcs11.CkmECDSASHA512:
+		hashAlg = crypto.SHA512
+		digest = sha512.New()
+
+	default:
+		return pkcs11.ErrMechanismInvalid
+	}
+	obj, err := p.readObject(req.Key)
+	if err != nil {
+		return err
+	}
+	// XXX Check object is valid for the operation.
+	p.session.Sign = &SignVerify{
+		Hash:      hashAlg,
+		Digest:    digest,
+		Mechanism: req.Mechanism,
+		Key:       obj.Native,
+	}
+
+	return nil
+}
+
+// Sign implements the Provider.Sign().
+func (p *Provider) Sign(req *pkcs11.SignReq) (*pkcs11.SignResp, error) {
+	if p.session == nil {
+		return nil, pkcs11.ErrSessionHandleInvalid
+	}
+	sign := p.session.Sign
+	if sign == nil {
+		return nil, pkcs11.ErrOperationNotInitialized
+	}
+
+	resp := new(pkcs11.SignResp)
+	var signature []byte
+	var err error
+
+	switch priv := sign.Key.(type) {
+	case *rsa.PrivateKey:
+		resp.SignatureLen = priv.PublicKey.Size()
+		if req.SignatureSize == 0 {
+			return resp, nil
+		}
+		sign.Digest.Write(req.Data)
+		digest := sign.Digest.Sum(nil)
+		signature, err = rsa.SignPKCS1v15(rand.Reader, priv, sign.Hash, digest)
+		if err != nil {
+			log.Printf("rsa.SignPKCS1v15: %s", err)
+			p.session.Sign = nil
+			return nil, pkcs11.ErrFunctionFailed
+		}
+
+	default:
+		log.Printf("Sign not supported for key %T", priv)
+		return nil, pkcs11.ErrDeviceError
+	}
+
+	resp.Signature = signature
+	p.session.Sign = nil
 
 	return resp, nil
 }
