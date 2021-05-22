@@ -14,22 +14,43 @@ following components:
 
  - [RPC Compiler](cmd/rpcc/) which is used to generated the PKCS #11
    stub functions from the RPC definitions. The RPC Compiler is
-   implemented in [Go](https://golang.org/) programming language. You
-   need the Go environment only if you modify the `.rpc` files under
-   library.
+   implemented in [Go](https://golang.org/) programming language.
 
  - [Software Token](cmd/token/) implementing PKCS #11 operations. The
    token is implemented in Go and (will) support all modern PKCS #11
    cryptographic operations.
 
+# Example Usage
+
+Start token:
+
+```sh
+$ cd cmd/token
+$ ./token
+```
+
+Run client program:
+
+```sh
+$ cd ~/work/pkcs11-testing
+$ ./pkcs11-testing --module ~/go/src/github.com/markkurossi/pkcs11-provider/library/libvpkcs11.so --slot 0 --pin 1111 --test-all
+```
+
 # TODO
 
- - [ ] RPC compiler (ugly but it works):
+ - [ ] Framework:
+   - [ ] Launch token from `libvpkcs11.so`
+   - [ ] Non-volatile token storage
+   - [ ] Token configuration file
+   - [ ] Test compatibility with Firefox
+ - [ ] Crypto provider with Go:
+   - [ ] Object search and enumeration
+   - [ ] Encryption and decryption
+   - [ ] Multi-part message digest
+   - [ ] Ed25519 public key algorithm
+   - [ ] Message sign and verify
+   - [ ] Dual function
+   - [ ] Symmetric key generation
+ - [X] RPC compiler (ugly but it works):
    - [ ] Cleanup field input/output handling and types
    - [ ] Remove old unused input/output code
- - [X] IPC over Unix domain sockets
- - [ ] Crypto provider with Go
-   - [ ] Message sign
-   - [ ] Message digest
-   - [X] Random numbers
-   - [ ] and others...
