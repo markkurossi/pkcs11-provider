@@ -51,7 +51,23 @@ var mechanisms = map[pkcs11.MechanismType]pkcs11.MechanismInfo{
 			pkcs11.CkfEncrypt | pkcs11.CkfDecrypt | pkcs11.CkfSign |
 			pkcs11.CkfVerify,
 	},
+	pkcs11.CkmSHA224RSAPKCS: {
+		MinKeySize: RSAMinKeySize,
+		MaxKeySize: RSAMaxKeySize,
+		Flags: pkcs11.CkfMessageEncrypt | pkcs11.CkfMessageDecrypt |
+			pkcs11.CkfMessageSign | pkcs11.CkfMessageVerify |
+			pkcs11.CkfEncrypt | pkcs11.CkfDecrypt | pkcs11.CkfSign |
+			pkcs11.CkfVerify,
+	},
 	pkcs11.CkmSHA256RSAPKCS: {
+		MinKeySize: RSAMinKeySize,
+		MaxKeySize: RSAMaxKeySize,
+		Flags: pkcs11.CkfMessageEncrypt | pkcs11.CkfMessageDecrypt |
+			pkcs11.CkfMessageSign | pkcs11.CkfMessageVerify |
+			pkcs11.CkfEncrypt | pkcs11.CkfDecrypt | pkcs11.CkfSign |
+			pkcs11.CkfVerify,
+	},
+	pkcs11.CkmSHA384RSAPKCS: {
 		MinKeySize: RSAMinKeySize,
 		MaxKeySize: RSAMaxKeySize,
 		Flags: pkcs11.CkfMessageEncrypt | pkcs11.CkfMessageDecrypt |

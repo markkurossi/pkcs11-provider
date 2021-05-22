@@ -128,10 +128,20 @@ func NewSignVerify(mechanism pkcs11.Mechanism) (*SignVerify, error) {
 		hashAlg = 0
 		digest = new(HashNone)
 
+	case pkcs11.CkmDSASHA224, pkcs11.CkmSHA224RSAPKCS,
+		pkcs11.CkmSHA224RSAPKCSPSS, pkcs11.CkmECDSASHA224:
+		hashAlg = crypto.SHA224
+		digest = sha256.New224()
+
 	case pkcs11.CkmDSASHA256, pkcs11.CkmSHA256RSAPKCS,
 		pkcs11.CkmSHA256RSAPKCSPSS, pkcs11.CkmECDSASHA256:
 		hashAlg = crypto.SHA256
 		digest = sha256.New()
+
+	case pkcs11.CkmDSASHA384, pkcs11.CkmSHA384RSAPKCS,
+		pkcs11.CkmSHA384RSAPKCSPSS, pkcs11.CkmECDSASHA384:
+		hashAlg = crypto.SHA384
+		digest = sha512.New384()
 
 	case pkcs11.CkmDSASHA512, pkcs11.CkmSHA512RSAPKCS,
 		pkcs11.CkmSHA512RSAPKCSPSS, pkcs11.CkmECDSASHA512:
