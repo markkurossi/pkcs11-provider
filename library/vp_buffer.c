@@ -236,7 +236,7 @@ vp_buffer_get_uint32_arr(VPBuffer *buf, void *data, size_t data_count)
 {
   unsigned char *ucp;
   size_t i, count;
-  uint32_t *arr;
+  CK_ULONG *arr;
 
   if (buf->offset + 4 > buf->used)
     {
@@ -262,7 +262,7 @@ vp_buffer_get_uint32_arr(VPBuffer *buf, void *data, size_t data_count)
       return false;
     }
 
-  arr = (uint32_t *) data;
+  arr = (CK_ULONG *) data;
   for (i = 0; i < count; i++)
     arr[i] = vp_buffer_get_uint32(buf);
 
