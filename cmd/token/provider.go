@@ -29,6 +29,7 @@ var (
 		Major: 0,
 		Minor: 1,
 	}
+	manufacturerID = []pkcs11.UTF8Char("mtr@iki.fi")
 )
 
 // Mechanimsm parameters.
@@ -128,6 +129,24 @@ func (p *Provider) Initialize() (*pkcs11.InitializeResp, error) {
 	}, nil
 }
 
+// GetInfo implements the Provider.GetInfo().
+func (p *Provider) GetInfo() (*pkcs11.GetInfoResp, error) {
+	info := pkcs11.Info{
+		CryptokiVersion: pkcs11.Version{
+			Major: 3,
+			Minor: 0,
+		},
+		Flags:          0,
+		LibraryVersion: fwVersion,
+	}
+	copy(info.ManufacturerID[:], manufacturerID)
+	copy(info.LibraryDescription[:], []pkcs11.UTF8Char("Go PKCS #11 Provider"))
+
+	return &pkcs11.GetInfoResp{
+		Info: info,
+	}, nil
+}
+
 // GetSlotList implements the Provider.GetSlotList().
 func (p *Provider) GetSlotList(req *pkcs11.GetSlotListReq) (*pkcs11.GetSlotListResp, error) {
 	return &pkcs11.GetSlotListResp{
@@ -142,16 +161,17 @@ func (p *Provider) GetSlotInfo(req *pkcs11.GetSlotInfoReq) (*pkcs11.GetSlotInfoR
 		return nil, pkcs11.ErrSlotIDInvalid
 	}
 
-	result := &pkcs11.GetSlotInfoResp{
-		Info: pkcs11.SlotInfo{
-			Flags:           pkcs11.CkfTokenPresent,
-			HardwareVersion: goVersion(),
-			FirmwareVersion: fwVersion,
-		},
+	info := pkcs11.SlotInfo{
+		Flags:           pkcs11.CkfTokenPresent,
+		HardwareVersion: goVersion(),
+		FirmwareVersion: fwVersion,
 	}
-	copy(result.Info.SlotDescription[:], []pkcs11.UTF8Char("Go crypto library"))
-	copy(result.Info.ManufacturerID[:], []pkcs11.UTF8Char("mtr@iki.fi"))
-	return result, nil
+	copy(info.SlotDescription[:], []pkcs11.UTF8Char("Go crypto library"))
+	copy(info.ManufacturerID[:], manufacturerID)
+
+	return &pkcs11.GetSlotInfoResp{
+		Info: info,
+	}, nil
 }
 
 // GetTokenInfo implements the Provider.GetTokenInfo().
@@ -160,16 +180,17 @@ func (p *Provider) GetTokenInfo(req *pkcs11.GetTokenInfoReq) (*pkcs11.GetTokenIn
 		return nil, pkcs11.ErrSlotIDInvalid
 	}
 
-	result := &pkcs11.GetTokenInfoResp{
-		Info: pkcs11.TokenInfo{
-			Flags:           pkcs11.CkfRNG | pkcs11.CkfClockOnToken,
-			HardwareVersion: goVersion(),
-			FirmwareVersion: fwVersion,
-		},
+	info := pkcs11.TokenInfo{
+		Flags:           pkcs11.CkfRNG | pkcs11.CkfClockOnToken,
+		HardwareVersion: goVersion(),
+		FirmwareVersion: fwVersion,
 	}
-	copy(result.Info.ManufacturerID[:], []pkcs11.UTF8Char("www.golang.org"))
-	copy(result.Info.Model[:], []pkcs11.UTF8Char("Software"))
-	return result, nil
+	copy(info.ManufacturerID[:], []pkcs11.UTF8Char("www.golang.org"))
+	copy(info.Model[:], []pkcs11.UTF8Char("Software"))
+
+	return &pkcs11.GetTokenInfoResp{
+		Info: info,
+	}, nil
 }
 
 // GetMechanismList implements the Provider.GetMechanismList().

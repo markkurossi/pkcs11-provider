@@ -201,11 +201,55 @@ C_GetInfo
   CK_INFO_PTR   pInfo  /* location that receives information */
 )
 {
-  /*
-   * Outputs:
-   *   CK_INFO pInfo
-   */
-  VP_FUNCTION_NOT_SUPPORTED;
+  CK_RV ret = CKR_OK;
+  VPBuffer buf;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
+
+  /* Use global session. */
+  conn = vp_global_conn;
+
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0050403);
+  vp_buffer_add_space(&buf, 4);
+
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  {
+    CK_INFO *iel = pInfo;
+
+    {
+      CK_VERSION *jel = &iel->cryptokiVersion;
+
+      jel->major = vp_buffer_get_byte(&buf);
+      jel->minor = vp_buffer_get_byte(&buf);
+    }
+    vp_buffer_get_byte_arr(&buf, iel->manufacturerID, 32);
+    iel->flags = vp_buffer_get_uint32(&buf);
+    vp_buffer_get_byte_arr(&buf, iel->libraryDescription, 32);
+    {
+      CK_VERSION *jel = &iel->libraryVersion;
+
+      jel->major = vp_buffer_get_byte(&buf);
+      jel->minor = vp_buffer_get_byte(&buf);
+    }
+  }
+
+  if (vp_buffer_error(&buf, &ret))
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  vp_buffer_uninit(&buf);
+
+  return ret;
 }
 
 /* C_GetFunctionList returns the function list. */
