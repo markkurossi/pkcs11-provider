@@ -30,7 +30,7 @@ type Flags uint32
 type KeyType uint32
 
 // MechanismType defines basic protocol type CK_MECHANISM_TYPE.
-type MechanismType uint32
+type MechanismType Ulong
 
 // ObjectClass defines basic protocol type CK_OBJECT_CLASS.
 type ObjectClass uint32
@@ -42,7 +42,7 @@ type ObjectHandle uint32
 type SessionHandle uint32
 
 // SlotID defines basic protocol type CK_SLOT_ID.
-type SlotID uint32
+type SlotID Ulong
 
 // SlotIDPtr defines basic protocol type CK_SLOT_ID_PTR.
 type SlotIDPtr uint32

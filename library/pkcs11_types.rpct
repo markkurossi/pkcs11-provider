@@ -16,9 +16,9 @@ type CK_SESSION_HANDLE   uint32
 type CK_OBJECT_HANDLE    uint32
 type CK_OBJECT_CLASS     uint32
 type CK_ATTRIBUTE_TYPE   uint32
-type CK_SLOT_ID	         uint32
+type CK_SLOT_ID	         Ulong
 type CK_SLOT_ID_PTR     *uint32
-type CK_MECHANISM_TYPE   uint32
+type CK_MECHANISM_TYPE   Ulong
 type CK_USER_TYPE        uint32
 type CK_KEY_TYPE         uint32
 

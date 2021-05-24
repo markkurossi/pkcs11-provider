@@ -110,7 +110,7 @@ C_OpenSession
   vp_buffer_add_uint32(&buf, 0xc0050601);
   vp_buffer_add_space(&buf, 4);
 
-  vp_buffer_add_uint32(&buf, slotID);
+  vp_buffer_add_ulong(&buf, slotID);
   vp_buffer_add_uint32(&buf, flags);
 
   ret = vp_ipc_tx(conn, &buf);

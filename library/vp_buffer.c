@@ -132,6 +132,20 @@ vp_buffer_add_uint32(VPBuffer *buf, uint32_t v)
 }
 
 bool
+vp_buffer_add_ulong(VPBuffer *buf, CK_ULONG v)
+{
+  unsigned char *ucp;
+
+  ucp = vp_buffer_add_space(buf, 4);
+  if (ucp == NULL)
+    return false;
+
+  VP_PUT_UINT32(ucp, v);
+
+  return true;
+}
+
+bool
 vp_buffer_add_byte_arr(VPBuffer *buf, const void *data, size_t len)
 {
   unsigned char *ucp;
@@ -232,11 +246,10 @@ vp_buffer_get_byte_arr(VPBuffer *buf, void *data, size_t data_count)
 }
 
 bool
-vp_buffer_get_uint32_arr(VPBuffer *buf, void *data, size_t data_count)
+vp_buffer_get_ulong_arr(VPBuffer *buf, CK_ULONG *data, size_t data_count)
 {
   unsigned char *ucp;
   size_t i, count;
-  CK_ULONG *arr;
 
   if (buf->offset + 4 > buf->used)
     {
@@ -262,9 +275,8 @@ vp_buffer_get_uint32_arr(VPBuffer *buf, void *data, size_t data_count)
       return false;
     }
 
-  arr = (CK_ULONG *) data;
   for (i = 0; i < count; i++)
-    arr[i] = vp_buffer_get_uint32(buf);
+    data[i] = vp_buffer_get_uint32(buf);
 
   return true;
 }

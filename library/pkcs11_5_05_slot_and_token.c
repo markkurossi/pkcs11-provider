@@ -63,7 +63,7 @@ C_GetSlotList
     else
       {
         *pulCount = count;
-        vp_buffer_get_uint32_arr(&buf, pSlotList, count);
+        vp_buffer_get_ulong_arr(&buf, pSlotList, count);
       }
   }
 
@@ -101,7 +101,7 @@ C_GetSlotInfo
   vp_buffer_add_uint32(&buf, 0xc0050502);
   vp_buffer_add_space(&buf, 4);
 
-  vp_buffer_add_uint32(&buf, slotID);
+  vp_buffer_add_ulong(&buf, slotID);
 
   ret = vp_ipc_tx(conn, &buf);
   if (ret != CKR_OK)
@@ -164,7 +164,7 @@ C_GetTokenInfo
   vp_buffer_add_uint32(&buf, 0xc0050503);
   vp_buffer_add_space(&buf, 4);
 
-  vp_buffer_add_uint32(&buf, slotID);
+  vp_buffer_add_ulong(&buf, slotID);
 
   ret = vp_ipc_tx(conn, &buf);
   if (ret != CKR_OK)
@@ -255,7 +255,7 @@ C_GetMechanismList
   vp_buffer_add_uint32(&buf, 0xc0050505);
   vp_buffer_add_space(&buf, 4);
 
-  vp_buffer_add_uint32(&buf, slotID);
+  vp_buffer_add_ulong(&buf, slotID);
 
   if (pMechanismList == NULL)
     vp_buffer_add_uint32(&buf, 0);
@@ -285,7 +285,7 @@ C_GetMechanismList
     else
       {
         *pulCount = count;
-        vp_buffer_get_uint32_arr(&buf, pMechanismList, count);
+        vp_buffer_get_ulong_arr(&buf, pMechanismList, count);
       }
   }
 
@@ -324,8 +324,8 @@ C_GetMechanismInfo
   vp_buffer_add_uint32(&buf, 0xc0050506);
   vp_buffer_add_space(&buf, 4);
 
-  vp_buffer_add_uint32(&buf, slotID);
-  vp_buffer_add_uint32(&buf, type);
+  vp_buffer_add_ulong(&buf, slotID);
+  vp_buffer_add_ulong(&buf, type);
 
   ret = vp_ipc_tx(conn, &buf);
   if (ret != CKR_OK)
@@ -376,7 +376,7 @@ C_InitToken
   vp_buffer_add_uint32(&buf, 0xc0050507);
   vp_buffer_add_space(&buf, 4);
 
-  vp_buffer_add_uint32(&buf, slotID);
+  vp_buffer_add_ulong(&buf, slotID);
   vp_buffer_add_byte_arr(&buf, pPin, ulPinLen);
   vp_buffer_add_byte_arr(&buf, pLabel, 32);
 

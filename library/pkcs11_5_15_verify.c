@@ -41,7 +41,7 @@ C_VerifyInit
   {
     CK_MECHANISM *iel = pMechanism;
 
-    vp_buffer_add_uint32(&buf, iel->mechanism);
+    vp_buffer_add_ulong(&buf, iel->mechanism);
     vp_buffer_add_byte_arr(&buf, iel->pParameter, iel->ulParameterLen);
   }
   vp_buffer_add_uint32(&buf, hKey);

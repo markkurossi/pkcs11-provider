@@ -313,7 +313,7 @@ func (f *Field) Input(level, indent int) error {
 		// Single instance.
 		if f.Type.IsBasic {
 			printf(indent, "vp_buffer_add_%s(&buf, %s%s);\n",
-				f.Type.Basic, ctx, f.Name)
+				strings.ToLower(f.Type.Basic), ctx, f.Name)
 		} else {
 			printf(indent, "{\n")
 			printf(indent, "  %s *%s = %s%s;\n\n",
@@ -346,7 +346,7 @@ else
 				size = f.SizeType
 			}
 			printf(indent, "vp_buffer_add_%s_arr(&buf, %s%s, %s%s);\n",
-				f.Type.Basic,
+				strings.ToLower(f.Type.Basic),
 				ctx, f.Name,
 				ctx, size)
 		} else {
@@ -396,7 +396,7 @@ func (f *Field) Output(level, indent int) error {
 		// Single instance.
 		if f.Type.IsBasic {
 			printf(indent, "%s%s = vp_buffer_get_%s(&buf);\n",
-				lvCtx, f.Name, f.Type.Basic)
+				lvCtx, f.Name, strings.ToLower(f.Type.Basic))
 		} else {
 			printf(indent, "{\n")
 			printf(indent, "  %s *%s = %s%s%s;\n\n",
@@ -439,18 +439,18 @@ func (f *Field) Output(level, indent int) error {
 				f.SizeName,
 				f.SizeName,
 				f.SizeName,
-				f.Type.Basic,
+				strings.ToLower(f.Type.Basic),
 				f.Name)
 		} else if f.Type.IsBasic {
 			// Array of basic types.
 			if f.Fixed {
 				printf(indent, "vp_buffer_get_%s_arr(&buf, %s%s, %s);\n",
-					f.Type.Basic,
+					strings.ToLower(f.Type.Basic),
 					rvCtx, f.Name,
 					f.SizeType)
 			} else {
 				printf(indent, "vp_buffer_get_%s_arr(&buf, %s%s, %s%s);\n",
-					f.Type.Basic,
+					strings.ToLower(f.Type.Basic),
 					rvCtx, f.Name,
 					rvCtx, f.SizeName)
 			}
