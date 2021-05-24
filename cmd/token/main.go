@@ -207,6 +207,20 @@ func LookupSession(id pkcs11.SessionHandle) (*Session, error) {
 	return session, nil
 }
 
+// CloseSession closes the specified session.
+func CloseSession(id pkcs11.SessionHandle) error {
+	m.Lock()
+	defer m.Unlock()
+
+	_, ok := sessions[id]
+	if !ok {
+		return pkcs11.ErrSessionHandleInvalid
+	}
+	delete(sessions, id)
+
+	return nil
+}
+
 func main() {
 	flag.BoolVar(&debug, "D", false, "enable debug output")
 	flag.Parse()

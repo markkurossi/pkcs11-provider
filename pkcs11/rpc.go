@@ -428,6 +428,7 @@ type Provider interface {
 	InitPIN(req *InitPINReq) error
 	SetPIN(req *SetPINReq) error
 	OpenSession(req *OpenSessionReq) (*OpenSessionResp, error)
+	CloseSession() error
 	Login(req *LoginReq) error
 	CreateObject(req *CreateObjectReq) (*CreateObjectResp, error)
 	CopyObject(req *CopyObjectReq) (*CopyObjectResp, error)
@@ -519,6 +520,11 @@ func (b *Base) SetPIN(req *SetPINReq) error {
 // OpenSession implements the Provider.OpenSession().
 func (b *Base) OpenSession(req *OpenSessionReq) (*OpenSessionResp, error) {
 	return nil, ErrFunctionNotSupported
+}
+
+// CloseSession implements the Provider.CloseSession().
+func (b *Base) CloseSession() error {
+	return ErrFunctionNotSupported
 }
 
 // Login implements the Provider.Login().
@@ -650,6 +656,7 @@ var msgTypeNames = map[Type]string{
 	0xc0050508: "InitPIN",
 	0xc0050509: "SetPIN",
 	0xc0050601: "OpenSession",
+	0xc0050602: "CloseSession",
 	0xc0050608: "Login",
 	0xc0050701: "CreateObject",
 	0xc0050702: "CopyObject",
@@ -806,6 +813,9 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 			return nil, err
 		}
 		return Marshal(resp)
+
+	case 0xc0050602: // CloseSession
+		return nil, p.CloseSession()
 
 	case 0xc0050608: // Login
 		var req LoginReq

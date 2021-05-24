@@ -51,6 +51,34 @@ vp_session_register(VPIPCConn *session, CK_SESSION_HANDLE id)
   return CKR_OK;
 }
 
+static CK_RV
+vp_session_unregister(CK_SESSION_HANDLE id)
+{
+  int idx = id % VP_SESSIONS_HASH_SIZE;
+  VPSession **s;
+  CK_RV ret;
+
+  ret = vp_init_args.LockMutex(vp_global_mutex);
+  if (ret != CKR_OK)
+    return ret;
+
+  s = &sessions[idx];
+  while ((*s) != NULL)
+    if ((*s)->id == id)
+      {
+        VPSession *session = (*s);
+
+        *s = session->next;
+
+        free(session);
+        break;
+      }
+
+  vp_init_args.UnlockMutex(vp_global_mutex);
+
+  return CKR_OK;
+}
+
 VPIPCConn *
 vp_session(CK_SESSION_HANDLE id, CK_RV *ret)
 {
@@ -147,7 +175,15 @@ C_CloseSession
   CK_SESSION_HANDLE hSession  /* the session's handle */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /** Header,Call
+   * Session:
+   *                      CK_SESSION_HANDLE hSession
+   */
+
+  vp_session_unregister(hSession);
+  vp_ipc_close(conn);
+
+  /** Trailer */
 }
 
 /* C_CloseAllSessions closes all sessions with a token. */

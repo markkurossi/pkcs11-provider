@@ -237,6 +237,20 @@ func (p *Provider) OpenSession(req *pkcs11.OpenSessionReq) (*pkcs11.OpenSessionR
 	}, nil
 }
 
+// CloseSession implements the Provider.CloseSession().
+func (p *Provider) CloseSession() error {
+	if p.session == nil {
+		return pkcs11.ErrSessionHandleInvalid
+	}
+	err := CloseSession(p.session.ID)
+	if err != nil {
+		return err
+	}
+	p.session = nil
+
+	return nil
+}
+
 // ImplOpenSession implements the Provider.ImplOpenSession().
 func (p *Provider) ImplOpenSession(req *pkcs11.ImplOpenSessionReq) error {
 	parent, err := LookupProvider(req.ProviderID)
