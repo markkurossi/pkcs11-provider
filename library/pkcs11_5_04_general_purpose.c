@@ -1,7 +1,7 @@
 /* This file is auto-generated from pkcs11_5_04_general_purpose.rpc by rpcc. */
 /* -*- c -*-
  *
- * Copyright (c) 2020-2021 Markku Rossi.
+ * Copyright (c) 2020-2023 Markku Rossi.
  *
  * All rights reserved.
  */
@@ -112,13 +112,24 @@ C_Initialize
 
   VP_FUNCTION_ENTER;
 
+  memset(&vp_init_args, 0, sizeof(vp_init_args));
+
   if (pInitArgs != NULL)
-    {
-      memcpy(&vp_init_args, pInitArgs, sizeof(vp_init_args));
-    }
+    memcpy(&vp_init_args, pInitArgs, sizeof(vp_init_args));
   else
+    vp_init_args.flags = CKF_OS_LOCKING_OK;
+
+  if (vp_init_args.CreateMutex == NULL
+      || vp_init_args.DestroyMutex == NULL
+      || vp_init_args.LockMutex == NULL
+      || vp_init_args.UnlockMutex == NULL)
     {
-      memset(&vp_init_args, 0, sizeof(vp_init_args));
+      if ((vp_init_args.flags & CKF_OS_LOCKING_OK) == 0)
+        {
+          vp_log(LOG_ERR, "%s: no mutex pointers and !CKF_OS_LOCKING_OK",
+                 __FUNCTION__);
+          return CKR_ARGUMENTS_BAD;
+        }
       vp_init_args.CreateMutex = mutex_create;
       vp_init_args.DestroyMutex = mutex_destroy;
       vp_init_args.LockMutex = mutex_lock;
