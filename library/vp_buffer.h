@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Markku Rossi.
+ * Copyright (c) 2021-2023 Markku Rossi.
  *
  * All rights reserved.
  */
@@ -49,6 +49,8 @@ uint32_t vp_buffer_get_uint32(VPBuffer *buf);
 unsigned char *vp_buffer_get_data(VPBuffer *buf, size_t len);
 
 bool vp_buffer_get_byte_arr(VPBuffer *buf, void *data, size_t data_count);
+
+bool vp_buffer_get_uint32_arr(VPBuffer *buf, CK_ULONG *data, size_t data_count);
 
 bool vp_buffer_get_ulong_arr(VPBuffer *buf, CK_ULONG *data, size_t data_count);
 

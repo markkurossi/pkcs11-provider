@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Markku Rossi.
+ * Copyright (c) 2021-2023 Markku Rossi.
  *
  * All rights reserved.
  */
@@ -241,6 +241,42 @@ vp_buffer_get_byte_arr(VPBuffer *buf, void *data, size_t data_count)
     }
   memcpy(data, ucp, len);
   buf->offset += len;
+
+  return true;
+}
+
+bool
+vp_buffer_get_uint32_arr(VPBuffer *buf, CK_ULONG *data, size_t data_count)
+{
+  unsigned char *ucp;
+  size_t i, count;
+
+  if (buf->offset + 4 > buf->used)
+    {
+      buf->error = CKR_DATA_LEN_RANGE;
+      return false;
+    }
+  ucp = buf->data + buf->offset;
+  buf->offset += 4;
+
+  count = VP_GET_UINT32(ucp);
+  ucp += 4;
+
+  if (buf->offset + count * 4 > buf->used)
+    {
+      buf->error = CKR_DATA_LEN_RANGE;
+      buf->offset = buf->used;
+      return false;
+    }
+  if (count > data_count)
+    {
+      buf->error = CKR_BUFFER_TOO_SMALL;
+      buf->offset += count * 4;
+      return false;
+    }
+
+  for (i = 0; i < count; i++)
+    data[i] = vp_buffer_get_uint32(buf);
 
   return true;
 }

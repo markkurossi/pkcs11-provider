@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 Markku Rossi
+// Copyright (c) 2021-2023 Markku Rossi
 //
 // All rights reserved.
 //
@@ -8,6 +8,7 @@ package main
 
 import (
 	"crypto"
+	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/sha512"
@@ -102,12 +103,15 @@ func LookupProvider(id pkcs11.Ulong) (*Provider, error) {
 
 // Session implements a session with the token.
 type Session struct {
-	ID      pkcs11.SessionHandle
-	Flags   pkcs11.Flags
-	storage pkcs11.Storage
-	Digest  hash.Hash
-	Sign    *SignVerify
-	Verify  *SignVerify
+	ID           pkcs11.SessionHandle
+	Flags        pkcs11.Flags
+	storage      pkcs11.Storage
+	Digest       hash.Hash
+	EncryptBlock cipher.BlockMode
+	EncryptAEAD  cipher.AEAD
+	Sign         *SignVerify
+	Verify       *SignVerify
+	FindObjects  *FindObjects
 }
 
 // SignVerify implements keypair sign and verify operations.
@@ -157,6 +161,11 @@ func NewSignVerify(mechanism pkcs11.Mechanism) (*SignVerify, error) {
 		Digest:    digest,
 		Mechanism: mechanism,
 	}, nil
+}
+
+// FindObjects implements find objects operation.
+type FindObjects struct {
+	Handles []pkcs11.ObjectHandle
 }
 
 // NewSession creates a new session instance.

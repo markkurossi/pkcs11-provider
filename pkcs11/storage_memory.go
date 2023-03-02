@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 Markku Rossi.
+// Copyright (c) 2021, 2023 Markku Rossi.
 //
 // All rights reserved.
 //
@@ -104,4 +104,14 @@ func (s *MemoryStorage) Delete(h ObjectHandle) error {
 	delete(s.objects, h)
 
 	return nil
+}
+
+// Find implements Storage.Find().
+func (s *MemoryStorage) Find(t Template) (result []ObjectHandle, err error) {
+	for handle, obj := range s.objects {
+		if obj.Attrs.Match(t) {
+			result = append(result, handle)
+		}
+	}
+	return
 }

@@ -1,7 +1,7 @@
 /* This file is auto-generated from pkcs11_5_07_object.rpc by rpcc. */
 /* -*- c -*-
  *
- * Copyright (c) 2020-2021 Markku Rossi.
+ * Copyright (c) 2020-2023 Markku Rossi.
  *
  * All rights reserved.
  */
@@ -349,13 +349,41 @@ C_FindObjectsInit
   CK_ULONG          ulCount     /* attrs in search template */
 )
 {
-  /*
-   * Session:
-   *            CK_SESSION_HANDLE hSession
-   * Inputs:
-   *   [ulCount]CK_ATTRIBUTE      pTemplate
-   */
-  VP_FUNCTION_NOT_SUPPORTED;
+  CK_RV ret = CKR_OK;
+  VPBuffer buf;
+  int i;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
+
+  /* Lookup session by hSession */
+  conn = vp_session(hSession, &ret);
+  if (ret != CKR_OK)
+    return ret;
+
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0050707);
+  vp_buffer_add_space(&buf, 4);
+
+  vp_buffer_add_uint32(&buf, ulCount);
+  for (i = 0; i < ulCount; i++)
+    {
+      CK_ATTRIBUTE *iel = &pTemplate[i];
+
+      vp_buffer_add_uint32(&buf, iel->type);
+      vp_buffer_add_byte_arr(&buf, iel->pValue, iel->ulValueLen);
+    }
+
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  vp_buffer_uninit(&buf);
+
+  return ret;
 }
 
 /* C_FindObjects continues a search for token and session
@@ -371,15 +399,59 @@ C_FindObjects
  CK_ULONG_PTR         pulObjectCount     /* actual # returned */
 )
 {
-  /*
-   * Session:
-   *                   CK_SESSION_HANDLE hSession
-   * Inputs:
-   *                   CK_ULONG          ulMaxObjectCount
-   * Outputs:
-   *   [pulObjectCount]CK_OBJECT_HANDLE  phObject
-   */
-  VP_FUNCTION_NOT_SUPPORTED;
+  CK_RV ret = CKR_OK;
+  VPBuffer buf;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
+
+  /* Lookup session by hSession */
+  conn = vp_session(hSession, &ret);
+  if (ret != CKR_OK)
+    return ret;
+
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0050708);
+  vp_buffer_add_space(&buf, 4);
+
+  vp_buffer_add_uint32(&buf, ulMaxObjectCount);
+
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  {
+    uint32_t count = vp_buffer_get_uint32(&buf);
+
+    if (phObject == NULL)
+      {
+        *pulObjectCount = count;
+      }
+    else if (count > *pulObjectCount)
+      {
+        *pulObjectCount = count;
+        vp_buffer_uninit(&buf);
+        return CKR_BUFFER_TOO_SMALL;
+      }
+    else
+      {
+        *pulObjectCount = count;
+        vp_buffer_get_uint32_arr(&buf, phObject, count);
+      }
+  }
+
+  if (vp_buffer_error(&buf, &ret))
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  vp_buffer_uninit(&buf);
+
+  return ret;
 }
 
 /* C_FindObjectsFinal finishes a search for token and session

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 Markku Rossi.
+// Copyright (c) 2021-2023 Markku Rossi.
 //
 // All rights reserved.
 //
@@ -7,6 +7,7 @@
 package pkcs11
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -1383,6 +1384,26 @@ func (tmpl Template) Debug() {
 	}
 }
 
+// Match matches the template to the argument template. The template
+// matches if all attributes of the argument template are found.
+func (tmpl Template) Match(t Template) bool {
+	for _, attr := range t {
+		if !tmpl.matchAttr(attr) {
+			return false
+		}
+	}
+	return true
+}
+
+func (tmpl Template) matchAttr(a Attribute) bool {
+	for _, attr := range tmpl {
+		if attr.Type == a.Type && bytes.Compare(attr.Value, a.Value) == 0 {
+			return true
+		}
+	}
+	return false
+}
+
 // Set sets the value of the attribute t to value v in the
 // template. The function returns a new template.
 func (tmpl Template) Set(t AttributeType, v []Byte) Template {
@@ -1410,6 +1431,17 @@ func (tmpl Template) SetInt(t AttributeType, v uint32) Template {
 	return tmpl.Set(t, buf[:])
 }
 
+// SetBool sets the boolean value of the attribute.
+func (tmpl Template) SetBool(t AttributeType, v bool) Template {
+	var buf [1]byte
+
+	if v {
+		buf[0] = 0x1
+	}
+
+	return tmpl.Set(t, buf[:])
+}
+
 // Bool returns attribute value as bool.
 func (tmpl Template) Bool(t AttributeType) (bool, error) {
 	for _, attr := range tmpl {
@@ -1431,7 +1463,7 @@ func (tmpl Template) OptBool(t AttributeType) (bool, error) {
 	}
 	// Default values.
 	switch t {
-	case CkaToken, CkaPrivate:
+	case CkaToken, CkaPrivate, CkaSensitive, CkaWrapWithTrusted:
 		return false, nil
 
 	case CkaModifiable, CkaCopyable, CkaDestroyable:

@@ -285,6 +285,63 @@ type GetAttributeValueResp struct {
 	Template Template
 }
 
+// FindObjectsInitReq defines the arguments of C_FindObjectsInit.
+type FindObjectsInitReq struct {
+	Template Template
+}
+
+// FindObjectsReq defines the arguments of C_FindObjects.
+type FindObjectsReq struct {
+	MaxObjectCount Ulong
+}
+
+// FindObjectsResp defines the result of C_FindObjects.
+type FindObjectsResp struct {
+	ObjectLen int
+	Object    []ObjectHandle
+}
+
+// EncryptInitReq defines the arguments of C_EncryptInit.
+type EncryptInitReq struct {
+	Mechanism Mechanism
+	Key       ObjectHandle
+}
+
+// EncryptReq defines the arguments of C_Encrypt.
+type EncryptReq struct {
+	Data              []Byte
+	EncryptedDataSize uint32
+}
+
+// EncryptResp defines the result of C_Encrypt.
+type EncryptResp struct {
+	EncryptedDataLen int
+	EncryptedData    []Byte
+}
+
+// EncryptUpdateReq defines the arguments of C_EncryptUpdate.
+type EncryptUpdateReq struct {
+	Part              []Byte
+	EncryptedPartSize uint32
+}
+
+// EncryptUpdateResp defines the result of C_EncryptUpdate.
+type EncryptUpdateResp struct {
+	EncryptedPartLen int
+	EncryptedPart    []Byte
+}
+
+// EncryptFinalReq defines the arguments of C_EncryptFinal.
+type EncryptFinalReq struct {
+	LastEncryptedPartSize uint32
+}
+
+// EncryptFinalResp defines the result of C_EncryptFinal.
+type EncryptFinalResp struct {
+	LastEncryptedPartLen int
+	LastEncryptedPart    []Byte
+}
+
 // DigestInitReq defines the arguments of C_DigestInit.
 type DigestInitReq struct {
 	Mechanism Mechanism
@@ -435,7 +492,13 @@ type Provider interface {
 	DestroyObject(req *DestroyObjectReq) error
 	GetObjectSize(req *GetObjectSizeReq) (*GetObjectSizeResp, error)
 	GetAttributeValue(req *GetAttributeValueReq) (*GetAttributeValueResp, error)
+	FindObjectsInit(req *FindObjectsInitReq) error
+	FindObjects(req *FindObjectsReq) (*FindObjectsResp, error)
 	FindObjectsFinal() error
+	EncryptInit(req *EncryptInitReq) error
+	Encrypt(req *EncryptReq) (*EncryptResp, error)
+	EncryptUpdate(req *EncryptUpdateReq) (*EncryptUpdateResp, error)
+	EncryptFinal(req *EncryptFinalReq) (*EncryptFinalResp, error)
 	DigestInit(req *DigestInitReq) error
 	Digest(req *DigestReq) (*DigestResp, error)
 	DigestUpdate(req *DigestUpdateReq) error
@@ -557,9 +620,39 @@ func (b *Base) GetAttributeValue(req *GetAttributeValueReq) (*GetAttributeValueR
 	return nil, ErrFunctionNotSupported
 }
 
+// FindObjectsInit implements the Provider.FindObjectsInit().
+func (b *Base) FindObjectsInit(req *FindObjectsInitReq) error {
+	return ErrFunctionNotSupported
+}
+
+// FindObjects implements the Provider.FindObjects().
+func (b *Base) FindObjects(req *FindObjectsReq) (*FindObjectsResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
 // FindObjectsFinal implements the Provider.FindObjectsFinal().
 func (b *Base) FindObjectsFinal() error {
 	return ErrFunctionNotSupported
+}
+
+// EncryptInit implements the Provider.EncryptInit().
+func (b *Base) EncryptInit(req *EncryptInitReq) error {
+	return ErrFunctionNotSupported
+}
+
+// Encrypt implements the Provider.Encrypt().
+func (b *Base) Encrypt(req *EncryptReq) (*EncryptResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
+// EncryptUpdate implements the Provider.EncryptUpdate().
+func (b *Base) EncryptUpdate(req *EncryptUpdateReq) (*EncryptUpdateResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
+// EncryptFinal implements the Provider.EncryptFinal().
+func (b *Base) EncryptFinal(req *EncryptFinalReq) (*EncryptFinalResp, error) {
+	return nil, ErrFunctionNotSupported
 }
 
 // DigestInit implements the Provider.DigestInit().
@@ -663,7 +756,13 @@ var msgTypeNames = map[Type]string{
 	0xc0050703: "DestroyObject",
 	0xc0050704: "GetObjectSize",
 	0xc0050705: "GetAttributeValue",
+	0xc0050707: "FindObjectsInit",
+	0xc0050708: "FindObjects",
 	0xc0050709: "FindObjectsFinal",
+	0xc0050801: "EncryptInit",
+	0xc0050802: "Encrypt",
+	0xc0050803: "EncryptUpdate",
+	0xc0050804: "EncryptFinal",
 	0xc0050c01: "DigestInit",
 	0xc0050c02: "Digest",
 	0xc0050c03: "DigestUpdate",
@@ -875,8 +974,66 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 		}
 		return Marshal(resp)
 
+	case 0xc0050707: // FindObjectsInit
+		var req FindObjectsInitReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		return nil, p.FindObjectsInit(&req)
+
+	case 0xc0050708: // FindObjects
+		var req FindObjectsReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		resp, err := p.FindObjects(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
+
 	case 0xc0050709: // FindObjectsFinal
 		return nil, p.FindObjectsFinal()
+
+	case 0xc0050801: // EncryptInit
+		var req EncryptInitReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		return nil, p.EncryptInit(&req)
+
+	case 0xc0050802: // Encrypt
+		var req EncryptReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		resp, err := p.Encrypt(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
+
+	case 0xc0050803: // EncryptUpdate
+		var req EncryptUpdateReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		resp, err := p.EncryptUpdate(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
+
+	case 0xc0050804: // EncryptFinal
+		var req EncryptFinalReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		resp, err := p.EncryptFinal(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
 
 	case 0xc0050c01: // DigestInit
 		var req DigestInitReq

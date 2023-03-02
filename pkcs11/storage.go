@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 Markku Rossi.
+// Copyright (c) 2021-2023 Markku Rossi.
 //
 // All rights reserved.
 //
@@ -138,4 +138,7 @@ type Storage interface {
 
 	// Delete deletes the object by its handle.
 	Delete(h ObjectHandle) error
+
+	// Find finds objects matching the template.
+	Find(t Template) ([]ObjectHandle, error)
 }
