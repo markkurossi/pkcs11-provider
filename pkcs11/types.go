@@ -8,7 +8,6 @@ package pkcs11
 
 import (
 	"bytes"
-	"encoding/hex"
 	"fmt"
 	"log"
 	"math/big"
@@ -1373,16 +1372,6 @@ func (t KeyType) String() string {
 
 // Template defines attributes for objects.
 type Template []Attribute
-
-// Debug prints the template to standard output.
-func (tmpl Template) Debug() {
-	for _, attr := range tmpl {
-		fmt.Printf("\u251c\u2500\u2500\u2500\u2500\u2574%s:\n", attr.Type)
-		if len(attr.Value) > 0 {
-			fmt.Printf("%s", hex.Dump(attr.Value))
-		}
-	}
-}
 
 // Match matches the template to the argument template. The template
 // matches if all attributes of the argument template are found.
