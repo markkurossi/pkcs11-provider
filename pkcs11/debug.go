@@ -39,6 +39,9 @@ func attrValueString(attr Attribute) string {
 		}
 		return ObjectClass(v).String()
 
+	case CkaLabel:
+		return string(attr.Value)
+
 	case CkaKeyType:
 		v, err := attr.Uint()
 		if err != nil {
@@ -46,23 +49,30 @@ func attrValueString(attr Attribute) string {
 		}
 		return KeyType(v).String()
 
-	case CkaValueLen:
+	case CkaValueLen, CkaModulusBits:
 		v, err := attr.Uint()
 		if err != nil {
 			return err.Error()
 		}
 		return fmt.Sprintf("%v", v)
 
-	case CkaLabel:
-		return string(attr.Value)
+	default:
+		h := fmt.Sprintf("%x", attr.Value)
+		var result string
+		const limit int = 32
+		for len(h) > limit {
+			result += h[:limit]
+			result += "\n"
+			h = h[limit:]
+		}
+		return result + h
 	}
-	return "???"
 }
 
 func (tmpl Template) Print() {
 	tab := tabulate.New(tabulate.UnicodeLight)
-	tab.Header("Attribute").SetAlign(tabulate.ML)
-	tab.Header("Value").SetAlign(tabulate.ML)
+	tab.Header("Attribute").SetAlign(tabulate.TL)
+	tab.Header("Value").SetAlign(tabulate.TL)
 
 	for _, attr := range tmpl {
 		row := tab.Row()

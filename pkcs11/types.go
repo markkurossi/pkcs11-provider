@@ -1173,7 +1173,7 @@ func (attr Attribute) Bool() (bool, error) {
 		return attr.Value[0] != 0, nil
 
 	default:
-		return false, fmt.Errorf("invalid attribute length %d", len(attr.Value))
+		return false, ErrTemplateInconsistent
 	}
 }
 
@@ -1452,7 +1452,7 @@ func (tmpl Template) OptBool(t AttributeType) (bool, error) {
 	}
 	// Default values.
 	switch t {
-	case CkaToken, CkaPrivate, CkaSensitive, CkaWrapWithTrusted:
+	case CkaToken, CkaPrivate, CkaSensitive, CkaWrapWithTrusted, CkaExtractable:
 		return false, nil
 
 	case CkaModifiable, CkaCopyable, CkaDestroyable:
