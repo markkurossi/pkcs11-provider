@@ -368,9 +368,21 @@ func (p *Provider) CopyObject(req *pkcs11.CopyObjectReq) (*pkcs11.CopyObjectResp
 		}
 		switch a.Type {
 		case pkcs11.CkaSensitive:
-			// XXX CkaAlwaysSensitive
+			sensitive, err := a.Bool()
+			if err != nil {
+				return nil, err
+			}
+			if !sensitive {
+				attrs = attrs.SetBool(pkcs11.CkaAlwaysSensitive, false)
+			}
 		case pkcs11.CkaExtractable:
-			// XXX CkaNeverExtractable
+			extractable, err := a.Bool()
+			if err != nil {
+				return nil, err
+			}
+			if extractable {
+				attrs = attrs.SetBool(pkcs11.CkaNeverExtractable, false)
+			}
 		}
 		attrs = attrs.Set(a.Type, a.Value)
 	}
@@ -385,11 +397,6 @@ func (p *Provider) CopyObject(req *pkcs11.CopyObjectReq) (*pkcs11.CopyObjectResp
 		storage = p.session.storage
 	}
 
-	nobj := &pkcs11.Object{
-		Attrs:  attrs,
-		Native: obj.Native,
-	}
-
 	// 4.4.1 The CKA_UNIQUE_ID attribute
 	//
 	// Any time a new object is created, a value for CKA_UNIQUE_ID
@@ -398,8 +405,12 @@ func (p *Provider) CopyObject(req *pkcs11.CopyObjectReq) (*pkcs11.CopyObjectResp
 	if err != nil {
 		return nil, pkcs11.ErrDeviceError
 	}
-	nobj.Attrs = nobj.Attrs.Set(pkcs11.CkaUniqueID, []byte(uuid.String()))
+	attrs = attrs.Set(pkcs11.CkaUniqueID, []byte(uuid.String()))
 
+	nobj := &pkcs11.Object{
+		Attrs:  attrs,
+		Native: obj.Native,
+	}
 	err = nobj.Inflate()
 	if err != nil {
 		return nil, err
@@ -947,6 +958,10 @@ func (p *Provider) GenerateKey(req *pkcs11.GenerateKeyReq) (*pkcs11.GenerateKeyR
 		if err != nil {
 			return nil, err
 		}
+		extractable, err := req.Template.OptBool(pkcs11.CkaExtractable)
+		if err != nil {
+			return nil, err
+		}
 		if size < uint64(info.MinKeySize) || size > uint64(info.MaxKeySize) {
 			return nil, pkcs11.ErrTemplateIncomplete
 		}
@@ -965,7 +980,9 @@ func (p *Provider) GenerateKey(req *pkcs11.GenerateKeyReq) (*pkcs11.GenerateKeyR
 		tmpl := req.Template
 		tmpl = tmpl.SetBool(pkcs11.CkaToken, token)
 		tmpl = tmpl.SetBool(pkcs11.CkaSensitive, sensitive)
-		tmpl = tmpl.SetBool(pkcs11.CkaExtractable, false)
+		tmpl = tmpl.SetBool(pkcs11.CkaAlwaysSensitive, sensitive)
+		tmpl = tmpl.SetBool(pkcs11.CkaExtractable, extractable)
+		tmpl = tmpl.SetBool(pkcs11.CkaNeverExtractable, !extractable)
 		tmpl = tmpl.SetInt(pkcs11.CkaValueLen, uint32(size))
 		tmpl = tmpl.SetInt(pkcs11.CkaKeyType, uint32(pkcs11.CkkAES))
 
