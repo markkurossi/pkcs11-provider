@@ -105,6 +105,11 @@ var mechanisms = map[pkcs11.MechanismType]pkcs11.MechanismInfo{
 		MaxKeySize: AESMaxKeySize,
 		Flags:      pkcs11.CkfGenerate,
 	},
+	pkcs11.CkmAESECB: {
+		MinKeySize: AESMinKeySize,
+		MaxKeySize: AESMaxKeySize,
+		Flags:      pkcs11.CkfGenerate,
+	},
 	pkcs11.CkmAESGCM: {
 		MinKeySize: AESMinKeySize,
 		MaxKeySize: AESMaxKeySize,
@@ -538,7 +543,7 @@ func (p *Provider) EncryptInit(req *pkcs11.EncryptInitReq) error {
 	if p.session == nil {
 		return pkcs11.ErrSessionHandleInvalid
 	}
-	if p.session.EncryptBlock != nil || p.session.EncryptAEAD != nil {
+	if p.session.Encrypt != nil {
 		return pkcs11.ErrOperationActive
 	}
 	obj, err := p.readObject(req.Key)
@@ -551,18 +556,28 @@ func (p *Provider) EncryptInit(req *pkcs11.EncryptInitReq) error {
 		log.Printf("!key: obj.Native=%v(%T)", obj.Native, obj.Native)
 		return pkcs11.ErrKeyHandleInvalid
 	}
+	log.Printf("EncryptInit: Mechanism=%v, Parameter=%x\n",
+		req.Mechanism.Mechanism, req.Mechanism.Parameter)
 
 	switch req.Mechanism.Mechanism {
+	case pkcs11.CkmAESECB:
+		b, err := aes.NewCipher(key)
+		if err != nil {
+			return pkcs11.ErrKeySizeRange
+		}
+		p.session.Encrypt = &EncDec{
+			Block: b,
+		}
+		return nil
+
 	case pkcs11.CkmAESCBC:
 		b, err := aes.NewCipher(key)
 		if err != nil {
 			return pkcs11.ErrKeySizeRange
 		}
-		log.Printf("EncryptInit: Mechanism=%v, Parameter=%x\n",
-			req.Mechanism.Mechanism, req.Mechanism.Parameter)
-
-		p.session.EncryptBlock = cipher.NewCBCEncrypter(b,
-			req.Mechanism.Parameter)
+		p.session.Encrypt = &EncDec{
+			BlockMode: cipher.NewCBCEncrypter(b, req.Mechanism.Parameter),
+		}
 		return nil
 
 	default:
@@ -582,24 +597,43 @@ func (p *Provider) EncryptUpdate(req *pkcs11.EncryptUpdateReq) (*pkcs11.EncryptU
 	if p.session == nil {
 		return nil, pkcs11.ErrSessionHandleInvalid
 	}
-	// XXX AEAD mode.
-	if p.session.EncryptBlock == nil {
+	if p.session.Encrypt == nil {
 		return nil, pkcs11.ErrOperationNotInitialized
-	}
-	blockSize := p.session.EncryptBlock.BlockSize()
-	if len(req.Part)%blockSize != 0 {
-		return nil, pkcs11.ErrDataLenRange
 	}
 	resp := &pkcs11.EncryptUpdateResp{
 		EncryptedPartLen: len(req.Part),
 	}
-	if req.EncryptedPartSize == 0 {
-		// Querying output buffer size.
-		return resp, nil
-	}
+	// Block size alignment checked below based on the algorithm.
 
-	p.session.EncryptBlock.CryptBlocks(req.Part, req.Part)
-	resp.EncryptedPart = req.Part
+	if p.session.Encrypt.Block != nil {
+		blockSize := p.session.Encrypt.Block.BlockSize()
+		if len(req.Part)%blockSize != 0 {
+			return nil, pkcs11.ErrDataLenRange
+		}
+		if req.EncryptedPartSize == 0 {
+			// Querying output buffer size.
+			return resp, nil
+		}
+
+		for i := 0; i < len(req.Part); i += blockSize {
+			p.session.Encrypt.Block.Encrypt(req.Part[i:], req.Part[i:])
+		}
+		resp.EncryptedPart = req.Part
+	} else if p.session.Encrypt.BlockMode != nil {
+		blockSize := p.session.Encrypt.BlockMode.BlockSize()
+		if len(req.Part)%blockSize != 0 {
+			return nil, pkcs11.ErrDataLenRange
+		}
+		if req.EncryptedPartSize == 0 {
+			// Querying output buffer size.
+			return resp, nil
+		}
+
+		p.session.Encrypt.BlockMode.CryptBlocks(req.Part, req.Part)
+		resp.EncryptedPart = req.Part
+	} else {
+		return nil, pkcs11.ErrOperationNotInitialized
+	}
 
 	return resp, nil
 }
@@ -609,12 +643,15 @@ func (p *Provider) EncryptFinal(req *pkcs11.EncryptFinalReq) (*pkcs11.EncryptFin
 	if p.session == nil {
 		return nil, pkcs11.ErrSessionHandleInvalid
 	}
-	// XXX AEAD mode.
-	if p.session.EncryptBlock == nil {
+	if p.session.Encrypt == nil {
 		return nil, pkcs11.ErrOperationNotInitialized
 	}
 	// XXX check if any cipher has leftovers.
-	return &pkcs11.EncryptFinalResp{}, nil
+	resp := &pkcs11.EncryptFinalResp{}
+
+	p.session.Encrypt = nil
+
+	return resp, nil
 }
 
 // DigestInit implements the Provider.DigestInit().

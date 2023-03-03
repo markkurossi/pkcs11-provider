@@ -69,6 +69,7 @@ func attrValueString(attr Attribute) string {
 	}
 }
 
+// Print pretty-prints the template to standard output.
 func (tmpl Template) Print() {
 	tab := tabulate.New(tabulate.UnicodeLight)
 	tab.Header("Attribute").SetAlign(tabulate.TL)

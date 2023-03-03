@@ -103,15 +103,21 @@ func LookupProvider(id pkcs11.Ulong) (*Provider, error) {
 
 // Session implements a session with the token.
 type Session struct {
-	ID           pkcs11.SessionHandle
-	Flags        pkcs11.Flags
-	storage      pkcs11.Storage
-	Digest       hash.Hash
-	EncryptBlock cipher.BlockMode
-	EncryptAEAD  cipher.AEAD
-	Sign         *SignVerify
-	Verify       *SignVerify
-	FindObjects  *FindObjects
+	ID          pkcs11.SessionHandle
+	Flags       pkcs11.Flags
+	storage     pkcs11.Storage
+	Digest      hash.Hash
+	Encrypt     *EncDec
+	Sign        *SignVerify
+	Verify      *SignVerify
+	FindObjects *FindObjects
+}
+
+// EncDec implements symmetric encrypt and decrypt operations.
+type EncDec struct {
+	Block     cipher.Block
+	BlockMode cipher.BlockMode
+	AEAD      cipher.AEAD
 }
 
 // SignVerify implements keypair sign and verify operations.
