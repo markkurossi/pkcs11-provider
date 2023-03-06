@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 Markku Rossi
+// Copyright (c) 2021-2023 Markku Rossi
 //
 // All rights reserved.
 //
@@ -25,6 +25,7 @@ var (
 	reStructField = regexp.MustCompilePOSIX(`^[[:space:]]*(.+)[[:space:]]+([[:^space:]]+)[[:space:]]*$`)
 	reStructEnd   = regexp.MustCompilePOSIX(`^[[:space:]]*}[[:space:]]*$`)
 	reType        = regexp.MustCompilePOSIX(`^(\[([[:^space:]]+)([[:space:]]+([[:^space:]]+))?\])?([A-Za-z_0-9]+)$`)
+	reEncoder     = regexp.MustCompilePOSIX(`^[[:space:]]*encoder[[:space:]]+([[:^space:]]+)[[:space:]]*=[[:space:]]*([[:^space:]]+)[[:space:]]*$`)
 )
 
 // TypeInfo provides information about a PKCS #11 API type.
@@ -36,6 +37,7 @@ type TypeInfo struct {
 	IsPointer bool
 	Basic     string
 	Compound  []Field
+	Encoder   string
 }
 
 func (t TypeInfo) String() string {
@@ -142,6 +144,7 @@ func readTypes(file string) error {
 	defer f.Close()
 
 	reader := bufio.NewReader(f)
+	var linenum int
 	for {
 		line, err := reader.ReadString('\n')
 		if err != nil {
@@ -150,6 +153,7 @@ func readTypes(file string) error {
 			}
 			break
 		}
+		linenum++
 		line = strings.TrimSpace(line)
 		if len(line) == 0 {
 			continue
@@ -194,6 +198,7 @@ func readTypes(file string) error {
 				if err != nil {
 					return err
 				}
+				linenum++
 				line = strings.TrimSpace(line)
 				if len(line) == 0 {
 					continue
@@ -214,7 +219,8 @@ func readTypes(file string) error {
 					fields = append(fields, field)
 					continue
 				}
-				return fmt.Errorf("unexpected line: %s", line)
+				return fmt.Errorf("%s:%d: unexpected line: %s",
+					file, linenum, line)
 			}
 
 			types[name] = TypeInfo{
@@ -223,8 +229,22 @@ func readTypes(file string) error {
 			}
 			continue
 		}
+		m = reEncoder.FindStringSubmatch(line)
+		if m != nil {
+			name := m[1]
+			encoder := m[2]
+			ti, ok := types[name]
+			if !ok {
+				return fmt.Errorf("%s:%d: unknown type: %s",
+					file, linenum, name)
+			}
+			ti.Encoder = encoder
+			types[name] = ti
+			continue
+		}
 
-		return fmt.Errorf("unexpected line: %s", line)
+		return fmt.Errorf("%s:%d: unexpected line: %s",
+			file, linenum, line)
 	}
 
 	return nil
@@ -309,7 +329,17 @@ func (f *Field) Input(level, indent int) error {
 		ctx = fmt.Sprintf("%cel->", 'i'+level-1)
 	}
 
-	if len(f.SizeType) == 0 {
+	if len(f.Type.Encoder) != 0 {
+		// Encode with the encoder function.
+		printf(indent, `ret = %s(&buf, %s%s);
+if (ret != CKR_OK)
+  {
+    vp_buffer_uninit(&buf);
+    return ret;
+  }
+`,
+			f.Type.Encoder, ctx, f.Name)
+	} else if len(f.SizeType) == 0 {
 		// Single instance.
 		if f.Type.IsBasic {
 			printf(indent, "vp_buffer_add_%s(&buf, %s%s);\n",

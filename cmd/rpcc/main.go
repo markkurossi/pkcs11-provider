@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 Markku Rossi
+// Copyright (c) 2021-2023 Markku Rossi
 //
 // All rights reserved.
 //
@@ -57,7 +57,7 @@ func main() {
 	if len(*typeFile) > 0 {
 		err = readTypes(*typeFile)
 		if err != nil {
-			log.Fatalf("failed to read types: %s\n", err)
+			log.Fatal(err)
 		}
 	}
 
