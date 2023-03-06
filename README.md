@@ -47,6 +47,7 @@ $ ./pkcs11-testing --module ~/go/src/github.com/markkurossi/pkcs11-provider/libr
    - [ ] Non-volatile token storage
    - [ ] Token configuration file
    - [ ] Test compatibility with Firefox
+   - [ ] Test compatibility with [aws-cloudhsm-pkcs11-examples](https://github.com/aws-samples/aws-cloudhsm-pkcs11-examples)
  - [ ] Crypto provider with Go:
    - [ ] Object search and enumeration
    - [ ] Encryption and decryption
