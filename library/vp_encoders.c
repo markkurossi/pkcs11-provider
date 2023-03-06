@@ -29,6 +29,16 @@ vp_encode_mechanism(VPBuffer *buf, CK_MECHANISM_PTR m)
 
   switch (m->mechanism)
     {
+    case CKM_RSA_PKCS_KEY_PAIR_GEN:
+    case CKM_RSA_PKCS:
+    case CKM_SHA224_RSA_PKCS:
+    case CKM_SHA256_RSA_PKCS:
+    case CKM_SHA384_RSA_PKCS:
+    case CKM_SHA512_RSA_PKCS:
+    case CKM_SHA224:
+    case CKM_SHA256:
+    case CKM_SHA384:
+    case CKM_SHA512:
     case CKM_AES_KEY_GEN:
     case CKM_AES_ECB:
       if (m->ulParameterLen != 0)
@@ -86,10 +96,6 @@ vp_encode_mechanism(VPBuffer *buf, CK_MECHANISM_PTR m)
                  m->mechanism, m->ulParameterLen, sizeof(CK_GCM_PARAMS));
           return CKR_MECHANISM_INVALID;
         }
-      break;
-
-    case CKM_SHA256:
-      vp_buffer_add_byte_arr(buf, m->pParameter, m->ulParameterLen);
       break;
 
     default:
