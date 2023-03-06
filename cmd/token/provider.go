@@ -556,8 +556,8 @@ func (p *Provider) EncryptInit(req *pkcs11.EncryptInitReq) error {
 		log.Printf("!key: obj.Native=%v(%T)", obj.Native, obj.Native)
 		return pkcs11.ErrKeyHandleInvalid
 	}
-	log.Printf("EncryptInit: Mechanism=%v, Parameter=%x\n",
-		req.Mechanism.Mechanism, req.Mechanism.Parameter)
+	log.Printf("\u251c\u2500\u2500\u2500\u2500\u2574mechanism: %v",
+		req.Mechanism.Mechanism)
 
 	switch req.Mechanism.Mechanism {
 	case pkcs11.CkmAESECB:
@@ -580,6 +580,39 @@ func (p *Provider) EncryptInit(req *pkcs11.EncryptInitReq) error {
 		}
 		return nil
 
+	case pkcs11.CkmAESGCM:
+		b, err := aes.NewCipher(key)
+		if err != nil {
+			return pkcs11.ErrKeySizeRange
+		}
+		aead, err := cipher.NewGCM(b)
+		if err != nil {
+			return pkcs11.ErrDeviceError
+		}
+		var params pkcs11.GcmParams
+		err = pkcs11.Unmarshal(req.Mechanism.Parameter, &params)
+		if err != nil {
+			log.Printf("\u251c\u2500\u2500\u2574pkcs11.Unmarshal: %v", err)
+			return pkcs11.ErrMechanismParamInvalid
+		}
+		if params.IvBits != 96 {
+			log.Printf("\u251c\u2500\u2500\u2574%s: invalid IV length %v, expected 96",
+				req.Mechanism.Mechanism, params.IvBits)
+			return pkcs11.ErrMechanismParamInvalid
+		}
+		if params.TagBits != 128 {
+			log.Printf("\u251c\u2500\u2500\u2524invalid tag length %v, expected 128",
+				params.TagBits)
+			return pkcs11.ErrMechanismParamInvalid
+		}
+
+		p.session.Encrypt = &EncDec{
+			AEAD: aead,
+			IV:   params.Iv,
+			AAD:  params.AAD,
+		}
+		return nil
+
 	default:
 		log.Printf("EncryptInit: Mechanism=%v, key=%x",
 			req.Mechanism.Mechanism, req.Key)
@@ -589,7 +622,30 @@ func (p *Provider) EncryptInit(req *pkcs11.EncryptInitReq) error {
 
 // Encrypt implements the Provider.Encrypt().
 func (p *Provider) Encrypt(req *pkcs11.EncryptReq) (*pkcs11.EncryptResp, error) {
-	return nil, pkcs11.ErrFunctionNotSupported
+	if p.session == nil {
+		return nil, pkcs11.ErrSessionHandleInvalid
+	}
+	if p.session.Encrypt == nil {
+		return nil, pkcs11.ErrOperationNotInitialized
+	}
+	resp := &pkcs11.EncryptResp{
+		EncryptedDataLen: len(req.Data),
+	}
+	// Block size alignment is checked below based on the algorithm.
+	if p.session.Encrypt.AEAD != nil {
+		if debug {
+			log.Printf("AEAD: IV: %x (%d), AAD: %x (%d)",
+				p.session.Encrypt.IV, len(p.session.Encrypt.IV),
+				p.session.Encrypt.AAD, len(p.session.Encrypt.AAD))
+		}
+		p.session.Encrypt.AEAD.Seal(req.Data[:0], p.session.Encrypt.IV,
+			req.Data, p.session.Encrypt.AAD)
+		resp.EncryptedData = req.Data
+	} else {
+		return nil, pkcs11.ErrFunctionNotSupported
+	}
+
+	return resp, nil
 }
 
 // EncryptUpdate implements the Provider.EncryptUpdate().
@@ -603,7 +659,7 @@ func (p *Provider) EncryptUpdate(req *pkcs11.EncryptUpdateReq) (*pkcs11.EncryptU
 	resp := &pkcs11.EncryptUpdateResp{
 		EncryptedPartLen: len(req.Part),
 	}
-	// Block size alignment checked below based on the algorithm.
+	// Block size alignment is checked below based on the algorithm.
 
 	if p.session.Encrypt.Block != nil {
 		blockSize := p.session.Encrypt.Block.BlockSize()

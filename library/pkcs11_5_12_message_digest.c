@@ -34,12 +34,12 @@ C_DigestInit
   vp_buffer_add_uint32(&buf, 0xc0050c01);
   vp_buffer_add_space(&buf, 4);
 
-  {
-    CK_MECHANISM *iel = pMechanism;
-
-    vp_buffer_add_ulong(&buf, iel->mechanism);
-    vp_buffer_add_byte_arr(&buf, iel->pParameter, iel->ulParameterLen);
-  }
+  ret = vp_encode_mechanism(&buf, pMechanism);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
 
   ret = vp_ipc_tx(conn, &buf);
   if (ret != CKR_OK)

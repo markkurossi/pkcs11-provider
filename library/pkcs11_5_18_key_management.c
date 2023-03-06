@@ -40,12 +40,12 @@ C_GenerateKey
   vp_buffer_add_uint32(&buf, 0xc0051201);
   vp_buffer_add_space(&buf, 4);
 
-  {
-    CK_MECHANISM *iel = pMechanism;
-
-    vp_buffer_add_ulong(&buf, iel->mechanism);
-    vp_buffer_add_byte_arr(&buf, iel->pParameter, iel->ulParameterLen);
-  }
+  ret = vp_encode_mechanism(&buf, pMechanism);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
   vp_buffer_add_uint32(&buf, ulCount);
   for (i = 0; i < ulCount; i++)
     {
@@ -107,12 +107,12 @@ C_GenerateKeyPair
   vp_buffer_add_uint32(&buf, 0xc0051202);
   vp_buffer_add_space(&buf, 4);
 
-  {
-    CK_MECHANISM *iel = pMechanism;
-
-    vp_buffer_add_ulong(&buf, iel->mechanism);
-    vp_buffer_add_byte_arr(&buf, iel->pParameter, iel->ulParameterLen);
-  }
+  ret = vp_encode_mechanism(&buf, pMechanism);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
   vp_buffer_add_uint32(&buf, ulPublicKeyAttributeCount);
   for (i = 0; i < ulPublicKeyAttributeCount; i++)
     {

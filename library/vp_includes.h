@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Markku Rossi.
+ * Copyright (c) 2020-2023 Markku Rossi.
  *
  * All rights reserved.
  */
@@ -53,6 +53,11 @@ extern void *vp_global_mutex;
 extern CK_ULONG vp_provider_id;
 
 VPIPCConn *vp_session(CK_SESSION_HANDLE id, CK_RV *ret);
+
+
+/***************************** Custom encoders ******************************/
+
+CK_RV vp_encode_mechanism(VPBuffer *buf, CK_MECHANISM_PTR m);
 
 
 /********************************* Logging **********************************/

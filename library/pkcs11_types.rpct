@@ -81,3 +81,12 @@ type CK_MECHANISM struct {
                            CK_MECHANISM_TYPE mechanism
   [CK_ULONG ulParameterLen]CK_VOID_PTR       pParameter
 }
+
+encoder CK_MECHANISM = vp_encode_mechanism
+
+type CK_GCM_PARAMS struct {
+   [CK_ULONG ulIvLen]CK_BYTE  pIv
+                     CK_ULONG ulIvBits
+  [CK_ULONG ulAADLen]CK_BYTE  pAAD
+                     CK_ULONG ulTagBits
+}

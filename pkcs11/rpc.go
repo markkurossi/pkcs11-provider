@@ -68,6 +68,14 @@ type Attribute struct {
 	Value []Byte
 }
 
+// GcmParams defines compound protocol type CK_GCM_PARAMS.
+type GcmParams struct {
+	Iv      []Byte
+	IvBits  Ulong
+	AAD     []Byte
+	TagBits Ulong
+}
+
 // Info defines compound protocol type CK_INFO.
 type Info struct {
 	CryptokiVersion    Version

@@ -118,6 +118,8 @@ type EncDec struct {
 	Block     cipher.Block
 	BlockMode cipher.BlockMode
 	AEAD      cipher.AEAD
+	IV        []byte
+	AAD       []byte
 }
 
 // SignVerify implements keypair sign and verify operations.
@@ -299,7 +301,8 @@ func messageLoop(conn net.Conn) error {
 					log.Printf("\u251c\u2500\u2500\u2574req: length=%d:\n%s",
 						length, hex.Dump(msg))
 				} else {
-					log.Printf("\u251c\u2500\u2500\u2574req: length=%d", length)
+					log.Printf("\u251c\u2500\u2500\u2574req: %x...[%d]",
+						msg[:30], length)
 				}
 			} else {
 				log.Printf("\u251c\u2500\u2500\u2574req: %x\n", msg)
