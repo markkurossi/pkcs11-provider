@@ -55,3 +55,11 @@ $ ./pkcs11-testing --module ~/go/src/github.com/markkurossi/pkcs11-provider/libr
  - [X] RPC compiler (ugly but it works):
    - [ ] Cleanup field input/output handling and types
    - [ ] Remove old unused input/output code
+
+# Documentation
+
+ - [PKCS #11 Cryptographic Token Interface
+Base Specification Version
+3.0](https://docs.oasis-open.org/pkcs11/pkcs11-base/v3.0/pkcs11-base-v3.0.html)
+ - [Cryptographic Token Interface
+   Standard](https://www.cryptsoft.com/pkcs11doc/v230/)
