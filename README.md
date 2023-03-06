@@ -20,6 +20,9 @@ following components:
    token is implemented in Go and (will) support all modern PKCS #11
    cryptographic operations.
 
+ - [Java PKCS #11 Test](java/) to test the PKCS #11 interface from
+   Java.
+
 # Example Usage
 
 Start token:
