@@ -1,6 +1,6 @@
 /* -*- c -*-
  *
- * Copyright (c) 2020-2021 Markku Rossi.
+ * Copyright (c) 2020-2023 Markku Rossi.
  *
  * All rights reserved.
  */
@@ -19,7 +19,13 @@ C_DecryptInit
   CK_OBJECT_HANDLE  hKey         /* handle of decryption key */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Session:
+   *   CK_SESSION_HANDLE hSession
+   * Inputs:
+   *   CK_MECHANISM      pMechanism
+   *   CK_OBJECT_HANDLE  hKey
+   */
 }
 
 /* C_Decrypt decrypts encrypted data in a single part. */
@@ -33,7 +39,14 @@ C_Decrypt
   CK_ULONG_PTR      pulDataLen          /* gets p-text size */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Session:
+   *                                CK_SESSION_HANDLE hSession
+   * Inputs:
+   *   [CK_ULONG ulEncryptedDataLen]CK_BYTE           pEncryptedData
+   * InOutputs:
+   *           [CK_ULONG pulDataLen]CK_BYTE           pData?
+   */
 }
 
 /* C_DecryptUpdate continues a multiple-part decryption
@@ -49,7 +62,14 @@ C_DecryptUpdate
   CK_ULONG_PTR      pulPartLen           /* p-text size */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Session:
+   *                                CK_SESSION_HANDLE hSession
+   * Inputs:
+   *   [CK_ULONG ulEncryptedPartLen]CK_BYTE           pEncryptedPart
+   * InOutputs:
+   *           [CK_ULONG pulPartLen]CK_BYTE           pPart?
+   */
 }
 
 /* C_DecryptFinal finishes a multiple-part decryption
@@ -63,5 +83,10 @@ C_DecryptFinal
   CK_ULONG_PTR      pulLastPartLen  /* p-text size */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Session:
+   *                                CK_SESSION_HANDLE hSession
+   * InOutputs:
+   *   [CK_ULONG_PTR pulLastPartLen]CK_BYTE           pLastPart?
+   */
 }

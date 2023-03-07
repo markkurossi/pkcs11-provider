@@ -302,6 +302,11 @@ func (p *Provider) Login(req *pkcs11.LoginReq) error {
 	return nil
 }
 
+// Logout implements the Provider.Logout().
+func (p *Provider) Logout() error {
+	return nil
+}
+
 // CreateObject implements the Provider.CreateObject().
 func (p *Provider) CreateObject(req *pkcs11.CreateObjectReq) (*pkcs11.CreateObjectResp, error) {
 	if p.session == nil {
@@ -568,6 +573,7 @@ func (p *Provider) EncryptInit(req *pkcs11.EncryptInitReq) error {
 		p.session.Encrypt = &EncDec{
 			Mechanism: req.Mechanism.Mechanism,
 			Block:     b,
+			Buffer:    make([]byte, 0, b.BlockSize()),
 		}
 		return nil
 
@@ -579,6 +585,7 @@ func (p *Provider) EncryptInit(req *pkcs11.EncryptInitReq) error {
 		p.session.Encrypt = &EncDec{
 			Mechanism: req.Mechanism.Mechanism,
 			BlockMode: cipher.NewCBCEncrypter(b, req.Mechanism.Parameter),
+			Buffer:    make([]byte, 0, b.BlockSize()),
 		}
 		return nil
 
@@ -623,12 +630,28 @@ func (p *Provider) EncryptInit(req *pkcs11.EncryptInitReq) error {
 	}
 }
 
+func pkcs7Pad(buf []byte, blockSize int) []byte {
+	padLen := blockSize - len(buf)%blockSize
+	if padLen == 0 {
+		padLen = blockSize
+	}
+	resultLen := len(buf) + padLen
+	result := make([]byte, resultLen)
+	copy(result, buf)
+	for i := 0; i < padLen; i++ {
+		result[resultLen-1-i] = byte(padLen)
+	}
+
+	return result
+}
+
 // Encrypt implements the Provider.Encrypt().
 func (p *Provider) Encrypt(req *pkcs11.EncryptReq) (*pkcs11.EncryptResp, error) {
 	if p.session == nil {
 		return nil, pkcs11.ErrSessionHandleInvalid
 	}
-	if p.session.Encrypt == nil {
+	enc := p.session.Encrypt
+	if enc == nil {
 		return nil, pkcs11.ErrOperationNotInitialized
 	}
 	resp := &pkcs11.EncryptResp{
@@ -636,8 +659,24 @@ func (p *Provider) Encrypt(req *pkcs11.EncryptReq) (*pkcs11.EncryptResp, error) 
 	}
 	// Block size alignment is checked below based on the algorithm.
 	switch p.session.Encrypt.Mechanism {
+	case pkcs11.CkmAESECB:
+		blockSize := enc.Block.BlockSize()
+		if len(req.Data)%blockSize != 0 {
+			p.session.Encrypt = nil
+			return nil, pkcs11.ErrDataLenRange
+		}
+		if req.EncryptedDataSize == 0 {
+			// Querying output buffer size.
+			return resp, nil
+		}
+		for i := 0; i < resp.EncryptedDataLen; i += blockSize {
+			enc.Block.Encrypt(req.Data[i:], req.Data[i:])
+		}
+		resp.EncryptedData = req.Data
+
 	case pkcs11.CkmAESCBC:
-		if len(req.Data)%p.session.Encrypt.BlockMode.BlockSize() != 0 {
+		if len(req.Data)%enc.BlockMode.BlockSize() != 0 {
+			p.session.Encrypt = nil
 			return nil, pkcs11.ErrDataLenRange
 		}
 		if req.EncryptedDataSize == 0 {
@@ -658,11 +697,8 @@ func (p *Provider) Encrypt(req *pkcs11.EncryptReq) (*pkcs11.EncryptResp, error) 
 			// Querying output buffer size.
 			return resp, nil
 		}
-		resp.EncryptedData = make([]byte, resp.EncryptedDataLen)
-		copy(resp.EncryptedData, req.Data)
-		for i := 0; i < padLen; i++ {
-			resp.EncryptedData[resp.EncryptedDataLen-1-i] = byte(i)
-		}
+		resp.EncryptedData = pkcs7Pad(req.Data, blockSize)
+
 		p.session.Encrypt.BlockMode.CryptBlocks(resp.EncryptedData,
 			resp.EncryptedData)
 
@@ -677,9 +713,11 @@ func (p *Provider) Encrypt(req *pkcs11.EncryptReq) (*pkcs11.EncryptResp, error) 
 		resp.EncryptedData = req.Data
 
 	default:
+		p.session.Encrypt = nil
 		return nil, pkcs11.ErrFunctionNotSupported
 	}
 
+	p.session.Encrypt = nil
 	return resp, nil
 }
 
@@ -688,44 +726,54 @@ func (p *Provider) EncryptUpdate(req *pkcs11.EncryptUpdateReq) (*pkcs11.EncryptU
 	if p.session == nil {
 		return nil, pkcs11.ErrSessionHandleInvalid
 	}
-	if p.session.Encrypt == nil {
+	enc := p.session.Encrypt
+	if enc == nil {
 		return nil, pkcs11.ErrOperationNotInitialized
 	}
-	resp := &pkcs11.EncryptUpdateResp{
-		EncryptedPartLen: len(req.Part),
-	}
-	// Block size alignment is checked below based on the algorithm.
-	switch p.session.Encrypt.Mechanism {
+
+	// Resolve output length.
+	var blockSize int
+	switch enc.Mechanism {
 	case pkcs11.CkmAESECB:
-		blockSize := p.session.Encrypt.Block.BlockSize()
-		if len(req.Part)%blockSize != 0 {
-			return nil, pkcs11.ErrDataLenRange
-		}
-		if req.EncryptedPartSize == 0 {
-			// Querying output buffer size.
-			return resp, nil
-		}
+		blockSize = enc.Block.BlockSize()
 
-		for i := 0; i < len(req.Part); i += blockSize {
-			p.session.Encrypt.Block.Encrypt(req.Part[i:], req.Part[i:])
-		}
-		resp.EncryptedPart = req.Part
-
-	case pkcs11.CkmAESCBC:
-		blockSize := p.session.Encrypt.BlockMode.BlockSize()
-		if len(req.Part)%blockSize != 0 {
-			return nil, pkcs11.ErrDataLenRange
-		}
-		if req.EncryptedPartSize == 0 {
-			// Querying output buffer size.
-			return resp, nil
-		}
-
-		p.session.Encrypt.BlockMode.CryptBlocks(req.Part, req.Part)
-		resp.EncryptedPart = req.Part
+	case pkcs11.CkmAESCBC, pkcs11.CkmAESCBCPad:
+		blockSize = enc.BlockMode.BlockSize()
 
 	default:
-		return nil, pkcs11.ErrOperationNotInitialized
+		return nil, pkcs11.ErrFunctionNotSupported
+	}
+	numBlocks := (len(enc.Buffer) + len(req.Part)) / blockSize
+
+	resp := &pkcs11.EncryptUpdateResp{
+		EncryptedPartLen: numBlocks * blockSize,
+	}
+	if req.EncryptedPartSize == 0 {
+		// Querying output buffer size.
+		return resp, nil
+	}
+
+	// Create output buffer.
+	resp.EncryptedPart = make([]byte, resp.EncryptedPartLen)
+	n := copy(resp.EncryptedPart, enc.Buffer)
+	limit := resp.EncryptedPartLen - n
+	copy(resp.EncryptedPart[n:], req.Part[:limit])
+
+	// Save any trailing data.
+	n = copy(enc.Buffer[0:cap(enc.Buffer)], req.Part[limit:])
+	enc.Buffer = enc.Buffer[:n]
+
+	switch enc.Mechanism {
+	case pkcs11.CkmAESECB:
+		for i := 0; i < resp.EncryptedPartLen; i += blockSize {
+			enc.Block.Encrypt(resp.EncryptedPart[i:], resp.EncryptedPart[i:])
+		}
+
+	case pkcs11.CkmAESCBC, pkcs11.CkmAESCBCPad:
+		enc.BlockMode.CryptBlocks(resp.EncryptedPart, resp.EncryptedPart)
+
+	default:
+		return nil, pkcs11.ErrFunctionNotSupported
 	}
 
 	return resp, nil
@@ -736,15 +784,216 @@ func (p *Provider) EncryptFinal(req *pkcs11.EncryptFinalReq) (*pkcs11.EncryptFin
 	if p.session == nil {
 		return nil, pkcs11.ErrSessionHandleInvalid
 	}
-	if p.session.Encrypt == nil {
+	enc := p.session.Encrypt
+	if enc == nil {
 		return nil, pkcs11.ErrOperationNotInitialized
 	}
-	// XXX check if any cipher has leftovers.
+	log.Printf("EncryptFinal: trailing data: %v", len(p.session.Encrypt.Buffer))
+
 	resp := &pkcs11.EncryptFinalResp{}
 
-	p.session.Encrypt = nil
+	switch enc.Mechanism {
+	case pkcs11.CkmAESECB, pkcs11.CkmAESCBC:
+		if len(enc.Buffer) != 0 {
+			p.session.Encrypt = nil
+			return nil, pkcs11.ErrDataLenRange
+		}
 
+	case pkcs11.CkmAESCBCPad:
+		blockSize := enc.BlockMode.BlockSize()
+		resp.LastEncryptedPartLen = blockSize
+		if req.LastEncryptedPartSize == 0 {
+			// Querying buffer size.
+			return resp, nil
+		}
+		resp.LastEncryptedPart = pkcs7Pad(enc.Buffer, blockSize)
+		log.Printf("EncryptFinal: enc : %x", resp.LastEncryptedPart)
+		enc.BlockMode.CryptBlocks(resp.LastEncryptedPart,
+			resp.LastEncryptedPart)
+
+	default:
+		return nil, pkcs11.ErrFunctionNotSupported
+	}
+
+	p.session.Encrypt = nil
 	return resp, nil
+}
+
+// DecryptInit implements the Provider.DecryptInit().
+func (p *Provider) DecryptInit(req *pkcs11.DecryptInitReq) error {
+	if p.session == nil {
+		return pkcs11.ErrSessionHandleInvalid
+	}
+	if p.session.Decrypt != nil {
+		return pkcs11.ErrOperationActive
+	}
+	obj, err := p.readObject(req.Key)
+	if err != nil {
+		log.Printf("readObject failed: key=%x, %v\n", req.Key, err)
+		return err
+	}
+	key, ok := obj.Native.([]byte)
+	if !ok {
+		log.Printf("!key: obj.Native=%v(%T)", obj.Native, obj.Native)
+		return pkcs11.ErrKeyHandleInvalid
+	}
+	log.Printf("\u251c\u2500\u2500\u2500\u2500\u2574mechanism: %v",
+		req.Mechanism.Mechanism)
+
+	switch req.Mechanism.Mechanism {
+	case pkcs11.CkmAESECB:
+		b, err := aes.NewCipher(key)
+		if err != nil {
+			return pkcs11.ErrKeySizeRange
+		}
+		p.session.Decrypt = &EncDec{
+			Mechanism: req.Mechanism.Mechanism,
+			Block:     b,
+		}
+		return nil
+
+	case pkcs11.CkmAESCBC, pkcs11.CkmAESCBCPad:
+		b, err := aes.NewCipher(key)
+		if err != nil {
+			return pkcs11.ErrKeySizeRange
+		}
+		p.session.Decrypt = &EncDec{
+			Mechanism: req.Mechanism.Mechanism,
+			BlockMode: cipher.NewCBCDecrypter(b, req.Mechanism.Parameter),
+		}
+		return nil
+
+	case pkcs11.CkmAESGCM:
+		b, err := aes.NewCipher(key)
+		if err != nil {
+			return pkcs11.ErrKeySizeRange
+		}
+		aead, err := cipher.NewGCM(b)
+		if err != nil {
+			return pkcs11.ErrDeviceError
+		}
+		var params pkcs11.GcmParams
+		err = pkcs11.Unmarshal(req.Mechanism.Parameter, &params)
+		if err != nil {
+			log.Printf("\u251c\u2500\u2500\u2574pkcs11.Unmarshal: %v", err)
+			return pkcs11.ErrMechanismParamInvalid
+		}
+		if params.IvBits != 96 {
+			log.Printf("\u251c\u2500\u2500\u2574%s: invalid IV length %v, expected 96",
+				req.Mechanism.Mechanism, params.IvBits)
+			return pkcs11.ErrMechanismParamInvalid
+		}
+		if params.TagBits != 128 {
+			log.Printf("\u251c\u2500\u2500\u2524invalid tag length %v, expected 128",
+				params.TagBits)
+			return pkcs11.ErrMechanismParamInvalid
+		}
+
+		p.session.Decrypt = &EncDec{
+			Mechanism: req.Mechanism.Mechanism,
+			AEAD:      aead,
+			IV:        params.Iv,
+			AAD:       params.AAD,
+		}
+		return nil
+
+	default:
+		log.Printf("\u251c\u2500\u2500\u2524unsupported mechanism %v, key=%x",
+			req.Mechanism.Mechanism, req.Key)
+		return pkcs11.ErrMechanismInvalid
+	}
+}
+
+// Decrypt implements the Provider.Decrypt().
+func (p *Provider) Decrypt(req *pkcs11.DecryptReq) (*pkcs11.DecryptResp, error) {
+	if p.session == nil {
+		return nil, pkcs11.ErrSessionHandleInvalid
+	}
+	dec := p.session.Decrypt
+	if dec == nil {
+		return nil, pkcs11.ErrOperationNotInitialized
+	}
+	resp := &pkcs11.DecryptResp{
+		DataLen: len(req.EncryptedData),
+	}
+	// Block size alignment is checked below based on the algorithm.
+	switch dec.Mechanism {
+	case pkcs11.CkmAESECB:
+		blockSize := dec.Block.BlockSize()
+		if len(req.EncryptedData)%blockSize != 0 {
+			p.session.Decrypt = nil
+			return nil, pkcs11.ErrDataLenRange
+		}
+		if req.DataSize == 0 {
+			// Querying output buffer size.
+			return resp, nil
+		}
+		for i := 0; i < resp.DataLen; i += blockSize {
+			dec.Block.Decrypt(req.EncryptedData[i:], req.EncryptedData[i:])
+		}
+		resp.Data = req.EncryptedData
+
+	case pkcs11.CkmAESCBC:
+		if len(req.EncryptedData)%p.session.Decrypt.BlockMode.BlockSize() != 0 {
+			p.session.Decrypt = nil
+			return nil, pkcs11.ErrDataLenRange
+		}
+		if req.DataSize == 0 {
+			// Querying output buffer size.
+			return resp, nil
+		}
+		p.session.Decrypt.BlockMode.CryptBlocks(req.EncryptedData,
+			req.EncryptedData)
+		resp.Data = req.EncryptedData
+
+	case pkcs11.CkmAESCBCPad:
+		blockSize := p.session.Decrypt.BlockMode.BlockSize()
+		if len(req.EncryptedData) == 0 ||
+			len(req.EncryptedData)%blockSize != 0 {
+			p.session.Decrypt = nil
+			return nil, pkcs11.ErrDataLenRange
+		}
+		if req.DataSize == 0 {
+			// Querying output buffer size.
+			return resp, nil
+		}
+		p.session.Decrypt.BlockMode.CryptBlocks(req.EncryptedData,
+			req.EncryptedData)
+		padLen := int(req.EncryptedData[len(req.EncryptedData)-1])
+		if padLen > len(req.EncryptedData) {
+			p.session.Decrypt = nil
+			return nil, pkcs11.ErrDataLenRange
+		}
+		resp.DataLen = len(req.EncryptedData) - padLen
+		resp.Data = req.EncryptedData[:resp.DataLen]
+
+	case pkcs11.CkmAESGCM:
+		if debug {
+			log.Printf("AEAD: IV: %x (%d), AAD: %x (%d)",
+				p.session.Decrypt.IV, len(p.session.Decrypt.IV),
+				p.session.Decrypt.AAD, len(p.session.Decrypt.AAD))
+		}
+		p.session.Decrypt.AEAD.Open(req.EncryptedData[:0], p.session.Decrypt.IV,
+			req.EncryptedData, p.session.Decrypt.AAD)
+		resp.Data = req.EncryptedData
+
+	default:
+		p.session.Decrypt = nil
+		return nil, pkcs11.ErrFunctionNotSupported
+	}
+
+	p.session.Decrypt = nil
+	return resp, nil
+}
+
+// DecryptUpdate implements the Provider.DecryptUpdate().
+func (p *Provider) DecryptUpdate(req *pkcs11.DecryptUpdateReq) (*pkcs11.DecryptUpdateResp, error) {
+	return nil, pkcs11.ErrFunctionNotSupported
+}
+
+// DecryptFinal implements the Provider.DecryptFinal().
+func (p *Provider) DecryptFinal(req *pkcs11.DecryptFinalReq) (*pkcs11.DecryptFinalResp, error) {
+	return nil, pkcs11.ErrFunctionNotSupported
 }
 
 // DigestInit implements the Provider.DigestInit().

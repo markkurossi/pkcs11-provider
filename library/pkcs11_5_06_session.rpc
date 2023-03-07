@@ -1,6 +1,6 @@
 /* -*- c -*-
  *
- * Copyright (c) 2020-2021 Markku Rossi.
+ * Copyright (c) 2020-2023 Markku Rossi.
  *
  * All rights reserved.
  */
@@ -289,5 +289,8 @@ C_Logout
   CK_SESSION_HANDLE hSession  /* the session's handle */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Session:
+   *  CK_SESSION_HANDLE hSession
+   */
 }

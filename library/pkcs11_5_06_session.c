@@ -1,7 +1,7 @@
 /* This file is auto-generated from pkcs11_5_06_session.rpc by rpcc. */
 /* -*- c -*-
  *
- * Copyright (c) 2020-2021 Markku Rossi.
+ * Copyright (c) 2020-2023 Markku Rossi.
  *
  * All rights reserved.
  */
@@ -355,5 +355,29 @@ C_Logout
   CK_SESSION_HANDLE hSession  /* the session's handle */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  CK_RV ret = CKR_OK;
+  VPBuffer buf;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
+
+  /* Lookup session by hSession */
+  conn = vp_session(hSession, &ret);
+  if (ret != CKR_OK)
+    return ret;
+
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc005060a);
+  vp_buffer_add_space(&buf, 4);
+
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  vp_buffer_uninit(&buf);
+
+  return ret;
 }

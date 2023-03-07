@@ -350,6 +350,47 @@ type EncryptFinalResp struct {
 	LastEncryptedPart    []Byte
 }
 
+// DecryptInitReq defines the arguments of C_DecryptInit.
+type DecryptInitReq struct {
+	Mechanism Mechanism
+	Key       ObjectHandle
+}
+
+// DecryptReq defines the arguments of C_Decrypt.
+type DecryptReq struct {
+	EncryptedData []Byte
+	DataSize      uint32
+}
+
+// DecryptResp defines the result of C_Decrypt.
+type DecryptResp struct {
+	DataLen int
+	Data    []Byte
+}
+
+// DecryptUpdateReq defines the arguments of C_DecryptUpdate.
+type DecryptUpdateReq struct {
+	EncryptedPart []Byte
+	PartSize      uint32
+}
+
+// DecryptUpdateResp defines the result of C_DecryptUpdate.
+type DecryptUpdateResp struct {
+	PartLen int
+	Part    []Byte
+}
+
+// DecryptFinalReq defines the arguments of C_DecryptFinal.
+type DecryptFinalReq struct {
+	LastPartSize uint32
+}
+
+// DecryptFinalResp defines the result of C_DecryptFinal.
+type DecryptFinalResp struct {
+	LastPartLen int
+	LastPart    []Byte
+}
+
 // DigestInitReq defines the arguments of C_DigestInit.
 type DigestInitReq struct {
 	Mechanism Mechanism
@@ -495,6 +536,7 @@ type Provider interface {
 	OpenSession(req *OpenSessionReq) (*OpenSessionResp, error)
 	CloseSession() error
 	Login(req *LoginReq) error
+	Logout() error
 	CreateObject(req *CreateObjectReq) (*CreateObjectResp, error)
 	CopyObject(req *CopyObjectReq) (*CopyObjectResp, error)
 	DestroyObject(req *DestroyObjectReq) error
@@ -507,6 +549,10 @@ type Provider interface {
 	Encrypt(req *EncryptReq) (*EncryptResp, error)
 	EncryptUpdate(req *EncryptUpdateReq) (*EncryptUpdateResp, error)
 	EncryptFinal(req *EncryptFinalReq) (*EncryptFinalResp, error)
+	DecryptInit(req *DecryptInitReq) error
+	Decrypt(req *DecryptReq) (*DecryptResp, error)
+	DecryptUpdate(req *DecryptUpdateReq) (*DecryptUpdateResp, error)
+	DecryptFinal(req *DecryptFinalReq) (*DecryptFinalResp, error)
 	DigestInit(req *DigestInitReq) error
 	Digest(req *DigestReq) (*DigestResp, error)
 	DigestUpdate(req *DigestUpdateReq) error
@@ -603,6 +649,11 @@ func (b *Base) Login(req *LoginReq) error {
 	return ErrFunctionNotSupported
 }
 
+// Logout implements the Provider.Logout().
+func (b *Base) Logout() error {
+	return ErrFunctionNotSupported
+}
+
 // CreateObject implements the Provider.CreateObject().
 func (b *Base) CreateObject(req *CreateObjectReq) (*CreateObjectResp, error) {
 	return nil, ErrFunctionNotSupported
@@ -660,6 +711,26 @@ func (b *Base) EncryptUpdate(req *EncryptUpdateReq) (*EncryptUpdateResp, error) 
 
 // EncryptFinal implements the Provider.EncryptFinal().
 func (b *Base) EncryptFinal(req *EncryptFinalReq) (*EncryptFinalResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
+// DecryptInit implements the Provider.DecryptInit().
+func (b *Base) DecryptInit(req *DecryptInitReq) error {
+	return ErrFunctionNotSupported
+}
+
+// Decrypt implements the Provider.Decrypt().
+func (b *Base) Decrypt(req *DecryptReq) (*DecryptResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
+// DecryptUpdate implements the Provider.DecryptUpdate().
+func (b *Base) DecryptUpdate(req *DecryptUpdateReq) (*DecryptUpdateResp, error) {
+	return nil, ErrFunctionNotSupported
+}
+
+// DecryptFinal implements the Provider.DecryptFinal().
+func (b *Base) DecryptFinal(req *DecryptFinalReq) (*DecryptFinalResp, error) {
 	return nil, ErrFunctionNotSupported
 }
 
@@ -759,6 +830,7 @@ var msgTypeNames = map[Type]string{
 	0xc0050601: "OpenSession",
 	0xc0050602: "CloseSession",
 	0xc0050608: "Login",
+	0xc005060a: "Logout",
 	0xc0050701: "CreateObject",
 	0xc0050702: "CopyObject",
 	0xc0050703: "DestroyObject",
@@ -771,6 +843,10 @@ var msgTypeNames = map[Type]string{
 	0xc0050802: "Encrypt",
 	0xc0050803: "EncryptUpdate",
 	0xc0050804: "EncryptFinal",
+	0xc0050a01: "DecryptInit",
+	0xc0050a02: "Decrypt",
+	0xc0050a03: "DecryptUpdate",
+	0xc0050a04: "DecryptFinal",
 	0xc0050c01: "DigestInit",
 	0xc0050c02: "Digest",
 	0xc0050c03: "DigestUpdate",
@@ -931,6 +1007,9 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 		}
 		return nil, p.Login(&req)
 
+	case 0xc005060a: // Logout
+		return nil, p.Logout()
+
 	case 0xc0050701: // CreateObject
 		var req CreateObjectReq
 		if err := Unmarshal(data, &req); err != nil {
@@ -1038,6 +1117,46 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 			return nil, err
 		}
 		resp, err := p.EncryptFinal(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
+
+	case 0xc0050a01: // DecryptInit
+		var req DecryptInitReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		return nil, p.DecryptInit(&req)
+
+	case 0xc0050a02: // Decrypt
+		var req DecryptReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		resp, err := p.Decrypt(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
+
+	case 0xc0050a03: // DecryptUpdate
+		var req DecryptUpdateReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		resp, err := p.DecryptUpdate(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
+
+	case 0xc0050a04: // DecryptFinal
+		var req DecryptFinalReq
+		if err := Unmarshal(data, &req); err != nil {
+			return nil, err
+		}
+		resp, err := p.DecryptFinal(&req)
 		if err != nil {
 			return nil, err
 		}

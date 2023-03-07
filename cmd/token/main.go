@@ -108,6 +108,7 @@ type Session struct {
 	storage     pkcs11.Storage
 	Digest      hash.Hash
 	Encrypt     *EncDec
+	Decrypt     *EncDec
 	Sign        *SignVerify
 	Verify      *SignVerify
 	FindObjects *FindObjects
@@ -121,6 +122,10 @@ type EncDec struct {
 	AEAD      cipher.AEAD
 	IV        []byte
 	AAD       []byte
+
+	// Buffer is used for multi-part encryption to hold any
+	// off-boundary data.
+	Buffer []byte
 }
 
 // SignVerify implements keypair sign and verify operations.
