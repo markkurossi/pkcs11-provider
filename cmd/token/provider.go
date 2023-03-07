@@ -788,7 +788,6 @@ func (p *Provider) EncryptFinal(req *pkcs11.EncryptFinalReq) (*pkcs11.EncryptFin
 	if enc == nil {
 		return nil, pkcs11.ErrOperationNotInitialized
 	}
-	log.Printf("EncryptFinal: trailing data: %v", len(p.session.Encrypt.Buffer))
 
 	resp := &pkcs11.EncryptFinalResp{}
 
@@ -807,7 +806,6 @@ func (p *Provider) EncryptFinal(req *pkcs11.EncryptFinalReq) (*pkcs11.EncryptFin
 			return resp, nil
 		}
 		resp.LastEncryptedPart = pkcs7Pad(enc.Buffer, blockSize)
-		log.Printf("EncryptFinal: enc : %x", resp.LastEncryptedPart)
 		enc.BlockMode.CryptBlocks(resp.LastEncryptedPart,
 			resp.LastEncryptedPart)
 
