@@ -13,3 +13,6 @@
 
 # Java class files.
 *.class
+
+aws-cloudhsm-pkcs11-examples/aws-cloudhsm-pkcs11-examples
+aws-cloudhsm-pkcs11-examples/bin
