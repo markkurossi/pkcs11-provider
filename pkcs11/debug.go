@@ -33,7 +33,7 @@ func attrValueString(attr Attribute) string {
 	}
 	switch attr.Type {
 	case CkaClass:
-		v, err := attr.Uint()
+		v, err := attr.Int()
 		if err != nil {
 			return err.Error()
 		}
@@ -43,14 +43,14 @@ func attrValueString(attr Attribute) string {
 		return string(attr.Value)
 
 	case CkaKeyType:
-		v, err := attr.Uint()
+		v, err := attr.Int()
 		if err != nil {
 			return err.Error()
 		}
 		return KeyType(v).String()
 
 	case CkaValueLen, CkaModulusBits:
-		v, err := attr.Uint()
+		v, err := attr.Int()
 		if err != nil {
 			return err.Error()
 		}

@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"math/bits"
 )
 
 // Flags that describe capabilities of a slot.
@@ -1177,20 +1178,20 @@ func (attr Attribute) Bool() (bool, error) {
 	}
 }
 
-// Uint returns the attribute value as uint64 integer number.
-func (attr Attribute) Uint() (uint64, error) {
+// Int returns the attribute value as integer number.
+func (attr Attribute) Int() (int, error) {
 	switch len(attr.Value) {
 	case 1:
-		return uint64(attr.Value[0]), nil
+		return int(attr.Value[0]), nil
 
 	case 2:
-		return uint64(HBO.Uint16(attr.Value)), nil
+		return int(HBO.Uint16(attr.Value)), nil
 
 	case 4:
-		return uint64(HBO.Uint32(attr.Value)), nil
+		return int(HBO.Uint32(attr.Value)), nil
 
 	case 8:
-		return uint64(HBO.Uint64(attr.Value)), nil
+		return int(HBO.Uint64(attr.Value)), nil
 
 	default:
 		return 0, fmt.Errorf("invalid attribute length %d", len(attr.Value))
@@ -1412,12 +1413,21 @@ func (tmpl Template) Set(t AttributeType, v []Byte) Template {
 }
 
 // SetInt sets the integer value of the attribute.
-func (tmpl Template) SetInt(t AttributeType, v uint32) Template {
-	var buf [4]byte
+func (tmpl Template) SetInt(t AttributeType, v int) Template {
+	var buf [8]byte
 
-	HBO.PutUint32(buf[:], uint32(v))
+	switch bits.UintSize {
+	case 32:
+		HBO.PutUint32(buf[:4], uint32(v))
+		return tmpl.Set(t, buf[:4])
 
-	return tmpl.Set(t, buf[:])
+	case 64:
+		HBO.PutUint64(buf[:8], uint64(v))
+		return tmpl.Set(t, buf[:8])
+
+	default:
+		panic("unexpected bits.UintSize")
+	}
 }
 
 // SetBool sets the boolean value of the attribute.
@@ -1464,14 +1474,30 @@ func (tmpl Template) OptBool(t AttributeType) (bool, error) {
 	}
 }
 
-// Uint returns the attribute value as uint64 integer number.
-func (tmpl Template) Uint(t AttributeType) (uint64, error) {
+// Int returns the attribute value as an integer number.
+func (tmpl Template) Int(t AttributeType) (int, error) {
 	for _, attr := range tmpl {
 		if attr.Type == t {
-			return attr.Uint()
+			return attr.Int()
 		}
 	}
 	return 0, ErrTemplateIncomplete
+}
+
+// OptInt returns the optional attribute value as an integer
+// number. If the attribute is not defined in the template, the
+// function returns the default value.
+func (tmpl Template) OptInt(t AttributeType, def int) int {
+	for _, attr := range tmpl {
+		if attr.Type == t {
+			v, err := attr.Int()
+			if err != nil {
+				break
+			}
+			return v
+		}
+	}
+	return def
 }
 
 // BigInt returns the attribute value as *big.Int.

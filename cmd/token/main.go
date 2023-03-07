@@ -115,6 +115,7 @@ type Session struct {
 
 // EncDec implements symmetric encrypt and decrypt operations.
 type EncDec struct {
+	Mechanism pkcs11.MechanismType
 	Block     cipher.Block
 	BlockMode cipher.BlockMode
 	AEAD      cipher.AEAD

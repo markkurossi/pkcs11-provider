@@ -21,7 +21,7 @@ type Object struct {
 // Inflate populates the object's Native member based on object class
 // and attributes.
 func (obj *Object) Inflate() error {
-	uival, err := obj.Attrs.Uint(CkaClass)
+	uival, err := obj.Attrs.Int(CkaClass)
 	if err != nil {
 		return err
 	}
@@ -39,11 +39,11 @@ func (obj *Object) Inflate() error {
 }
 
 func (obj *Object) inflatePublicKey() error {
-	uival, err := obj.Attrs.Uint(CkaKeyType)
+	ival, err := obj.Attrs.Int(CkaKeyType)
 	if err != nil {
 		return err
 	}
-	keyType := KeyType(uival)
+	keyType := KeyType(ival)
 	switch keyType {
 	case CkkRSA:
 		e, err := obj.Attrs.BigInt(CkaPublicExponent)
@@ -54,7 +54,7 @@ func (obj *Object) inflatePublicKey() error {
 		if err != nil {
 			return err
 		}
-		obj.Attrs = obj.Attrs.SetInt(CkaModulusBits, uint32(n.BitLen()))
+		obj.Attrs = obj.Attrs.SetInt(CkaModulusBits, n.BitLen())
 
 		obj.Native = &rsa.PublicKey{
 			N: n,
@@ -69,11 +69,11 @@ func (obj *Object) inflatePublicKey() error {
 }
 
 func (obj *Object) inflatePrivateKey() error {
-	uival, err := obj.Attrs.Uint(CkaKeyType)
+	ival, err := obj.Attrs.Int(CkaKeyType)
 	if err != nil {
 		return err
 	}
-	keyType := KeyType(uival)
+	keyType := KeyType(ival)
 	switch keyType {
 	case CkkRSA:
 		e, err := obj.Attrs.BigInt(CkaPublicExponent)
@@ -97,7 +97,7 @@ func (obj *Object) inflatePrivateKey() error {
 		if err != nil {
 			return err
 		}
-		obj.Attrs = obj.Attrs.SetInt(CkaModulusBits, uint32(n.BitLen()))
+		obj.Attrs = obj.Attrs.SetInt(CkaModulusBits, n.BitLen())
 
 		key := &rsa.PrivateKey{
 			PublicKey: rsa.PublicKey{

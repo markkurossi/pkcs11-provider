@@ -566,16 +566,18 @@ func (p *Provider) EncryptInit(req *pkcs11.EncryptInitReq) error {
 			return pkcs11.ErrKeySizeRange
 		}
 		p.session.Encrypt = &EncDec{
-			Block: b,
+			Mechanism: req.Mechanism.Mechanism,
+			Block:     b,
 		}
 		return nil
 
-	case pkcs11.CkmAESCBC:
+	case pkcs11.CkmAESCBC, pkcs11.CkmAESCBCPad:
 		b, err := aes.NewCipher(key)
 		if err != nil {
 			return pkcs11.ErrKeySizeRange
 		}
 		p.session.Encrypt = &EncDec{
+			Mechanism: req.Mechanism.Mechanism,
 			BlockMode: cipher.NewCBCEncrypter(b, req.Mechanism.Parameter),
 		}
 		return nil
@@ -607,14 +609,15 @@ func (p *Provider) EncryptInit(req *pkcs11.EncryptInitReq) error {
 		}
 
 		p.session.Encrypt = &EncDec{
-			AEAD: aead,
-			IV:   params.Iv,
-			AAD:  params.AAD,
+			Mechanism: req.Mechanism.Mechanism,
+			AEAD:      aead,
+			IV:        params.Iv,
+			AAD:       params.AAD,
 		}
 		return nil
 
 	default:
-		log.Printf("EncryptInit: Mechanism=%v, key=%x",
+		log.Printf("\u251c\u2500\u2500\u2524unsupported mechanism %v, key=%x",
 			req.Mechanism.Mechanism, req.Key)
 		return pkcs11.ErrMechanismInvalid
 	}
@@ -632,7 +635,38 @@ func (p *Provider) Encrypt(req *pkcs11.EncryptReq) (*pkcs11.EncryptResp, error) 
 		EncryptedDataLen: len(req.Data),
 	}
 	// Block size alignment is checked below based on the algorithm.
-	if p.session.Encrypt.AEAD != nil {
+	switch p.session.Encrypt.Mechanism {
+	case pkcs11.CkmAESCBC:
+		if len(req.Data)%p.session.Encrypt.BlockMode.BlockSize() != 0 {
+			return nil, pkcs11.ErrDataLenRange
+		}
+		if req.EncryptedDataSize == 0 {
+			// Querying output buffer size.
+			return resp, nil
+		}
+		p.session.Encrypt.BlockMode.CryptBlocks(req.Data, req.Data)
+		resp.EncryptedData = req.Data
+
+	case pkcs11.CkmAESCBCPad:
+		blockSize := p.session.Encrypt.BlockMode.BlockSize()
+		padLen := blockSize - len(req.Data)%blockSize
+		if padLen == 0 {
+			padLen = blockSize
+		}
+		resp.EncryptedDataLen = len(req.Data) + padLen
+		if req.EncryptedDataSize == 0 {
+			// Querying output buffer size.
+			return resp, nil
+		}
+		resp.EncryptedData = make([]byte, resp.EncryptedDataLen)
+		copy(resp.EncryptedData, req.Data)
+		for i := 0; i < padLen; i++ {
+			resp.EncryptedData[resp.EncryptedDataLen-1-i] = byte(i)
+		}
+		p.session.Encrypt.BlockMode.CryptBlocks(resp.EncryptedData,
+			resp.EncryptedData)
+
+	case pkcs11.CkmAESGCM:
 		if debug {
 			log.Printf("AEAD: IV: %x (%d), AAD: %x (%d)",
 				p.session.Encrypt.IV, len(p.session.Encrypt.IV),
@@ -641,7 +675,8 @@ func (p *Provider) Encrypt(req *pkcs11.EncryptReq) (*pkcs11.EncryptResp, error) 
 		p.session.Encrypt.AEAD.Seal(req.Data[:0], p.session.Encrypt.IV,
 			req.Data, p.session.Encrypt.AAD)
 		resp.EncryptedData = req.Data
-	} else {
+
+	default:
 		return nil, pkcs11.ErrFunctionNotSupported
 	}
 
@@ -660,8 +695,8 @@ func (p *Provider) EncryptUpdate(req *pkcs11.EncryptUpdateReq) (*pkcs11.EncryptU
 		EncryptedPartLen: len(req.Part),
 	}
 	// Block size alignment is checked below based on the algorithm.
-
-	if p.session.Encrypt.Block != nil {
+	switch p.session.Encrypt.Mechanism {
+	case pkcs11.CkmAESECB:
 		blockSize := p.session.Encrypt.Block.BlockSize()
 		if len(req.Part)%blockSize != 0 {
 			return nil, pkcs11.ErrDataLenRange
@@ -675,7 +710,8 @@ func (p *Provider) EncryptUpdate(req *pkcs11.EncryptUpdateReq) (*pkcs11.EncryptU
 			p.session.Encrypt.Block.Encrypt(req.Part[i:], req.Part[i:])
 		}
 		resp.EncryptedPart = req.Part
-	} else if p.session.Encrypt.BlockMode != nil {
+
+	case pkcs11.CkmAESCBC:
 		blockSize := p.session.Encrypt.BlockMode.BlockSize()
 		if len(req.Part)%blockSize != 0 {
 			return nil, pkcs11.ErrDataLenRange
@@ -687,7 +723,8 @@ func (p *Provider) EncryptUpdate(req *pkcs11.EncryptUpdateReq) (*pkcs11.EncryptU
 
 		p.session.Encrypt.BlockMode.CryptBlocks(req.Part, req.Part)
 		resp.EncryptedPart = req.Part
-	} else {
+
+	default:
 		return nil, pkcs11.ErrOperationNotInitialized
 	}
 
@@ -1029,17 +1066,14 @@ func (p *Provider) GenerateKey(req *pkcs11.GenerateKeyReq) (*pkcs11.GenerateKeyR
 	if !ok {
 		return nil, pkcs11.ErrMechanismInvalid
 	}
-	cls, err := req.Template.Uint(pkcs11.CkaClass)
-	if err != nil {
-		return nil, err
-	}
+	cls := req.Template.OptInt(pkcs11.CkaClass, int(pkcs11.CkoSecretKey))
 	if pkcs11.ObjectClass(cls) != pkcs11.CkoSecretKey {
 		return nil, pkcs11.ErrTemplateIncomplete
 	}
 
 	switch req.Mechanism.Mechanism {
 	case pkcs11.CkmAESKeyGen:
-		size, err := req.Template.Uint(pkcs11.CkaValueLen)
+		size, err := req.Template.Int(pkcs11.CkaValueLen)
 		if err != nil {
 			return nil, err
 		}
@@ -1055,7 +1089,7 @@ func (p *Provider) GenerateKey(req *pkcs11.GenerateKeyReq) (*pkcs11.GenerateKeyR
 		if err != nil {
 			return nil, err
 		}
-		if size < uint64(info.MinKeySize) || size > uint64(info.MaxKeySize) {
+		if size < int(info.MinKeySize) || size > int(info.MaxKeySize) {
 			return nil, pkcs11.ErrTemplateIncomplete
 		}
 		var storage pkcs11.Storage
@@ -1071,13 +1105,14 @@ func (p *Provider) GenerateKey(req *pkcs11.GenerateKeyReq) (*pkcs11.GenerateKeyR
 			return nil, pkcs11.ErrDeviceError
 		}
 		tmpl := req.Template
+		tmpl = tmpl.SetInt(pkcs11.CkaClass, cls)
 		tmpl = tmpl.SetBool(pkcs11.CkaToken, token)
 		tmpl = tmpl.SetBool(pkcs11.CkaSensitive, sensitive)
 		tmpl = tmpl.SetBool(pkcs11.CkaAlwaysSensitive, sensitive)
 		tmpl = tmpl.SetBool(pkcs11.CkaExtractable, extractable)
 		tmpl = tmpl.SetBool(pkcs11.CkaNeverExtractable, !extractable)
-		tmpl = tmpl.SetInt(pkcs11.CkaValueLen, uint32(size))
-		tmpl = tmpl.SetInt(pkcs11.CkaKeyType, uint32(pkcs11.CkkAES))
+		tmpl = tmpl.SetInt(pkcs11.CkaValueLen, size)
+		tmpl = tmpl.SetInt(pkcs11.CkaKeyType, int(pkcs11.CkkAES))
 
 		obj := &pkcs11.Object{
 			Attrs:  tmpl,
@@ -1117,7 +1152,7 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 	}
 	switch req.Mechanism.Mechanism {
 	case pkcs11.CkmRSAPKCSKeyPairGen, pkcs11.CkmRSAX931KeyPairGen:
-		bits, err := req.PublicKeyTemplate.Uint(pkcs11.CkaModulusBits)
+		bits, err := req.PublicKeyTemplate.Int(pkcs11.CkaModulusBits)
 		if err != nil {
 			return nil, err
 		}
@@ -1134,7 +1169,7 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 			log.Printf("e:\t%s\n", e)
 			log.Printf("token:\t%v\n", token)
 		}
-		if bits < uint64(info.MinKeySize) || bits > uint64(info.MaxKeySize) {
+		if bits < int(info.MinKeySize) || bits > int(info.MaxKeySize) {
 			return nil, pkcs11.ErrMechanismParamInvalid
 		}
 
@@ -1163,8 +1198,8 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 		privTmpl = privTmpl.Set(pkcs11.CkaModulus, key.PublicKey.N.Bytes())
 		privTmpl = privTmpl.Set(pkcs11.CkaPublicExponent, e.Bytes())
 		privTmpl = privTmpl.Set(pkcs11.CkaPrivateExponent, key.D.Bytes())
-		privTmpl = privTmpl.SetInt(pkcs11.CkaClass, uint32(pkcs11.CkoPrivateKey))
-		privTmpl = privTmpl.SetInt(pkcs11.CkaKeyType, uint32(pkcs11.CkkRSA))
+		privTmpl = privTmpl.SetInt(pkcs11.CkaClass, int(pkcs11.CkoPrivateKey))
+		privTmpl = privTmpl.SetInt(pkcs11.CkaKeyType, int(pkcs11.CkkRSA))
 
 		privObj := &pkcs11.Object{
 			Attrs: privTmpl,
@@ -1181,8 +1216,8 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 		pubTmpl := req.PublicKeyTemplate
 		pubTmpl = pubTmpl.Set(pkcs11.CkaModulus, key.PublicKey.N.Bytes())
 		pubTmpl = pubTmpl.Set(pkcs11.CkaPublicExponent, e.Bytes())
-		pubTmpl = pubTmpl.SetInt(pkcs11.CkaClass, uint32(pkcs11.CkoPublicKey))
-		pubTmpl = pubTmpl.SetInt(pkcs11.CkaKeyType, uint32(pkcs11.CkkRSA))
+		pubTmpl = pubTmpl.SetInt(pkcs11.CkaClass, int(pkcs11.CkoPublicKey))
+		pubTmpl = pubTmpl.SetInt(pkcs11.CkaKeyType, int(pkcs11.CkkRSA))
 
 		pubObj := &pkcs11.Object{
 			Attrs: pubTmpl,
