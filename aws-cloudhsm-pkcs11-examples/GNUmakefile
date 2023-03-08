@@ -1,7 +1,11 @@
 AWS := aws-cloudhsm-pkcs11-examples
 BINARIES := bin/aes_cbc bin/aes_gcm bin/aes_ecb \
 	bin/digest bin/multi_part_digest \
-	bin/find_objects
+	bin/find_objects \
+	bin/aes_generate bin/rsa_generate \
+	bin/generate_random \
+	bin/mechanism_info \
+	bin/login_state bin/session_keys
 
 CFLAGS := -Wall -Wno-pointer-sign -I$(AWS)/src/common -I$(AWS)/include/pkcs11/v2.40
 
@@ -34,6 +38,24 @@ bin/multi_part_digest: $(AWS)/src/digest/multi_part_digest.c
 	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
 
 bin/find_objects: $(AWS)/src/find_objects/find_objects.c
+	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
+
+bin/aes_generate: $(AWS)/src/generate/aes_generate.c
+	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
+
+bin/rsa_generate: $(AWS)/src/generate/rsa_generate.c
+	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
+
+bin/generate_random: $(AWS)/src/generate_random/generate_random.c
+	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
+
+bin/mechanism_info: $(AWS)/src/mechanism_info/mechanism_info.c
+	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
+
+bin/login_state: $(AWS)/src/session/login_state.c
+	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
+
+bin/session_keys: $(AWS)/src/session/session_keys.c
 	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
 
 test:
