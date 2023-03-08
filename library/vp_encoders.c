@@ -31,6 +31,7 @@ vp_encode_mechanism(VPBuffer *buf, CK_MECHANISM_PTR m)
     {
     case CKM_RSA_PKCS_KEY_PAIR_GEN:
     case CKM_RSA_PKCS:
+    case CKM_RSA_X9_31_KEY_PAIR_GEN:
     case CKM_SHA224_RSA_PKCS:
     case CKM_SHA256_RSA_PKCS:
     case CKM_SHA384_RSA_PKCS:

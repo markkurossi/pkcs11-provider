@@ -48,13 +48,10 @@ var mechanisms = map[pkcs11.MechanismType]pkcs11.MechanismInfo{
 		MaxKeySize: RSAMaxKeySize,
 		Flags:      pkcs11.CkfGenerateKeyPair,
 	},
-	pkcs11.CkmRSAPKCS: {
+	pkcs11.CkmRSAX931KeyPairGen: {
 		MinKeySize: RSAMinKeySize,
 		MaxKeySize: RSAMaxKeySize,
-		Flags: pkcs11.CkfMessageEncrypt | pkcs11.CkfMessageDecrypt |
-			pkcs11.CkfMessageSign | pkcs11.CkfMessageVerify |
-			pkcs11.CkfEncrypt | pkcs11.CkfDecrypt | pkcs11.CkfSign |
-			pkcs11.CkfVerify,
+		Flags:      pkcs11.CkfGenerateKeyPair,
 	},
 	pkcs11.CkmSHA224RSAPKCS: {
 		MinKeySize: RSAMinKeySize,
@@ -621,8 +618,7 @@ func (p *Provider) EncryptInit(req *pkcs11.EncryptInitReq) (*pkcs11.EncryptInitR
 		}
 
 		if params.TagBits != 128 {
-			log.Printf("\u251c\u2500\u2500\u2524invalid tag length %v, expected 128",
-				params.TagBits)
+			Errorf("invalid tag length %v, expected 128", params.TagBits)
 			return nil, pkcs11.ErrMechanismParamInvalid
 		}
 
@@ -635,7 +631,7 @@ func (p *Provider) EncryptInit(req *pkcs11.EncryptInitReq) (*pkcs11.EncryptInitR
 		return resp, nil
 
 	default:
-		log.Printf("\u251c\u2500\u2500\u2524unsupported mechanism %v, key=%x",
+		Errorf("unsupported mechanism %v, key=%x",
 			req.Mechanism.Mechanism, req.Key)
 		return nil, pkcs11.ErrMechanismInvalid
 	}
@@ -899,8 +895,7 @@ func (p *Provider) DecryptInit(req *pkcs11.DecryptInitReq) error {
 			return pkcs11.ErrMechanismParamInvalid
 		}
 		if params.TagBits != 128 {
-			log.Printf("\u251c\u2500\u2500\u2524invalid tag length %v, expected 128",
-				params.TagBits)
+			Errorf("invalid tag length %v, expected 128", params.TagBits)
 			return pkcs11.ErrMechanismParamInvalid
 		}
 
@@ -913,7 +908,7 @@ func (p *Provider) DecryptInit(req *pkcs11.DecryptInitReq) error {
 		return nil
 
 	default:
-		log.Printf("\u251c\u2500\u2500\u2524unsupported mechanism %v, key=%x",
+		Errorf("unsupported mechanism %v, key=%x",
 			req.Mechanism.Mechanism, req.Key)
 		return pkcs11.ErrMechanismInvalid
 	}
@@ -1421,6 +1416,7 @@ func (p *Provider) GenerateKey(req *pkcs11.GenerateKeyReq) (*pkcs11.GenerateKeyR
 func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.GenerateKeyPairResp, error) {
 	info, ok := mechanisms[req.Mechanism.Mechanism]
 	if !ok {
+		Errorf("%s: unknown mechanism", req.Mechanism.Mechanism)
 		return nil, pkcs11.ErrMechanismInvalid
 	}
 	switch req.Mechanism.Mechanism {
@@ -1550,4 +1546,10 @@ func (p *Provider) GenerateRandom(req *pkcs11.GenerateRandomReq) (*pkcs11.Genera
 		return nil, pkcs11.ErrDeviceError
 	}
 	return resp, nil
+}
+
+// Errorf reports an provider error message.
+func Errorf(format string, a ...interface{}) {
+	msg := fmt.Sprintf(format, a...)
+	log.Printf("\u251c\u2500\u2500\u2524%s", msg)
 }

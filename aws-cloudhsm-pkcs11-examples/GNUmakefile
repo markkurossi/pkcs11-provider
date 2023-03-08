@@ -1,5 +1,7 @@
 AWS := aws-cloudhsm-pkcs11-examples
-BINARIES := bin/aes_cbc bin/aes_gcm bin/aes_ecb bin/digest bin/multi_part_digest
+BINARIES := bin/aes_cbc bin/aes_gcm bin/aes_ecb \
+	bin/digest bin/multi_part_digest \
+	bin/find_objects
 
 CFLAGS := -Wall -Wno-pointer-sign -I$(AWS)/src/common -I$(AWS)/include/pkcs11/v2.40
 
@@ -29,6 +31,9 @@ bin/digest: $(AWS)/src/digest/digest.c
 	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
 
 bin/multi_part_digest: $(AWS)/src/digest/multi_part_digest.c
+	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
+
+bin/find_objects: $(AWS)/src/find_objects/find_objects.c
 	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
 
 test:
