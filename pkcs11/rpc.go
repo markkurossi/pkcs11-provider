@@ -315,6 +315,11 @@ type EncryptInitReq struct {
 	Key       ObjectHandle
 }
 
+// EncryptInitResp defines the result of C_EncryptInit.
+type EncryptInitResp struct {
+	Iv []Byte
+}
+
 // EncryptReq defines the arguments of C_Encrypt.
 type EncryptReq struct {
 	Data              []Byte
@@ -545,7 +550,7 @@ type Provider interface {
 	FindObjectsInit(req *FindObjectsInitReq) error
 	FindObjects(req *FindObjectsReq) (*FindObjectsResp, error)
 	FindObjectsFinal() error
-	EncryptInit(req *EncryptInitReq) error
+	EncryptInit(req *EncryptInitReq) (*EncryptInitResp, error)
 	Encrypt(req *EncryptReq) (*EncryptResp, error)
 	EncryptUpdate(req *EncryptUpdateReq) (*EncryptUpdateResp, error)
 	EncryptFinal(req *EncryptFinalReq) (*EncryptFinalResp, error)
@@ -695,8 +700,8 @@ func (b *Base) FindObjectsFinal() error {
 }
 
 // EncryptInit implements the Provider.EncryptInit().
-func (b *Base) EncryptInit(req *EncryptInitReq) error {
-	return ErrFunctionNotSupported
+func (b *Base) EncryptInit(req *EncryptInitReq) (*EncryptInitResp, error) {
+	return nil, ErrFunctionNotSupported
 }
 
 // Encrypt implements the Provider.Encrypt().
@@ -1087,7 +1092,11 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 		if err := Unmarshal(data, &req); err != nil {
 			return nil, err
 		}
-		return nil, p.EncryptInit(&req)
+		resp, err := p.EncryptInit(&req)
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
 
 	case 0xc0050802: // Encrypt
 		var req EncryptReq

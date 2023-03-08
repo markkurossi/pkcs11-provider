@@ -239,7 +239,9 @@ vp_buffer_get_byte_arr(VPBuffer *buf, void *data, size_t data_count)
       buf->offset += len;
       return false;
     }
-  memcpy(data, ucp, len);
+  if (data != NULL)
+    memcpy(data, ucp, len);
+
   buf->offset += len;
 
   return true;

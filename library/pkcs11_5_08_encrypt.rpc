@@ -19,13 +19,41 @@ C_EncryptInit
   CK_OBJECT_HANDLE  hKey         /* handle of encryption key */
 )
 {
-  /**
+  CK_GCM_PARAMS_PTR gcm_params = NULL;
+  CK_BYTE_PTR iv = NULL;
+  CK_ULONG iv_len = 0;
+
+  if (pMechanism->mechanism == CKM_AES_GCM
+      && pMechanism->ulParameterLen == sizeof(CK_GCM_PARAMS))
+    {
+      gcm_params = (CK_GCM_PARAMS_PTR) pMechanism->pParameter;
+      if (gcm_params == NULL)
+        {
+          vp_log(LOG_ERR, "CK_GCM_PARAMS is NULL");
+          return CKR_MECHANISM_PARAM_INVALID;
+        }
+      if (gcm_params->ulIvBits == 0)
+        {
+          iv = gcm_params->pIv;
+          iv_len = gcm_params->ulIvLen;
+        }
+    }
+
+  /** Header,Call
+   *
    * Session:
    *   CK_SESSION_HANDLE hSession
    * Inputs:
    *   CK_MECHANISM      pMechanism
    *   CK_OBJECT_HANDLE  hKey
+   * Outputs:
+   *   [CK_ULONG iv_len]CK_BYTE iv
    */
+
+  if (gcm_params != NULL && gcm_params->ulIvBits == 0)
+    gcm_params->ulIvBits = gcm_params->ulIvLen * 8;
+
+  /** Trailer */
 }
 
 /* C_Encrypt encrypts single-part data. */

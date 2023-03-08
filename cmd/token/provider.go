@@ -544,75 +544,86 @@ func (p *Provider) FindObjectsFinal() error {
 }
 
 // EncryptInit implements the Provider.EncryptInit().
-func (p *Provider) EncryptInit(req *pkcs11.EncryptInitReq) error {
+func (p *Provider) EncryptInit(req *pkcs11.EncryptInitReq) (*pkcs11.EncryptInitResp, error) {
 	if p.session == nil {
-		return pkcs11.ErrSessionHandleInvalid
+		return nil, pkcs11.ErrSessionHandleInvalid
 	}
 	if p.session.Encrypt != nil {
-		return pkcs11.ErrOperationActive
+		return nil, pkcs11.ErrOperationActive
 	}
 	obj, err := p.readObject(req.Key)
 	if err != nil {
 		log.Printf("readObject failed: key=%x, %v\n", req.Key, err)
-		return err
+		return nil, err
 	}
 	key, ok := obj.Native.([]byte)
 	if !ok {
 		log.Printf("!key: obj.Native=%v(%T)", obj.Native, obj.Native)
-		return pkcs11.ErrKeyHandleInvalid
+		return nil, pkcs11.ErrKeyHandleInvalid
 	}
 	log.Printf("\u251c\u2500\u2500\u2500\u2500\u2574mechanism: %v",
 		req.Mechanism.Mechanism)
+
+	resp := &pkcs11.EncryptInitResp{}
 
 	switch req.Mechanism.Mechanism {
 	case pkcs11.CkmAESECB:
 		b, err := aes.NewCipher(key)
 		if err != nil {
-			return pkcs11.ErrKeySizeRange
+			return nil, pkcs11.ErrKeySizeRange
 		}
 		p.session.Encrypt = &EncDec{
 			Mechanism: req.Mechanism.Mechanism,
 			Block:     b,
 			Buffer:    make([]byte, 0, b.BlockSize()),
 		}
-		return nil
+		return resp, nil
 
 	case pkcs11.CkmAESCBC, pkcs11.CkmAESCBCPad:
 		b, err := aes.NewCipher(key)
 		if err != nil {
-			return pkcs11.ErrKeySizeRange
+			return nil, pkcs11.ErrKeySizeRange
 		}
 		p.session.Encrypt = &EncDec{
 			Mechanism: req.Mechanism.Mechanism,
 			BlockMode: cipher.NewCBCEncrypter(b, req.Mechanism.Parameter),
 			Buffer:    make([]byte, 0, b.BlockSize()),
 		}
-		return nil
+		return resp, nil
 
 	case pkcs11.CkmAESGCM:
 		b, err := aes.NewCipher(key)
 		if err != nil {
-			return pkcs11.ErrKeySizeRange
+			return nil, pkcs11.ErrKeySizeRange
 		}
 		aead, err := cipher.NewGCM(b)
 		if err != nil {
-			return pkcs11.ErrDeviceError
+			return nil, pkcs11.ErrDeviceError
 		}
 		var params pkcs11.GcmParams
 		err = pkcs11.Unmarshal(req.Mechanism.Parameter, &params)
 		if err != nil {
 			log.Printf("\u251c\u2500\u2500\u2574pkcs11.Unmarshal: %v", err)
-			return pkcs11.ErrMechanismParamInvalid
+			return nil, pkcs11.ErrMechanismParamInvalid
 		}
-		if params.IvBits != 96 {
-			log.Printf("\u251c\u2500\u2500\u2574%s: invalid IV length %v, expected 96",
-				req.Mechanism.Mechanism, params.IvBits)
-			return pkcs11.ErrMechanismParamInvalid
+		if len(params.Iv) != 12 {
+			log.Printf("\u251c\u2500\u2500\u2574%s: invalid IV length %v, expected 12",
+				req.Mechanism.Mechanism, len(params.Iv))
+			return nil, pkcs11.ErrMechanismParamInvalid
 		}
+		if params.IvBits == 0 {
+			// Token generated IV.
+			_, err = rand.Read(params.Iv)
+			if err != nil {
+				return nil, pkcs11.ErrDeviceError
+			}
+			resp.Iv = params.Iv
+		}
+
 		if params.TagBits != 128 {
 			log.Printf("\u251c\u2500\u2500\u2524invalid tag length %v, expected 128",
 				params.TagBits)
-			return pkcs11.ErrMechanismParamInvalid
+			return nil, pkcs11.ErrMechanismParamInvalid
 		}
 
 		p.session.Encrypt = &EncDec{
@@ -621,12 +632,12 @@ func (p *Provider) EncryptInit(req *pkcs11.EncryptInitReq) error {
 			IV:        params.Iv,
 			AAD:       params.AAD,
 		}
-		return nil
+		return resp, nil
 
 	default:
 		log.Printf("\u251c\u2500\u2500\u2524unsupported mechanism %v, key=%x",
 			req.Mechanism.Mechanism, req.Key)
-		return pkcs11.ErrMechanismInvalid
+		return nil, pkcs11.ErrMechanismInvalid
 	}
 }
 
@@ -708,9 +719,15 @@ func (p *Provider) Encrypt(req *pkcs11.EncryptReq) (*pkcs11.EncryptResp, error) 
 				p.session.Encrypt.IV, len(p.session.Encrypt.IV),
 				p.session.Encrypt.AAD, len(p.session.Encrypt.AAD))
 		}
-		p.session.Encrypt.AEAD.Seal(req.Data[:0], p.session.Encrypt.IV,
-			req.Data, p.session.Encrypt.AAD)
-		resp.EncryptedData = req.Data
+		resp.EncryptedDataLen += p.session.Encrypt.AEAD.Overhead()
+		if req.EncryptedDataSize == 0 {
+			// Querying output buffer size.
+			return resp, nil
+		}
+		resp.EncryptedData = make([]byte, resp.EncryptedDataLen)
+		resp.EncryptedData = p.session.Encrypt.AEAD.Seal(resp.EncryptedData[:0],
+			p.session.Encrypt.IV, req.Data, p.session.Encrypt.AAD)
+		resp.EncryptedDataLen = len(resp.EncryptedData)
 
 	default:
 		p.session.Encrypt = nil
@@ -971,9 +988,18 @@ func (p *Provider) Decrypt(req *pkcs11.DecryptReq) (*pkcs11.DecryptResp, error) 
 				p.session.Decrypt.IV, len(p.session.Decrypt.IV),
 				p.session.Decrypt.AAD, len(p.session.Decrypt.AAD))
 		}
-		p.session.Decrypt.AEAD.Open(req.EncryptedData[:0], p.session.Decrypt.IV,
-			req.EncryptedData, p.session.Decrypt.AAD)
-		resp.Data = req.EncryptedData
+		if req.DataSize == 0 {
+			// Querying output buffer size.
+			return resp, nil
+		}
+		var err error
+		resp.Data, err = p.session.Decrypt.AEAD.Open(req.EncryptedData[:0],
+			p.session.Decrypt.IV, req.EncryptedData, p.session.Decrypt.AAD)
+		if err != nil {
+			p.session.Decrypt = nil
+			return nil, pkcs11.ErrFunctionFailed
+		}
+		resp.DataLen = len(resp.Data)
 
 	default:
 		p.session.Decrypt = nil

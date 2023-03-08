@@ -20,6 +20,26 @@ C_EncryptInit
   CK_OBJECT_HANDLE  hKey         /* handle of encryption key */
 )
 {
+  CK_GCM_PARAMS_PTR gcm_params = NULL;
+  CK_BYTE_PTR iv = NULL;
+  CK_ULONG iv_len = 0;
+
+  if (pMechanism->mechanism == CKM_AES_GCM
+      && pMechanism->ulParameterLen == sizeof(CK_GCM_PARAMS))
+    {
+      gcm_params = (CK_GCM_PARAMS_PTR) pMechanism->pParameter;
+      if (gcm_params == NULL)
+        {
+          vp_log(LOG_ERR, "CK_GCM_PARAMS is NULL");
+          return CKR_MECHANISM_PARAM_INVALID;
+        }
+      if (gcm_params->ulIvBits == 0)
+        {
+          iv = gcm_params->pIv;
+          iv_len = gcm_params->ulIvLen;
+        }
+    }
+
   CK_RV ret = CKR_OK;
   VPBuffer buf;
   VPIPCConn *conn = NULL;
@@ -49,6 +69,18 @@ C_EncryptInit
       vp_buffer_uninit(&buf);
       return ret;
     }
+
+  vp_buffer_get_byte_arr(&buf, iv, iv_len);
+
+  if (vp_buffer_error(&buf, &ret))
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  if (gcm_params != NULL && gcm_params->ulIvBits == 0)
+    gcm_params->ulIvBits = gcm_params->ulIvLen * 8;
+
 
   vp_buffer_uninit(&buf);
 
