@@ -277,6 +277,20 @@ func (p *Provider) CloseSession() error {
 	return nil
 }
 
+// GetSessionInfo implements the Provider.GetSessionInfo().
+func (p *Provider) GetSessionInfo() (*pkcs11.GetSessionInfoResp, error) {
+	if p.session == nil {
+		return nil, pkcs11.ErrSessionHandleInvalid
+	}
+
+	return &pkcs11.GetSessionInfoResp{
+		Info: pkcs11.SessionInfo{
+			SlotID: pkcs11.Ulong(p.session.ID),
+			Flags:  pkcs11.Ulong(p.session.Flags),
+		},
+	}, nil
+}
+
 // ImplOpenSession implements the Provider.ImplOpenSession().
 func (p *Provider) ImplOpenSession(req *pkcs11.ImplOpenSessionReq) error {
 	parent, err := LookupProvider(req.ProviderID)

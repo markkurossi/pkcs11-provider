@@ -98,6 +98,14 @@ type MechanismInfo struct {
 	Flags      Flags
 }
 
+// SessionInfo defines compound protocol type CK_SESSION_INFO.
+type SessionInfo struct {
+	SlotID      Ulong
+	State       Ulong
+	Flags       Ulong
+	DeviceError Ulong
+}
+
 // SlotInfo defines compound protocol type CK_SLOT_INFO.
 type SlotInfo struct {
 	SlotDescription [64]UTF8Char
@@ -238,6 +246,11 @@ type OpenSessionReq struct {
 // OpenSessionResp defines the result of C_OpenSession.
 type OpenSessionResp struct {
 	Session SessionHandle
+}
+
+// GetSessionInfoResp defines the result of C_GetSessionInfo.
+type GetSessionInfoResp struct {
+	Info SessionInfo
 }
 
 // LoginReq defines the arguments of C_Login.
@@ -540,6 +553,7 @@ type Provider interface {
 	SetPIN(req *SetPINReq) error
 	OpenSession(req *OpenSessionReq) (*OpenSessionResp, error)
 	CloseSession() error
+	GetSessionInfo() (*GetSessionInfoResp, error)
 	Login(req *LoginReq) error
 	Logout() error
 	CreateObject(req *CreateObjectReq) (*CreateObjectResp, error)
@@ -647,6 +661,11 @@ func (b *Base) OpenSession(req *OpenSessionReq) (*OpenSessionResp, error) {
 // CloseSession implements the Provider.CloseSession().
 func (b *Base) CloseSession() error {
 	return ErrFunctionNotSupported
+}
+
+// GetSessionInfo implements the Provider.GetSessionInfo().
+func (b *Base) GetSessionInfo() (*GetSessionInfoResp, error) {
+	return nil, ErrFunctionNotSupported
 }
 
 // Login implements the Provider.Login().
@@ -834,6 +853,7 @@ var msgTypeNames = map[Type]string{
 	0xc0050509: "SetPIN",
 	0xc0050601: "OpenSession",
 	0xc0050602: "CloseSession",
+	0xc0050604: "GetSessionInfo",
 	0xc0050608: "Login",
 	0xc005060a: "Logout",
 	0xc0050701: "CreateObject",
@@ -1004,6 +1024,13 @@ func call(p Provider, msgType Type, data []byte) ([]byte, error) {
 
 	case 0xc0050602: // CloseSession
 		return nil, p.CloseSession()
+
+	case 0xc0050604: // GetSessionInfo
+		resp, err := p.GetSessionInfo()
+		if err != nil {
+			return nil, err
+		}
+		return Marshal(resp)
 
 	case 0xc0050608: // Login
 		var req LoginReq

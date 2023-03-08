@@ -249,7 +249,46 @@ C_GetSessionInfo
   CK_SESSION_INFO_PTR pInfo      /* receives session info */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  CK_RV ret = CKR_OK;
+  VPBuffer buf;
+  VPIPCConn *conn = NULL;
+
+  VP_FUNCTION_ENTER;
+
+  /* Lookup session by hSession */
+  conn = vp_session(hSession, &ret);
+  if (ret != CKR_OK)
+    return ret;
+
+  vp_buffer_init(&buf);
+  vp_buffer_add_uint32(&buf, 0xc0050604);
+  vp_buffer_add_space(&buf, 4);
+
+  ret = vp_ipc_tx(conn, &buf);
+  if (ret != CKR_OK)
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  {
+    CK_SESSION_INFO *iel = pInfo;
+
+    iel->slotID = vp_buffer_get_uint32(&buf);
+    iel->state = vp_buffer_get_uint32(&buf);
+    iel->flags = vp_buffer_get_uint32(&buf);
+    iel->ulDeviceError = vp_buffer_get_uint32(&buf);
+  }
+
+  if (vp_buffer_error(&buf, &ret))
+    {
+      vp_buffer_uninit(&buf);
+      return ret;
+    }
+
+  vp_buffer_uninit(&buf);
+
+  return ret;
 }
 
 /* C_SessionCancel terminates active session based operations. */

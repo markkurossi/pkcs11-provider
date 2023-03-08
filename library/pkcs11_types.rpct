@@ -71,6 +71,13 @@ type CK_TOKEN_INFO struct {
   [16]CK_CHAR     utcTime
 }
 
+type CK_SESSION_INFO struct {
+  CK_ULONG slotID
+  CK_ULONG state
+  CK_ULONG flags
+  CK_ULONG ulDeviceError
+}
+
 type CK_MECHANISM_INFO struct {
   CK_ULONG ulMinKeySize
   CK_ULONG ulMaxKeySize

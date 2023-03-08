@@ -204,7 +204,12 @@ C_GetSessionInfo
   CK_SESSION_INFO_PTR pInfo      /* receives session info */
 )
 {
-  VP_FUNCTION_NOT_SUPPORTED;
+  /**
+   * Session:
+   *   CK_SESSION_HANDLE hSession
+   * Outputs:
+   *   CK_SESSION_INFO   pInfo
+   */
 }
 
 /* C_SessionCancel terminates active session based operations. */
