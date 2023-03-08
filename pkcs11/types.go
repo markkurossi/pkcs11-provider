@@ -1240,6 +1240,22 @@ func (c ObjectClass) String() string {
 	return fmt.Sprintf("{ObjectClass %d}", c)
 }
 
+// User types.
+const (
+	CkuSO UserType = iota
+	CkuUser
+	CkuContextSpecific
+)
+
+// Session states.
+const (
+	CksROPublicSession Ulong = iota
+	CksROUserFunctions
+	CksRWPublicSession
+	CksRWUserFunctions
+	CksRWSOFunctions
+)
+
 // Key types.
 const (
 	CkkRSA            KeyType = 0x00000000

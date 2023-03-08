@@ -32,6 +32,7 @@ var (
 		Minor: 1,
 	}
 	manufacturerID = []pkcs11.UTF8Char("mtr@iki.fi")
+	defaultState   = pkcs11.CksRWPublicSession
 )
 
 // Mechanimsm parameters.
@@ -146,10 +147,18 @@ type Provider struct {
 	parent  *Provider
 	storage pkcs11.Storage
 	session *Session
+
+	// Just a single slot.
+	loggedIn   bool
+	loggedUser pkcs11.UserType
+	state      pkcs11.Ulong
 }
 
 // Initialize implements pkcs11.Provider.Initialize().
 func (p *Provider) Initialize() (*pkcs11.InitializeResp, error) {
+	p.loggedIn = false
+	p.state = defaultState
+
 	return &pkcs11.InitializeResp{
 		ProviderID: p.id,
 	}, nil
@@ -286,6 +295,7 @@ func (p *Provider) GetSessionInfo() (*pkcs11.GetSessionInfoResp, error) {
 	return &pkcs11.GetSessionInfoResp{
 		Info: pkcs11.SessionInfo{
 			SlotID: pkcs11.Ulong(p.session.ID),
+			State:  p.state,
 			Flags:  pkcs11.Ulong(p.session.Flags),
 		},
 	}, nil
@@ -310,11 +320,33 @@ func (p *Provider) ImplOpenSession(req *pkcs11.ImplOpenSessionReq) error {
 // Login implements the Provider.Login().
 func (p *Provider) Login(req *pkcs11.LoginReq) error {
 	log.Printf("Login: UserType=%v, Pin=%v", req.UserType, string(req.Pin))
+	if p.loggedIn {
+		if p.loggedUser == req.UserType {
+			return pkcs11.ErrUserAlreadyLoggedIn
+		}
+		return pkcs11.ErrUserAnotherAlreadyLoggedIn
+	}
+	switch req.UserType {
+	case pkcs11.CkuSO:
+		p.state = pkcs11.CksRWSOFunctions
+
+	case pkcs11.CkuUser:
+		p.state = pkcs11.CksRWUserFunctions
+
+	default:
+		p.state = pkcs11.CksROPublicSession
+	}
+
 	return nil
 }
 
 // Logout implements the Provider.Logout().
 func (p *Provider) Logout() error {
+	if !p.loggedIn {
+		return pkcs11.ErrUserNotLoggedIn
+	}
+	p.state = defaultState
+
 	return nil
 }
 
