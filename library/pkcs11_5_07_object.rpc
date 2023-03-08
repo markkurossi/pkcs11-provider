@@ -167,11 +167,12 @@ C_FindObjects
 {
   /**
    * Session:
-   *                            CK_SESSION_HANDLE hSession
+   *                              CK_SESSION_HANDLE hSession
    * Inputs:
-   *                            CK_ULONG          ulMaxObjectCount
+   *                              CK_ULONG          ulMaxObjectCount
    * Outputs:
-   *   [CK_ULONG pulObjectCount]CK_OBJECT_HANDLE  phObject?
+   *   [CK_ULONG ulMaxObjectCount]CK_OBJECT_HANDLE  phObject
+   *                              CK_ULONG          pulObjectCount
    */
 }
 

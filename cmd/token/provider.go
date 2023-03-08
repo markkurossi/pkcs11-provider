@@ -526,8 +526,8 @@ func (p *Provider) FindObjects(req *pkcs11.FindObjectsReq) (*pkcs11.FindObjectsR
 	p.session.FindObjects.Handles = p.session.FindObjects.Handles[count:]
 
 	return &pkcs11.FindObjectsResp{
-		ObjectLen: count,
-		Object:    result,
+		Object:      result,
+		ObjectCount: pkcs11.Ulong(count),
 	}, nil
 }
 

@@ -423,25 +423,8 @@ C_FindObjects
       return ret;
     }
 
-  {
-    uint32_t count = vp_buffer_get_uint32(&buf);
-
-    if (phObject == NULL)
-      {
-        *pulObjectCount = count;
-      }
-    else if (count > *pulObjectCount)
-      {
-        *pulObjectCount = count;
-        vp_buffer_uninit(&buf);
-        return CKR_BUFFER_TOO_SMALL;
-      }
-    else
-      {
-        *pulObjectCount = count;
-        vp_buffer_get_uint32_arr(&buf, phObject, count);
-      }
-  }
+  vp_buffer_get_uint32_arr(&buf, phObject, ulMaxObjectCount);
+  *pulObjectCount = vp_buffer_get_uint32(&buf);
 
   if (vp_buffer_error(&buf, &ret))
     {

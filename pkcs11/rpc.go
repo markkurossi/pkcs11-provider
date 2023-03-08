@@ -305,8 +305,8 @@ type FindObjectsReq struct {
 
 // FindObjectsResp defines the result of C_FindObjects.
 type FindObjectsResp struct {
-	ObjectLen int
-	Object    []ObjectHandle
+	Object      []ObjectHandle
+	ObjectCount Ulong
 }
 
 // EncryptInitReq defines the arguments of C_EncryptInit.
