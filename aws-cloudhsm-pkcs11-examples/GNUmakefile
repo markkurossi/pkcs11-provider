@@ -2,7 +2,7 @@ AWS := aws-cloudhsm-pkcs11-examples
 BINARIES := bin/aes_cbc bin/aes_gcm bin/aes_ecb \
 	bin/digest bin/multi_part_digest \
 	bin/find_objects \
-	bin/aes_generate bin/rsa_generate \
+	bin/aes_generate bin/ec_generate bin/rsa_generate \
 	bin/generate_random \
 	bin/mechanism_info \
 	bin/login_state \
@@ -43,6 +43,9 @@ bin/find_objects: $(AWS)/src/find_objects/find_objects.c
 	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
 
 bin/aes_generate: $(AWS)/src/generate/aes_generate.c
+	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
+
+bin/ec_generate: $(AWS)/src/generate/ec_generate.c
 	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
 
 bin/rsa_generate: $(AWS)/src/generate/rsa_generate.c
