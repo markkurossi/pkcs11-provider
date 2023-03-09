@@ -76,7 +76,7 @@ $ make test
    - [X] generate_random/generate_random.c
    - [ ] attributes/attributes_cmd.c
    - [X] generate/rsa_generate.c
-   - [ ] generate/ec_generate.c
+   - [X] generate/ec_generate.c
    - [X] generate/aes_generate.c
    - [X] find_objects/find_objects.c
    - [ ] wrapping/unwrap_with_template.c
