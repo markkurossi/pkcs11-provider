@@ -1249,7 +1249,7 @@ const (
 
 // Session states.
 const (
-	CksROPublicSession Ulong = iota
+	CksROPublicSession State = iota
 	CksROUserFunctions
 	CksRWPublicSession
 	CksRWUserFunctions

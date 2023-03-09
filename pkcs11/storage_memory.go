@@ -108,6 +108,9 @@ func (s *MemoryStorage) Delete(h ObjectHandle) error {
 
 // Find implements Storage.Find().
 func (s *MemoryStorage) Find(t Template) (result []ObjectHandle, err error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	for handle, obj := range s.objects {
 		if obj.Attrs.Match(t) {
 			result = append(result, handle)

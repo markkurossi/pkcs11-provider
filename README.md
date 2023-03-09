@@ -63,7 +63,6 @@ $ make test
    - [ ] Non-volatile token storage
    - [ ] Token configuration file
    - [ ] Test compatibility with Firefox
-   - [ ] Cleanup provider and session handling
  - [ ] Test compatibility with [aws-cloudhsm-pkcs11-examples](https://github.com/aws-samples/aws-cloudhsm-pkcs11-examples)
    - [ ] destroy/destroy_cmd.c
    - [ ] tools/import_pub_key.c
@@ -93,7 +92,7 @@ $ make test
    - [X] encrypt/aes_ecb.c
    - [ ] sign/multi_part_sign.c
    - [ ] sign/sign.c
-   - [ ] session/login_state.c
+   - [X] session/login_state.c
    - [ ] session/session_keys.c
  - [ ] Crypto provider with Go:
    - [X] Object search and enumeration

@@ -21,6 +21,7 @@ type CK_SLOT_ID_PTR     *uint32
 type CK_MECHANISM_TYPE   Ulong
 type CK_USER_TYPE        uint32
 type CK_KEY_TYPE         uint32
+type CK_STATE            uint32
 
 type CK_ATTRIBUTE struct {
                        CK_ATTRIBUTE_TYPE type
@@ -73,7 +74,7 @@ type CK_TOKEN_INFO struct {
 
 type CK_SESSION_INFO struct {
   CK_ULONG slotID
-  CK_ULONG state
+  CK_STATE state
   CK_ULONG flags
   CK_ULONG ulDeviceError
 }

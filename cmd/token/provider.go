@@ -19,6 +19,7 @@ import (
 	"regexp"
 	"runtime"
 	"strconv"
+	"sync"
 
 	"github.com/markkurossi/go-libs/uuid"
 	"github.com/markkurossi/pkcs11-provider/pkcs11"
@@ -147,11 +148,12 @@ type Provider struct {
 	parent  *Provider
 	storage pkcs11.Storage
 	session *Session
+	m       sync.Mutex
 
 	// Just a single slot.
 	loggedIn   bool
 	loggedUser pkcs11.UserType
-	state      pkcs11.Ulong
+	state      pkcs11.State
 }
 
 // Initialize implements pkcs11.Provider.Initialize().
@@ -162,6 +164,16 @@ func (p *Provider) Initialize() (*pkcs11.InitializeResp, error) {
 	return &pkcs11.InitializeResp{
 		ProviderID: p.id,
 	}, nil
+}
+
+// Lock locks the provider mutex.
+func (p *Provider) Lock() {
+	p.m.Lock()
+}
+
+// Unlock unlocks the provider mutex.
+func (p *Provider) Unlock() {
+	p.m.Unlock()
 }
 
 // GetInfo implements the Provider.GetInfo().
@@ -291,11 +303,13 @@ func (p *Provider) GetSessionInfo() (*pkcs11.GetSessionInfoResp, error) {
 	if p.session == nil {
 		return nil, pkcs11.ErrSessionHandleInvalid
 	}
+	p.parent.Lock()
+	defer p.parent.Unlock()
 
 	return &pkcs11.GetSessionInfoResp{
 		Info: pkcs11.SessionInfo{
 			SlotID: pkcs11.Ulong(p.session.ID),
-			State:  p.state,
+			State:  p.parent.state,
 			Flags:  pkcs11.Ulong(p.session.Flags),
 		},
 	}, nil
@@ -317,24 +331,41 @@ func (p *Provider) ImplOpenSession(req *pkcs11.ImplOpenSessionReq) error {
 	return nil
 }
 
+func mask(val string) string {
+	var result string
+
+	for i := 0; i < len(val); i++ {
+		result += "*"
+	}
+
+	return result
+}
+
 // Login implements the Provider.Login().
 func (p *Provider) Login(req *pkcs11.LoginReq) error {
-	log.Printf("Login: UserType=%v, Pin=%v", req.UserType, string(req.Pin))
-	if p.loggedIn {
-		if p.loggedUser == req.UserType {
+	log.Printf("Login: UserType=%v, Pin=%v",
+		req.UserType, mask(string(req.Pin)))
+	p.parent.Lock()
+	defer p.parent.Unlock()
+
+	if p.parent.loggedIn {
+		if p.parent.loggedUser == req.UserType {
 			return pkcs11.ErrUserAlreadyLoggedIn
 		}
 		return pkcs11.ErrUserAnotherAlreadyLoggedIn
 	}
+	p.parent.loggedIn = true
+	p.parent.loggedUser = req.UserType
+
 	switch req.UserType {
 	case pkcs11.CkuSO:
-		p.state = pkcs11.CksRWSOFunctions
+		p.parent.state = pkcs11.CksRWSOFunctions
 
 	case pkcs11.CkuUser:
-		p.state = pkcs11.CksRWUserFunctions
+		p.parent.state = pkcs11.CksRWUserFunctions
 
 	default:
-		p.state = pkcs11.CksROPublicSession
+		p.parent.state = pkcs11.CksROPublicSession
 	}
 
 	return nil
@@ -342,10 +373,14 @@ func (p *Provider) Login(req *pkcs11.LoginReq) error {
 
 // Logout implements the Provider.Logout().
 func (p *Provider) Logout() error {
-	if !p.loggedIn {
+	p.parent.Lock()
+	defer p.parent.Unlock()
+
+	if !p.parent.loggedIn {
 		return pkcs11.ErrUserNotLoggedIn
 	}
-	p.state = defaultState
+	p.parent.loggedIn = false
+	p.parent.state = defaultState
 
 	return nil
 }

@@ -47,6 +47,9 @@ type SlotID Ulong
 // SlotIDPtr defines basic protocol type CK_SLOT_ID_PTR.
 type SlotIDPtr uint32
 
+// State defines basic protocol type CK_STATE.
+type State uint32
+
 // Ulong defines basic protocol type CK_ULONG.
 type Ulong uint32
 
@@ -101,7 +104,7 @@ type MechanismInfo struct {
 // SessionInfo defines compound protocol type CK_SESSION_INFO.
 type SessionInfo struct {
 	SlotID      Ulong
-	State       Ulong
+	State       State
 	Flags       Ulong
 	DeviceError Ulong
 }
