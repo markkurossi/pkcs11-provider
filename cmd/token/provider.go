@@ -1683,8 +1683,14 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 			return nil, err
 		}
 		var curve elliptic.Curve
-		if bytes.Compare(params, secp256r1) == 0 {
+		if bytes.Compare(params, secp224r1) == 0 {
+			curve = elliptic.P224()
+		} else if bytes.Compare(params, secp256r1) == 0 {
 			curve = elliptic.P256()
+		} else if bytes.Compare(params, secp384r1) == 0 {
+			curve = elliptic.P384()
+		} else if bytes.Compare(params, secp521r1) == 0 {
+			curve = elliptic.P521()
 		} else {
 			return nil, pkcs11.ErrMechanismParamInvalid
 		}
