@@ -7,8 +7,11 @@
 package main
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
@@ -40,9 +43,44 @@ var (
 const (
 	RSAMinKeySize = 512
 	RSAMaxKeySize = 8192
+	ECMinKeySize  = 224
+	ECMaxKeySize  = 521
 	AESMinKeySize = 16
 	AESMaxKeySize = 32
 )
+
+var (
+	/* {1 3 132 0 33} */
+	secp224r1 = []byte{
+		0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x21,
+	}
+
+	/* {1 2 840 10045 3 1 7} */
+	secp256r1 = []byte{
+		0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07,
+	}
+	/* {1 3 132 0 34} */
+	secp384r1 = []byte{
+		0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x22,
+	}
+	/* {1 3 132 0 35} */
+	secp521r1 = []byte{
+		0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x23,
+	}
+)
+
+func signatureLen(privateKey interface{}) int {
+	switch priv := privateKey.(type) {
+	case *rsa.PrivateKey:
+		return priv.PublicKey.Size()
+
+	case *ecdsa.PrivateKey:
+		return len(priv.D.Bytes())*2 + 8
+
+	default:
+		panic(fmt.Sprintf("unsupported key %v(%T)", privateKey, privateKey))
+	}
+}
 
 var mechanisms = map[pkcs11.MechanismType]pkcs11.MechanismInfo{
 	pkcs11.CkmRSAPKCSKeyPairGen: {
@@ -98,6 +136,11 @@ var mechanisms = map[pkcs11.MechanismType]pkcs11.MechanismInfo{
 	},
 	pkcs11.CkmSHA512: {
 		Flags: pkcs11.CkfDigest,
+	},
+	pkcs11.CkmECKeyPairGen: {
+		MinKeySize: ECMinKeySize,
+		MaxKeySize: ECMaxKeySize,
+		Flags:      pkcs11.CkfGenerateKeyPair,
 	},
 	pkcs11.CkmAESKeyGen: {
 		MinKeySize: AESMinKeySize,
@@ -1227,26 +1270,41 @@ func (p *Provider) Sign(req *pkcs11.SignReq) (*pkcs11.SignResp, error) {
 
 	switch priv := sign.Key.(type) {
 	case *rsa.PrivateKey:
-		resp.SignatureLen = priv.PublicKey.Size()
 		if req.SignatureSize == 0 {
+			resp.SignatureLen = signatureLen(priv)
 			return resp, nil
 		}
 		sign.Digest.Write(req.Data)
 		digest := sign.Digest.Sum(nil)
 		signature, err = rsa.SignPKCS1v15(rand.Reader, priv, sign.Hash, digest)
 		if err != nil {
-			log.Printf("Sign: rsa.SignPKCS1v15: %s", err)
+			Errorf("Sign: rsa.SignPKCS1v15: %s", err)
+			p.session.Sign = nil
+			return nil, pkcs11.ErrFunctionFailed
+		}
+
+	case *ecdsa.PrivateKey:
+		if req.SignatureSize == 0 {
+			resp.SignatureLen = signatureLen(priv)
+			return resp, nil
+		}
+		sign.Digest.Write(req.Data)
+		digest := sign.Digest.Sum(nil)
+		signature, err = ecdsa.SignASN1(rand.Reader, priv, digest)
+		if err != nil {
+			Errorf("Sign: ecdsa.SignASN1: %s", err)
 			p.session.Sign = nil
 			return nil, pkcs11.ErrFunctionFailed
 		}
 
 	default:
-		log.Printf("Sign: sign not supported for key %T", priv)
+		Errorf("Sign: sign not supported for key %T", priv)
 		p.session.Sign = nil
 		return nil, pkcs11.ErrDeviceError
 	}
 
 	resp.Signature = signature
+	resp.SignatureLen = len(signature)
 	p.session.Sign = nil
 
 	return resp, nil
@@ -1281,25 +1339,39 @@ func (p *Provider) SignFinal(req *pkcs11.SignFinalReq) (*pkcs11.SignFinalResp, e
 
 	switch priv := sign.Key.(type) {
 	case *rsa.PrivateKey:
-		resp.SignatureLen = priv.PublicKey.Size()
 		if req.SignatureSize == 0 {
+			resp.SignatureLen = signatureLen(priv)
 			return resp, nil
 		}
 		digest := sign.Digest.Sum(nil)
 		signature, err = rsa.SignPKCS1v15(rand.Reader, priv, sign.Hash, digest)
 		if err != nil {
-			log.Printf("SignFinal: rsa.SignPKCS1v15: %s", err)
+			Errorf("SignFinal: rsa.SignPKCS1v15: %s", err)
+			p.session.Sign = nil
+			return nil, pkcs11.ErrFunctionFailed
+		}
+
+	case *ecdsa.PrivateKey:
+		if req.SignatureSize == 0 {
+			resp.SignatureLen = signatureLen(priv)
+			return resp, nil
+		}
+		digest := sign.Digest.Sum(nil)
+		signature, err = ecdsa.SignASN1(rand.Reader, priv, digest)
+		if err != nil {
+			Errorf("Sign: ecdsa.SignASN1: %s", err)
 			p.session.Sign = nil
 			return nil, pkcs11.ErrFunctionFailed
 		}
 
 	default:
-		log.Printf("SignFinal: sign not supported for key %T", priv)
+		Errorf("SignFinal: sign not supported for key %T", priv)
 		p.session.Sign = nil
 		return nil, pkcs11.ErrDeviceError
 	}
 
 	resp.Signature = signature
+	resp.SignatureLen = len(signature)
 	p.session.Sign = nil
 
 	return resp, nil
@@ -1352,8 +1424,17 @@ func (p *Provider) Verify(req *pkcs11.VerifyReq) error {
 			return pkcs11.ErrSignatureInvalid
 		}
 
+	case *ecdsa.PublicKey:
+		verify.Digest.Write(req.Data)
+		digest := verify.Digest.Sum(nil)
+		if !ecdsa.VerifyASN1(pub, digest, req.Signature) {
+			Errorf("Verify: ecdsa.VerifyASN1 failed")
+			p.session.Verify = nil
+			return pkcs11.ErrSignatureInvalid
+		}
+
 	default:
-		log.Printf("Verify: verify not supported for key %T", pub)
+		Errorf("Verify: verify not supported for key %T", pub)
 		p.session.Verify = nil
 		return pkcs11.ErrDeviceError
 	}
@@ -1393,13 +1474,21 @@ func (p *Provider) VerifyFinal(req *pkcs11.VerifyFinalReq) error {
 		digest := verify.Digest.Sum(nil)
 		err := rsa.VerifyPKCS1v15(pub, verify.Hash, digest, req.Signature)
 		if err != nil {
-			log.Printf("VerifyFinal: rsa.VerifyPKCS1v15: %s", err)
+			Errorf("rsa.VerifyPKCS1v15: %s", err)
+			p.session.Verify = nil
+			return pkcs11.ErrSignatureInvalid
+		}
+
+	case *ecdsa.PublicKey:
+		digest := verify.Digest.Sum(nil)
+		if !ecdsa.VerifyASN1(pub, digest, req.Signature) {
+			Errorf("ecdsa.VerifyASN1 failed")
 			p.session.Verify = nil
 			return pkcs11.ErrSignatureInvalid
 		}
 
 	default:
-		log.Printf("VerifyFinal: verify not supported for key %T", pub)
+		Errorf("verify not supported for key %T", pub)
 		p.session.Verify = nil
 		return pkcs11.ErrDeviceError
 	}
@@ -1500,6 +1589,17 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 		Errorf("%s: unknown mechanism", req.Mechanism.Mechanism)
 		return nil, pkcs11.ErrMechanismInvalid
 	}
+	token, err := req.PrivateKeyTemplate.OptBool(pkcs11.CkaToken)
+	if err != nil {
+		return nil, err
+	}
+	var storage pkcs11.Storage
+	if token {
+		storage = p.parent.storage
+	} else {
+		storage = p.session.storage
+	}
+
 	switch req.Mechanism.Mechanism {
 	case pkcs11.CkmRSAPKCSKeyPairGen, pkcs11.CkmRSAX931KeyPairGen:
 		bits, err := req.PublicKeyTemplate.Int(pkcs11.CkaModulusBits)
@@ -1507,10 +1607,6 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 			return nil, err
 		}
 		e, err := req.PublicKeyTemplate.BigInt(pkcs11.CkaPublicExponent)
-		if err != nil {
-			return nil, err
-		}
-		token, err := req.PrivateKeyTemplate.OptBool(pkcs11.CkaToken)
 		if err != nil {
 			return nil, err
 		}
@@ -1523,16 +1619,9 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 			return nil, pkcs11.ErrMechanismParamInvalid
 		}
 
-		var storage pkcs11.Storage
-		if token {
-			storage = p.parent.storage
-		} else {
-			storage = p.session.storage
-		}
-
 		key, err := rsa.GenerateKey(rand.Reader, int(bits))
 		if err != nil {
-			log.Printf("rsa.GenerateKey failed: %s", err)
+			Errorf("rsa.GenerateKey failed: %s", err)
 			return nil, pkcs11.ErrDeviceError
 		}
 
@@ -1588,22 +1677,80 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 			PrivateKey: privHandle,
 		}, nil
 
+	case pkcs11.CkmECKeyPairGen:
+		params, err := req.PublicKeyTemplate.OptBytes(pkcs11.CkaECParams)
+		if err != nil {
+			return nil, err
+		}
+		var curve elliptic.Curve
+		if bytes.Compare(params, secp256r1) == 0 {
+			curve = elliptic.P256()
+		} else {
+			return nil, pkcs11.ErrMechanismParamInvalid
+		}
+		key, err := ecdsa.GenerateKey(curve, rand.Reader)
+		if err != nil {
+			Errorf("ecdsa.GenerateKey failed: %s", err)
+			return nil, pkcs11.ErrDeviceError
+		}
+		privTmpl := req.PrivateKeyTemplate
+		privTmpl = privTmpl.SetInt(pkcs11.CkaClass, int(pkcs11.CkoPrivateKey))
+		privTmpl = privTmpl.SetInt(pkcs11.CkaKeyType, int(pkcs11.CkkEC))
+		privTmpl = privTmpl.Set(pkcs11.CkaECParams, params)
+
+		privObj := &pkcs11.Object{
+			Attrs:  privTmpl,
+			Native: key,
+		}
+		err = privObj.Inflate()
+		if err != nil {
+			return nil, err
+		}
+		privHandle, err := storage.Create(privObj)
+		if err != nil {
+			return nil, err
+		}
+
+		q := elliptic.Marshal(curve, key.X, key.Y)
+
+		pubTmpl := req.PublicKeyTemplate
+		pubTmpl = pubTmpl.SetInt(pkcs11.CkaClass, int(pkcs11.CkoPublicKey))
+		pubTmpl = pubTmpl.SetInt(pkcs11.CkaKeyType, int(pkcs11.CkkEC))
+		pubTmpl = pubTmpl.Set(pkcs11.CkaECPoint, q)
+
+		pubObj := &pkcs11.Object{
+			Attrs:  pubTmpl,
+			Native: &key.PublicKey,
+		}
+		err = pubObj.Inflate()
+		if err != nil {
+			storage.Delete(privHandle)
+			return nil, err
+		}
+		pubHandle, err := storage.Create(pubObj)
+		if err != nil {
+			storage.Delete(privHandle)
+			return nil, err
+		}
+		if false {
+			log.Printf("GenerateKey: %s", req.Mechanism)
+			log.Printf(" - PublicKey:")
+			pubObj.Attrs.Print()
+			log.Printf(" - PrivateKey:")
+			privObj.Attrs.Print()
+		}
+
+		return &pkcs11.GenerateKeyPairResp{
+			PublicKey:  pubHandle,
+			PrivateKey: privHandle,
+		}, nil
+
 	default:
 		log.Printf("GenerateKeyPair: %s", req.Mechanism)
 		log.Printf("PublicKeyTemplate:")
-		for idx, attr := range req.PublicKeyTemplate {
-			log.Printf(" - %d: %s\n", idx, attr.Type)
-			if len(attr.Value) > 0 {
-				log.Printf("%s", hex.Dump(attr.Value))
-			}
-		}
+		req.PublicKeyTemplate.Print()
 		log.Printf("PrivateKeyTemplate:")
-		for idx, attr := range req.PrivateKeyTemplate {
-			log.Printf(" - %d: %s\n", idx, attr.Type)
-			if len(attr.Value) > 0 {
-				log.Printf("%s", hex.Dump(attr.Value))
-			}
-		}
+		req.PrivateKeyTemplate.Print()
 
 		return nil, pkcs11.ErrMechanismInvalid
 	}

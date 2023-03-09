@@ -5,7 +5,9 @@ BINARIES := bin/aes_cbc bin/aes_gcm bin/aes_ecb \
 	bin/aes_generate bin/rsa_generate \
 	bin/generate_random \
 	bin/mechanism_info \
-	bin/login_state bin/session_keys
+	bin/login_state \
+	bin/sign bin/multi_part_sign
+#bin/session_keys
 
 CFLAGS := -Wall -Wno-pointer-sign -I$(AWS)/src/common -I$(AWS)/include/pkcs11/v2.40
 
@@ -56,6 +58,12 @@ bin/login_state: $(AWS)/src/session/login_state.c
 	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
 
 bin/session_keys: $(AWS)/src/session/session_keys.c
+	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
+
+bin/sign: $(AWS)/src/sign/rsa_sign.c $(AWS)/src/sign/ec_sign.c $(AWS)/src/sign/common.c $(AWS)/src/sign/sign.c
+	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
+
+bin/multi_part_sign: $(AWS)/src/sign/rsa_sign.c $(AWS)/src/sign/ec_sign.c $(AWS)/src/sign/common.c $(AWS)/src/sign/multi_part_sign.c
 	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
 
 test:

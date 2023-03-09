@@ -40,6 +40,8 @@ vp_encode_mechanism(VPBuffer *buf, CK_MECHANISM_PTR m)
     case CKM_SHA256:
     case CKM_SHA384:
     case CKM_SHA512:
+    case CKM_EC_KEY_PAIR_GEN:
+    case CKM_ECDSA_SHA512:
     case CKM_AES_KEY_GEN:
     case CKM_AES_ECB:
       if (m->ulParameterLen != 0)

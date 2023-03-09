@@ -64,7 +64,7 @@ func (obj *Object) inflatePublicKey() error {
 
 	default:
 		log.Printf("\u251c\u2574inflatePublicKey: %s", keyType)
-		return ErrAttributeValueInvalid
+		return nil
 	}
 }
 
@@ -117,7 +117,7 @@ func (obj *Object) inflatePrivateKey() error {
 
 	default:
 		log.Printf("\u251c\u2574inflatePrivateKey: %s", keyType)
-		return ErrAttributeValueInvalid
+		return nil
 	}
 }
 
