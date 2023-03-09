@@ -40,6 +40,22 @@ $ cd ~/work/pkcs11-testing
 $ ./pkcs11-testing --module ~/go/src/github.com/markkurossi/pkcs11-provider/library/libvpkcs11.so --slot 0 --pin 1111 --test-all
 ```
 
+Java's SunPKCS11 provider:
+
+``` sh
+$ cd java
+$ javac PKCS11Test
+$ java PKCS11Test
+```
+
+AWS CloudHSM examples:
+
+``` sh
+$ cd aws-cloudhsm-pkcs11-examples
+$ make
+$ make test
+```
+
 # TODO
 
  - [ ] Framework:
@@ -47,15 +63,46 @@ $ ./pkcs11-testing --module ~/go/src/github.com/markkurossi/pkcs11-provider/libr
    - [ ] Non-volatile token storage
    - [ ] Token configuration file
    - [ ] Test compatibility with Firefox
-   - [ ] Test compatibility with [aws-cloudhsm-pkcs11-examples](https://github.com/aws-samples/aws-cloudhsm-pkcs11-examples)
+   - [ ] Cleanup provider and session handling
+ - [ ] Test compatibility with [aws-cloudhsm-pkcs11-examples](https://github.com/aws-samples/aws-cloudhsm-pkcs11-examples)
+   - [ ] destroy/destroy_cmd.c
+   - [ ] tools/import_pub_key.c
+   - [ ] tools/wrap_with_imported_rsa_key.c
+   - [X] mechanism_info/mechanism_info.c
+   - [ ] derivation/ecdh.c
+   - [ ] derivation/hmac_kdf.c
+   - [X] digest/multi_part_digest.c
+   - [X] digest/digest.c
+   - [X] generate_random/generate_random.c
+   - [ ] attributes/attributes_cmd.c
+   - [X] generate/rsa_generate.c
+   - [ ] generate/ec_generate.c
+   - [X] generate/aes_generate.c
+   - [X] find_objects/find_objects.c
+   - [ ] wrapping/unwrap_with_template.c
+   - [ ] wrapping/aes_wrapping.c
+   - [ ] wrapping/rsa_wrapping.c
+   - [ ] wrapping/aes_gcm_wrapping.c
+   - [ ] wrapping/wrap_with_template.c
+   - [ ] wrapping/aes_no_padding_wrapping.c
+   - [ ] wrapping/aes_zero_padding_wrapping.c
+   - [X] encrypt/aes_cbc.c
+   - [X] encrypt/aes_gcm.c
+   - [ ] encrypt/des_ecb.c
+   - [ ] encrypt/aes_ctr.c
+   - [X] encrypt/aes_ecb.c
+   - [ ] sign/multi_part_sign.c
+   - [ ] sign/sign.c
+   - [ ] session/login_state.c
+   - [ ] session/session_keys.c
  - [ ] Crypto provider with Go:
-   - [ ] Object search and enumeration
-   - [ ] Encryption and decryption
-   - [ ] Multi-part message digest
+   - [X] Object search and enumeration
+   - [X] Encryption and decryption
+   - [X] Multi-part message digest
    - [ ] Ed25519 public key algorithm
    - [ ] Message sign and verify
    - [ ] Dual function
-   - [ ] Symmetric key generation
+   - [X] Symmetric key generation
  - [X] RPC compiler (ugly but it works):
    - [ ] Cleanup field input/output handling and types
    - [ ] Remove old unused input/output code
