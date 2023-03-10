@@ -6,10 +6,10 @@ TESTS := bin/aes_cbc bin/aes_gcm bin/aes_ecb \
 	bin/aes_generate bin/ec_generate bin/rsa_generate \
 	bin/generate_random \
 	bin/mechanism_info \
-	bin/login_state \
+	bin/login_state bin/session_keys \
 	bin/sign bin/multi_part_sign
 
-BINARIES := $(TESTS) bin/attributes_cmd bin/session_keys
+BINARIES := $(TESTS) bin/attributes_cmd
 
 CFLAGS := -Wall -Wno-pointer-sign -I$(AWS)/src/common -I$(AWS)/include/pkcs11/v2.40
 

@@ -187,11 +187,12 @@ func goVersion() pkcs11.Version {
 // Provider implements pkcs11.Provider interface.
 type Provider struct {
 	pkcs11.Base
-	id      pkcs11.Ulong
-	parent  *Provider
-	storage pkcs11.Storage
-	session *Session
-	m       sync.Mutex
+	id           pkcs11.Ulong
+	parent       *Provider
+	tokenStorage pkcs11.Storage
+	storage      pkcs11.Storage
+	session      *Session
+	m            sync.Mutex
 
 	// Just a single slot.
 	loggedIn   bool
@@ -336,6 +337,14 @@ func (p *Provider) CloseSession() error {
 	if err != nil {
 		return err
 	}
+
+	// Delete session objects created by this session.
+	for handle, storage := range p.session.Objects {
+		if storage == p.parent.storage {
+			storage.Delete(handle)
+		}
+	}
+
 	p.session = nil
 
 	return nil
@@ -447,9 +456,9 @@ func (p *Provider) CreateObject(req *pkcs11.CreateObjectReq) (*pkcs11.CreateObje
 	}
 	var storage pkcs11.Storage
 	if token {
-		storage = p.parent.storage
+		storage = p.tokenStorage
 	} else {
-		storage = p.session.storage
+		storage = p.parent.storage
 	}
 
 	obj := &pkcs11.Object{
@@ -474,6 +483,7 @@ func (p *Provider) CreateObject(req *pkcs11.CreateObjectReq) (*pkcs11.CreateObje
 	if err != nil {
 		return nil, err
 	}
+	p.session.Objects[handle] = storage
 
 	return &pkcs11.CreateObjectResp{
 		Object: handle,
@@ -485,8 +495,9 @@ func (p *Provider) CopyObject(req *pkcs11.CopyObjectReq) (*pkcs11.CopyObjectResp
 	if p.session == nil {
 		return nil, pkcs11.ErrSessionHandleInvalid
 	}
-	obj, err := p.readObject(req.Object)
+	obj, err := p.readObject(req.Object, pkcs11.ErrObjectHandleInvalid)
 	if err != nil {
+		Errorf("failed to read object %v: %s", req.Object, err)
 		return nil, err
 	}
 	attrs := obj.Attrs
@@ -523,9 +534,9 @@ func (p *Provider) CopyObject(req *pkcs11.CopyObjectReq) (*pkcs11.CopyObjectResp
 	}
 	var storage pkcs11.Storage
 	if token {
-		storage = p.parent.storage
+		storage = p.tokenStorage
 	} else {
-		storage = p.session.storage
+		storage = p.parent.storage
 	}
 
 	// 4.4.1 The CKA_UNIQUE_ID attribute
@@ -550,6 +561,10 @@ func (p *Provider) CopyObject(req *pkcs11.CopyObjectReq) (*pkcs11.CopyObjectResp
 	if err != nil {
 		return nil, err
 	}
+	p.session.Objects[handle] = storage
+
+	Infof("handle: %v", handle)
+	req.Template.Print("\u2502 ")
 
 	return &pkcs11.CopyObjectResp{
 		NewObject: handle,
@@ -559,25 +574,34 @@ func (p *Provider) CopyObject(req *pkcs11.CopyObjectReq) (*pkcs11.CopyObjectResp
 // DestroyObject implements the Provider.DestroyObject().
 func (p *Provider) DestroyObject(req *pkcs11.DestroyObjectReq) error {
 	if req.Object&FlagToken != 0 {
-		return p.parent.storage.Delete(req.Object)
+		return p.tokenStorage.Delete(req.Object)
 	}
-	return p.session.storage.Delete(req.Object)
+	return p.parent.storage.Delete(req.Object)
 }
 
-func (p *Provider) readObject(h pkcs11.ObjectHandle) (*pkcs11.Object, error) {
+func (p *Provider) readObject(h pkcs11.ObjectHandle, errNotFound error) (
+	*pkcs11.Object, error) {
+
 	var storage pkcs11.Storage
 	if h&FlagToken != 0 {
-		storage = p.parent.storage
+		storage = p.tokenStorage
 	} else {
-		storage = p.session.storage
+		storage = p.parent.storage
 	}
 
-	return storage.Read(h)
+	obj, err := storage.Read(h)
+	if err != nil {
+		if err == pkcs11.ErrObjectHandleInvalid {
+			return nil, errNotFound
+		}
+		return nil, err
+	}
+	return obj, nil
 }
 
 // GetAttributeValue implements the Provider.GetAttributeValue().
 func (p *Provider) GetAttributeValue(req *pkcs11.GetAttributeValueReq) (*pkcs11.GetAttributeValueResp, error) {
-	obj, err := p.readObject(req.Object)
+	obj, err := p.readObject(req.Object, pkcs11.ErrObjectHandleInvalid)
 	if err != nil {
 		return nil, err
 	}
@@ -607,22 +631,19 @@ func (p *Provider) FindObjectsInit(req *pkcs11.FindObjectsInitReq) error {
 	if p.session.FindObjects != nil {
 		return pkcs11.ErrOperationActive
 	}
-	if debug {
-		for _, attr := range req.Template {
-			fmt.Printf("\u251c\u2500\u2500\u2500\u2500\u2574%s:\n", attr.Type)
-			if len(attr.Value) > 0 {
-				fmt.Printf("%s", hex.Dump(attr.Value))
-			}
-		}
+	if true {
+		req.Template.Print("\u2502 ")
 	}
-	sessionHandles, err := p.session.storage.Find(req.Template)
+	sessionHandles, err := p.parent.storage.Find(req.Template)
 	if err != nil {
 		return err
 	}
-	tokenHandles, err := p.parent.storage.Find(req.Template)
+	Infof("session: %v\n", sessionHandles)
+	tokenHandles, err := p.tokenStorage.Find(req.Template)
 	if err != nil {
 		return err
 	}
+	Infof("token  : %v\n", tokenHandles)
 	p.session.FindObjects = &FindObjects{
 		Handles: append(sessionHandles, tokenHandles...),
 	}
@@ -672,7 +693,7 @@ func (p *Provider) EncryptInit(req *pkcs11.EncryptInitReq) (*pkcs11.EncryptInitR
 	if p.session.Encrypt != nil {
 		return nil, pkcs11.ErrOperationActive
 	}
-	obj, err := p.readObject(req.Key)
+	obj, err := p.readObject(req.Key, pkcs11.ErrKeyHandleInvalid)
 	if err != nil {
 		log.Printf("readObject failed: key=%x, %v\n", req.Key, err)
 		return nil, err
@@ -962,7 +983,7 @@ func (p *Provider) DecryptInit(req *pkcs11.DecryptInitReq) error {
 	if p.session.Decrypt != nil {
 		return pkcs11.ErrOperationActive
 	}
-	obj, err := p.readObject(req.Key)
+	obj, err := p.readObject(req.Key, pkcs11.ErrKeyHandleInvalid)
 	if err != nil {
 		log.Printf("readObject failed: key=%x, %v\n", req.Key, err)
 		return err
@@ -1242,7 +1263,7 @@ func (p *Provider) SignInit(req *pkcs11.SignInitReq) error {
 		return err
 	}
 
-	obj, err := p.readObject(req.Key)
+	obj, err := p.readObject(req.Key, pkcs11.ErrKeyHandleInvalid)
 	if err != nil {
 		return err
 	}
@@ -1391,7 +1412,7 @@ func (p *Provider) VerifyInit(req *pkcs11.VerifyInitReq) error {
 		return err
 	}
 
-	obj, err := p.readObject(req.Key)
+	obj, err := p.readObject(req.Key, pkcs11.ErrKeyHandleInvalid)
 	if err != nil {
 		return err
 	}
@@ -1504,6 +1525,7 @@ func (p *Provider) GenerateKey(req *pkcs11.GenerateKeyReq) (*pkcs11.GenerateKeyR
 	if !ok {
 		return nil, pkcs11.ErrMechanismInvalid
 	}
+	req.Template.Print("\u2502 ")
 	cls := req.Template.OptInt(pkcs11.CkaClass, int(pkcs11.CkoSecretKey))
 	if pkcs11.ObjectClass(cls) != pkcs11.CkoSecretKey {
 		return nil, pkcs11.ErrTemplateIncomplete
@@ -1532,9 +1554,9 @@ func (p *Provider) GenerateKey(req *pkcs11.GenerateKeyReq) (*pkcs11.GenerateKeyR
 		}
 		var storage pkcs11.Storage
 		if token {
-			storage = p.parent.storage
+			storage = p.tokenStorage
 		} else {
-			storage = p.session.storage
+			storage = p.parent.storage
 		}
 		key := make([]byte, size)
 		_, err = rand.Read(key)
@@ -1564,6 +1586,7 @@ func (p *Provider) GenerateKey(req *pkcs11.GenerateKeyReq) (*pkcs11.GenerateKeyR
 		if err != nil {
 			return nil, err
 		}
+		p.session.Objects[handle] = storage
 
 		return &pkcs11.GenerateKeyResp{
 			Key: handle,
@@ -1595,9 +1618,9 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 	}
 	var storage pkcs11.Storage
 	if token {
-		storage = p.parent.storage
+		storage = p.tokenStorage
 	} else {
-		storage = p.session.storage
+		storage = p.parent.storage
 	}
 
 	switch req.Mechanism.Mechanism {
@@ -1651,6 +1674,7 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 		if err != nil {
 			return nil, err
 		}
+		p.session.Objects[privHandle] = storage
 
 		pubTmpl := req.PublicKeyTemplate
 		pubTmpl = pubTmpl.Set(pkcs11.CkaModulus, key.PublicKey.N.Bytes())
@@ -1671,6 +1695,7 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 			storage.Delete(privHandle)
 			return nil, err
 		}
+		p.session.Objects[pubHandle] = storage
 
 		return &pkcs11.GenerateKeyPairResp{
 			PublicKey:  pubHandle,
@@ -1716,6 +1741,7 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 		if err != nil {
 			return nil, err
 		}
+		p.session.Objects[privHandle] = storage
 
 		q := elliptic.Marshal(curve, key.X, key.Y)
 
@@ -1738,12 +1764,13 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 			storage.Delete(privHandle)
 			return nil, err
 		}
+		p.session.Objects[pubHandle] = storage
 		if false {
 			log.Printf("GenerateKey: %s", req.Mechanism)
 			log.Printf(" - PublicKey:")
-			pubObj.Attrs.Print()
+			pubObj.Attrs.Print("\u2502 ")
 			log.Printf(" - PrivateKey:")
-			privObj.Attrs.Print()
+			privObj.Attrs.Print("\u2502 ")
 		}
 
 		return &pkcs11.GenerateKeyPairResp{
@@ -1754,9 +1781,9 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 	default:
 		log.Printf("GenerateKeyPair: %s", req.Mechanism)
 		log.Printf("PublicKeyTemplate:")
-		req.PublicKeyTemplate.Print()
+		req.PublicKeyTemplate.Print("\u2502 ")
 		log.Printf("PrivateKeyTemplate:")
-		req.PrivateKeyTemplate.Print()
+		req.PrivateKeyTemplate.Print("\u2502 ")
 
 		return nil, pkcs11.ErrMechanismInvalid
 	}
@@ -1780,6 +1807,12 @@ func (p *Provider) GenerateRandom(req *pkcs11.GenerateRandomReq) (*pkcs11.Genera
 		return nil, pkcs11.ErrDeviceError
 	}
 	return resp, nil
+}
+
+// Infof prints an informative message.
+func Infof(format string, a ...interface{}) {
+	msg := fmt.Sprintf(format, a...)
+	log.Printf("\u251c\u2500\u2500\u2574%s", msg)
 }
 
 // Errorf reports an provider error message.

@@ -9,7 +9,7 @@ package pkcs11
 import (
 	"encoding/hex"
 	"fmt"
-	"os"
+	"strings"
 
 	"github.com/markkurossi/tabulate"
 )
@@ -70,7 +70,7 @@ func attrValueString(attr Attribute) string {
 }
 
 // Print pretty-prints the template to standard output.
-func (tmpl Template) Print() {
+func (tmpl Template) Print(prefix string) {
 	tab := tabulate.New(tabulate.UnicodeLight)
 	tab.Header("Attribute").SetAlign(tabulate.TL)
 	tab.Header("Value").SetAlign(tabulate.TL)
@@ -80,5 +80,7 @@ func (tmpl Template) Print() {
 		row.Column(attr.Type.String())
 		row.Column(attrValueString(attr))
 	}
-	tab.Print(os.Stdout)
+	for _, line := range strings.Split(tab.String(), "\n") {
+		fmt.Printf("%s%s\n", prefix, line)
+	}
 }

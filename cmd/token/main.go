@@ -29,18 +29,26 @@ const (
 	path = "/tmp/vp.sock"
 )
 
-var (
-	debug     bool
-	m         sync.Mutex
-	bo        = binary.BigEndian
-	providers = make(map[pkcs11.Ulong]*Provider)
-	sessions  = make(map[pkcs11.SessionHandle]*Session)
-)
-
 const (
 	// FlagToken specifies that the object is stored on token storage
 	// instead of session storage.
 	FlagToken pkcs11.ObjectHandle = 0x1
+)
+
+var (
+	debug        bool
+	m            sync.Mutex
+	bo           = binary.BigEndian
+	providers    = make(map[pkcs11.Ulong]*Provider)
+	sessions     = make(map[pkcs11.SessionHandle]*Session)
+	tokenStorage = pkcs11.NewMemoryStorage(func() (pkcs11.ObjectHandle, error) {
+		h, err := allocObjectHandle()
+		if err != nil {
+			return 0, err
+		}
+		h |= FlagToken
+		return h, nil
+	})
 )
 
 func allocObjectHandle() (pkcs11.ObjectHandle, error) {
@@ -54,7 +62,7 @@ func allocObjectHandle() (pkcs11.ObjectHandle, error) {
 }
 
 // NewProvider creates a new provider instance.
-func NewProvider() (*Provider, error) {
+func NewProvider(tokenStorage, storage pkcs11.Storage) (*Provider, error) {
 	var buf [4]byte
 
 	m.Lock()
@@ -72,16 +80,9 @@ func NewProvider() (*Provider, error) {
 			continue
 		}
 		provider := &Provider{
-			id: id,
-			storage: pkcs11.NewMemoryStorage(func() (
-				pkcs11.ObjectHandle, error) {
-				h, err := allocObjectHandle()
-				if err != nil {
-					return 0, err
-				}
-				h |= FlagToken
-				return h, nil
-			}),
+			id:           id,
+			tokenStorage: tokenStorage,
+			storage:      storage,
 		}
 		providers[id] = provider
 		return provider, nil
@@ -103,9 +104,12 @@ func LookupProvider(id pkcs11.Ulong) (*Provider, error) {
 
 // Session implements a session with the token.
 type Session struct {
-	ID          pkcs11.SessionHandle
-	Flags       pkcs11.Flags
-	storage     pkcs11.Storage
+	ID    pkcs11.SessionHandle
+	Flags pkcs11.Flags
+
+	// Objects contain the session objects created by this session.
+	Objects map[pkcs11.ObjectHandle]pkcs11.Storage
+
 	Digest      hash.Hash
 	Encrypt     *EncDec
 	Decrypt     *EncDec
@@ -201,16 +205,8 @@ func NewSession() (*Session, error) {
 			continue
 		}
 		session := &Session{
-			ID: id,
-			storage: pkcs11.NewMemoryStorage(func() (
-				pkcs11.ObjectHandle, error) {
-				h, err := allocObjectHandle()
-				if err != nil {
-					return 0, err
-				}
-				h &^= FlagToken
-				return h, nil
-			}),
+			ID:      id,
+			Objects: make(map[pkcs11.ObjectHandle]pkcs11.Storage),
 		}
 		sessions[id] = session
 		return session, nil
@@ -277,7 +273,16 @@ func main() {
 func messageLoop(conn net.Conn) error {
 	var hdr [8]byte
 
-	provider, err := NewProvider()
+	storage := pkcs11.NewMemoryStorage(func() (pkcs11.ObjectHandle, error) {
+		h, err := allocObjectHandle()
+		if err != nil {
+			return 0, err
+		}
+		h &^= FlagToken
+		return h, nil
+	})
+
+	provider, err := NewProvider(tokenStorage, storage)
 	if err != nil {
 		return err
 	}

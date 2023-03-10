@@ -61,7 +61,6 @@ $ make test
  - [ ] Framework:
    - [ ] Launch token from `libvpkcs11.so`
    - [ ] Non-volatile token storage
-   - [ ] Session objects are shared between all application sessions
    - [ ] Token configuration file
    - [ ] Test compatibility with Firefox
  - [ ] Test compatibility with [aws-cloudhsm-pkcs11-examples](https://github.com/aws-samples/aws-cloudhsm-pkcs11-examples)
@@ -94,7 +93,7 @@ $ make test
    - [X] sign/multi_part_sign.c
    - [X] sign/sign.c
    - [X] session/login_state.c
-   - [ ] session/session_keys.c
+   - [X] session/session_keys.c
  - [ ] Crypto provider with Go:
    - [X] Object search and enumeration
    - [X] Encryption and decryption

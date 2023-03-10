@@ -33,7 +33,6 @@ func (obj *Object) Inflate() error {
 	case CkoPrivateKey:
 		return obj.inflatePrivateKey()
 	default:
-		log.Printf("nothing to inflate for key type %s", class)
 		return nil
 	}
 }
