@@ -1,5 +1,6 @@
 AWS := aws-cloudhsm-pkcs11-examples
-BINARIES := bin/aes_cbc bin/aes_gcm bin/aes_ecb \
+
+TESTS := bin/aes_cbc bin/aes_gcm bin/aes_ecb \
 	bin/digest bin/multi_part_digest \
 	bin/find_objects \
 	bin/aes_generate bin/ec_generate bin/rsa_generate \
@@ -7,7 +8,8 @@ BINARIES := bin/aes_cbc bin/aes_gcm bin/aes_ecb \
 	bin/mechanism_info \
 	bin/login_state \
 	bin/sign bin/multi_part_sign
-#bin/session_keys
+
+BINARIES := $(TESTS) bin/attributes_cmd bin/session_keys
 
 CFLAGS := -Wall -Wno-pointer-sign -I$(AWS)/src/common -I$(AWS)/include/pkcs11/v2.40
 
@@ -69,7 +71,10 @@ bin/sign: $(AWS)/src/sign/rsa_sign.c $(AWS)/src/sign/ec_sign.c $(AWS)/src/sign/c
 bin/multi_part_sign: $(AWS)/src/sign/rsa_sign.c $(AWS)/src/sign/ec_sign.c $(AWS)/src/sign/common.c $(AWS)/src/sign/multi_part_sign.c
 	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
 
+bin/attributes_cmd: $(AWS)/src/attributes/attributes_cmd.c $(AWS)/src/attributes/attributes.c
+	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
+
 test:
-	for b in $(BINARIES); do \
+	for b in $(TESTS); do \
 	  $$b --pin foo:bar --library ../library/libvpkcs11.so; \
 	done
