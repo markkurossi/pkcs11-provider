@@ -64,7 +64,7 @@ $ make test
    - [ ] Token configuration file
    - [ ] Test compatibility with Firefox
  - [ ] Test compatibility with [aws-cloudhsm-pkcs11-examples](https://github.com/aws-samples/aws-cloudhsm-pkcs11-examples)
-   - [ ] destroy/destroy_cmd.c
+   - [X] destroy/destroy_cmd.c
    - [ ] tools/import_pub_key.c
    - [ ] tools/wrap_with_imported_rsa_key.c
    - [X] mechanism_info/mechanism_info.c
@@ -73,7 +73,7 @@ $ make test
    - [X] digest/multi_part_digest.c
    - [X] digest/digest.c
    - [X] generate_random/generate_random.c
-   - [ ] attributes/attributes_cmd.c
+   - [X] attributes/attributes_cmd.c
    - [X] generate/rsa_generate.c
    - [X] generate/ec_generate.c
    - [X] generate/aes_generate.c

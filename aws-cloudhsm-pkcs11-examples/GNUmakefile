@@ -9,7 +9,7 @@ TESTS := bin/aes_cbc bin/aes_gcm bin/aes_ecb \
 	bin/login_state bin/session_keys \
 	bin/sign bin/multi_part_sign
 
-BINARIES := $(TESTS) bin/attributes_cmd
+BINARIES := $(TESTS) bin/attributes_cmd bin/destroy_cmd
 
 CFLAGS := -Wall -Wno-pointer-sign -I$(AWS)/src/common -I$(AWS)/include/pkcs11/v2.40
 
@@ -72,6 +72,9 @@ bin/multi_part_sign: $(AWS)/src/sign/rsa_sign.c $(AWS)/src/sign/ec_sign.c $(AWS)
 	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
 
 bin/attributes_cmd: $(AWS)/src/attributes/attributes_cmd.c $(AWS)/src/attributes/attributes.c
+	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
+
+bin/destroy_cmd: $(AWS)/src/destroy/destroy_cmd.c $(AWS)/src/destroy/destroy.c
 	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
 
 test:
