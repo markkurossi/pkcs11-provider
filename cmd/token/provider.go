@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/markkurossi/crypto/pkcs7"
 	"github.com/markkurossi/go-libs/uuid"
 	"github.com/markkurossi/pkcs11-provider/pkcs11"
 )
@@ -782,21 +783,6 @@ func (p *Provider) EncryptInit(req *pkcs11.EncryptInitReq) (*pkcs11.EncryptInitR
 	}
 }
 
-func pkcs7Pad(buf []byte, blockSize int) []byte {
-	padLen := blockSize - len(buf)%blockSize
-	if padLen == 0 {
-		padLen = blockSize
-	}
-	resultLen := len(buf) + padLen
-	result := make([]byte, resultLen)
-	copy(result, buf)
-	for i := 0; i < padLen; i++ {
-		result[resultLen-1-i] = byte(padLen)
-	}
-
-	return result
-}
-
 // Encrypt implements the Provider.Encrypt().
 func (p *Provider) Encrypt(req *pkcs11.EncryptReq) (*pkcs11.EncryptResp, error) {
 	if p.session == nil {
@@ -840,16 +826,14 @@ func (p *Provider) Encrypt(req *pkcs11.EncryptReq) (*pkcs11.EncryptResp, error) 
 
 	case pkcs11.CkmAESCBCPad:
 		blockSize := p.session.Encrypt.BlockMode.BlockSize()
-		padLen := blockSize - len(req.Data)%blockSize
-		if padLen == 0 {
-			padLen = blockSize
-		}
-		resp.EncryptedDataLen = len(req.Data) + padLen
+
+		_, paddedLen := pkcs7.PadLen(len(req.Data), blockSize)
+		resp.EncryptedDataLen = paddedLen
 		if req.EncryptedDataSize == 0 {
 			// Querying output buffer size.
 			return resp, nil
 		}
-		resp.EncryptedData = pkcs7Pad(req.Data, blockSize)
+		resp.EncryptedData = pkcs7.Pad(req.Data, blockSize)
 
 		p.session.Encrypt.BlockMode.CryptBlocks(resp.EncryptedData,
 			resp.EncryptedData)
@@ -963,7 +947,7 @@ func (p *Provider) EncryptFinal(req *pkcs11.EncryptFinalReq) (*pkcs11.EncryptFin
 			// Querying buffer size.
 			return resp, nil
 		}
-		resp.LastEncryptedPart = pkcs7Pad(enc.Buffer, blockSize)
+		resp.LastEncryptedPart = pkcs7.Pad(enc.Buffer, blockSize)
 		enc.BlockMode.CryptBlocks(resp.LastEncryptedPart,
 			resp.LastEncryptedPart)
 
@@ -1103,6 +1087,7 @@ func (p *Provider) Decrypt(req *pkcs11.DecryptReq) (*pkcs11.DecryptResp, error) 
 
 	case pkcs11.CkmAESCBCPad:
 		blockSize := p.session.Decrypt.BlockMode.BlockSize()
+
 		if len(req.EncryptedData) == 0 ||
 			len(req.EncryptedData)%blockSize != 0 {
 			p.session.Decrypt = nil
@@ -1114,13 +1099,13 @@ func (p *Provider) Decrypt(req *pkcs11.DecryptReq) (*pkcs11.DecryptResp, error) 
 		}
 		p.session.Decrypt.BlockMode.CryptBlocks(req.EncryptedData,
 			req.EncryptedData)
-		padLen := int(req.EncryptedData[len(req.EncryptedData)-1])
-		if padLen > len(req.EncryptedData) {
+		data, err := pkcs7.UnPad(req.EncryptedData)
+		if err != nil {
 			p.session.Decrypt = nil
 			return nil, pkcs11.ErrDataLenRange
 		}
-		resp.DataLen = len(req.EncryptedData) - padLen
-		resp.Data = req.EncryptedData[:resp.DataLen]
+		resp.DataLen = len(data)
+		resp.Data = data
 
 	case pkcs11.CkmAESGCM:
 		if debug {
