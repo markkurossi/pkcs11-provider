@@ -734,6 +734,30 @@ func (p *Provider) EncryptInit(req *pkcs11.EncryptInitReq) (*pkcs11.EncryptInitR
 		}
 		return resp, nil
 
+	case pkcs11.CkmAESCTR:
+		var params pkcs11.AesCtrParams
+		err = pkcs11.Unmarshal(req.Mechanism.Parameter, &params)
+		if err != nil {
+			Errorf("pkcs11.Unmarshal: %v", err)
+			return nil, pkcs11.ErrMechanismParamInvalid
+		}
+
+		b, err := aes.NewCipher(key)
+		if err != nil {
+			return nil, pkcs11.ErrKeySizeRange
+		}
+		if b.BlockSize() != len(params.Cb) {
+			Errorf("%s: invalid IV length %v, expected %v",
+				req.Mechanism.Mechanism, len(params.Cb), b.BlockSize())
+			return nil, pkcs11.ErrMechanismParamInvalid
+		}
+
+		p.session.Encrypt = &EncDec{
+			Mechanism: req.Mechanism.Mechanism,
+			Stream:    cipher.NewCTR(b, params.Cb[:]),
+		}
+		return resp, nil
+
 	case pkcs11.CkmAESGCM:
 		b, err := aes.NewCipher(key)
 		if err != nil {
@@ -746,11 +770,11 @@ func (p *Provider) EncryptInit(req *pkcs11.EncryptInitReq) (*pkcs11.EncryptInitR
 		var params pkcs11.GcmParams
 		err = pkcs11.Unmarshal(req.Mechanism.Parameter, &params)
 		if err != nil {
-			log.Printf("\u251c\u2500\u2500\u2574pkcs11.Unmarshal: %v", err)
+			Errorf("pkcs11.Unmarshal: %v", err)
 			return nil, pkcs11.ErrMechanismParamInvalid
 		}
 		if len(params.Iv) != 12 {
-			log.Printf("\u251c\u2500\u2500\u2574%s: invalid IV length %v, expected 12",
+			Errorf("%s: invalid IV length %v, expected 12",
 				req.Mechanism.Mechanism, len(params.Iv))
 			return nil, pkcs11.ErrMechanismParamInvalid
 		}
@@ -837,6 +861,14 @@ func (p *Provider) Encrypt(req *pkcs11.EncryptReq) (*pkcs11.EncryptResp, error) 
 
 		p.session.Encrypt.BlockMode.CryptBlocks(resp.EncryptedData,
 			resp.EncryptedData)
+
+	case pkcs11.CkmAESCTR:
+		if req.EncryptedDataSize == 0 {
+			// Querying output buffer size.
+			return resp, nil
+		}
+		p.session.Encrypt.Stream.XORKeyStream(req.Data, req.Data)
+		resp.EncryptedData = req.Data
 
 	case pkcs11.CkmAESGCM:
 		if debug {
@@ -1003,6 +1035,30 @@ func (p *Provider) DecryptInit(req *pkcs11.DecryptInitReq) error {
 		}
 		return nil
 
+	case pkcs11.CkmAESCTR:
+		var params pkcs11.AesCtrParams
+		err = pkcs11.Unmarshal(req.Mechanism.Parameter, &params)
+		if err != nil {
+			Errorf("pkcs11.Unmarshal: %v", err)
+			return pkcs11.ErrMechanismParamInvalid
+		}
+
+		b, err := aes.NewCipher(key)
+		if err != nil {
+			return pkcs11.ErrKeySizeRange
+		}
+		if b.BlockSize() != len(params.Cb) {
+			Errorf("%s: invalid IV length %v, expected %v",
+				req.Mechanism.Mechanism, len(params.Cb), b.BlockSize())
+			return pkcs11.ErrMechanismParamInvalid
+		}
+
+		p.session.Decrypt = &EncDec{
+			Mechanism: req.Mechanism.Mechanism,
+			Stream:    cipher.NewCTR(b, params.Cb[:]),
+		}
+		return nil
+
 	case pkcs11.CkmAESGCM:
 		b, err := aes.NewCipher(key)
 		if err != nil {
@@ -1106,6 +1162,15 @@ func (p *Provider) Decrypt(req *pkcs11.DecryptReq) (*pkcs11.DecryptResp, error) 
 		}
 		resp.DataLen = len(data)
 		resp.Data = data
+
+	case pkcs11.CkmAESCTR:
+		if req.DataSize == 0 {
+			// Querying output buffer size.
+			return resp, nil
+		}
+		p.session.Decrypt.Stream.XORKeyStream(req.EncryptedData,
+			req.EncryptedData)
+		resp.Data = req.EncryptedData
 
 	case pkcs11.CkmAESGCM:
 		if debug {

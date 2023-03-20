@@ -1,6 +1,6 @@
 AWS := aws-cloudhsm-pkcs11-examples
 
-TESTS := bin/aes_cbc bin/aes_gcm bin/aes_ecb \
+TESTS := bin/aes_cbc bin/aes_ctr bin/aes_gcm bin/aes_ecb \
 	bin/digest bin/multi_part_digest \
 	bin/find_objects \
 	bin/aes_generate bin/ec_generate bin/rsa_generate \
@@ -27,6 +27,9 @@ clean:
 	rm -f $(BINARIES)
 
 bin/aes_cbc: $(AWS)/src/encrypt/aes_cbc.c $(AWS)/src/encrypt/aes.c
+	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
+
+bin/aes_ctr: $(AWS)/src/encrypt/aes_ctr.c $(AWS)/src/encrypt/aes.c
 	cc $(CFLAGS) -o $@ $+ $(COMMON_SRCS)
 
 bin/aes_gcm: $(AWS)/src/encrypt/aes_gcm.c $(AWS)/src/encrypt/aes.c

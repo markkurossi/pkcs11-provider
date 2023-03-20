@@ -65,6 +65,12 @@ type UTF8Char = byte
 // VoidPtr defines basic protocol type CK_VOID_PTR.
 type VoidPtr = byte
 
+// AesCtrParams defines compound protocol type CK_AES_CTR_PARAMS.
+type AesCtrParams struct {
+	CounterBits Ulong
+	Cb          [16]Byte
+}
+
 // Attribute defines compound protocol type CK_ATTRIBUTE.
 type Attribute struct {
 	Type  AttributeType

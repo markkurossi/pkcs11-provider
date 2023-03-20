@@ -92,6 +92,11 @@ type CK_MECHANISM struct {
 
 encoder CK_MECHANISM = vp_encode_mechanism
 
+type CK_AES_CTR_PARAMS struct {
+      CK_ULONG ulCounterBits
+  [16]CK_BYTE  cb
+}
+
 type CK_GCM_PARAMS struct {
    [CK_ULONG ulIvLen]CK_BYTE  pIv
                      CK_ULONG ulIvBits

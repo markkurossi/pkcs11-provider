@@ -124,6 +124,7 @@ type EncDec struct {
 	Block     cipher.Block
 	BlockMode cipher.BlockMode
 	AEAD      cipher.AEAD
+	Stream    cipher.Stream
 	IV        []byte
 	AAD       []byte
 

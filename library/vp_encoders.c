@@ -64,6 +64,29 @@ vp_encode_mechanism(VPBuffer *buf, CK_MECHANISM_PTR m)
       vp_buffer_add_byte_arr(buf, m->pParameter, m->ulParameterLen);
       break;
 
+    case CKM_AES_CTR:
+      if (m->ulParameterLen == sizeof(CK_AES_CTR_PARAMS))
+        {
+          CK_AES_CTR_PARAMS_PTR p = (CK_AES_CTR_PARAMS_PTR) m->pParameter;
+
+          vp_buffer_add_ulong(&b, p->ulCounterBits);
+          vp_buffer_add_byte_arr(&b, p->cb, sizeof(p->cb));
+
+          if (vp_buffer_error(&b, &ret))
+            goto out;
+
+          vp_buffer_add_byte_arr(buf, vp_buffer_ptr(&b), vp_buffer_len(&b));
+        }
+      else
+        {
+          vp_log(LOG_ERR,
+                 "mechanism: %08x: invalid CK_AES_CTR_PARAMS: len=%d (%d)",
+                 m->mechanism, m->ulParameterLen, sizeof(CK_AES_CTR_PARAMS));
+          return CKR_MECHANISM_INVALID;
+        }
+
+      break;
+
     case CKM_AES_GCM:
       if (m->ulParameterLen == sizeof(CK_GCM_PARAMS_V230))
         {
