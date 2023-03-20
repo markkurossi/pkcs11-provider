@@ -151,7 +151,7 @@ var mechanisms = map[pkcs11.MechanismType]pkcs11.MechanismInfo{
 	pkcs11.CkmAESECB: {
 		MinKeySize: AESMinKeySize,
 		MaxKeySize: AESMaxKeySize,
-		Flags:      pkcs11.CkfGenerate,
+		Flags:      pkcs11.CkfEncrypt | pkcs11.CkfDecrypt | pkcs11.CkfGenerate,
 	},
 	pkcs11.CkmAESGCM: {
 		MinKeySize: AESMinKeySize,
@@ -161,12 +161,12 @@ var mechanisms = map[pkcs11.MechanismType]pkcs11.MechanismInfo{
 	pkcs11.CkmAESCTR: {
 		MinKeySize: AESMinKeySize,
 		MaxKeySize: AESMaxKeySize,
-		Flags:      pkcs11.CkfGenerate,
+		Flags:      pkcs11.CkfEncrypt | pkcs11.CkfDecrypt | pkcs11.CkfGenerate,
 	},
 	pkcs11.CkmAESCBC: {
 		MinKeySize: AESMinKeySize,
 		MaxKeySize: AESMaxKeySize,
-		Flags:      pkcs11.CkfGenerate,
+		Flags:      pkcs11.CkfEncrypt | pkcs11.CkfDecrypt | pkcs11.CkfGenerate,
 	},
 }
 
@@ -696,16 +696,15 @@ func (p *Provider) EncryptInit(req *pkcs11.EncryptInitReq) (*pkcs11.EncryptInitR
 	}
 	obj, err := p.readObject(req.Key, pkcs11.ErrKeyHandleInvalid)
 	if err != nil {
-		log.Printf("readObject failed: key=%x, %v\n", req.Key, err)
+		Errorf("readObject failed: key=%x, %v\n", req.Key, err)
 		return nil, err
 	}
 	key, ok := obj.Native.([]byte)
 	if !ok {
-		log.Printf("!key: obj.Native=%v(%T)", obj.Native, obj.Native)
+		Errorf("!key: obj.Native=%v(%T)", obj.Native, obj.Native)
 		return nil, pkcs11.ErrKeyHandleInvalid
 	}
-	log.Printf("\u251c\u2500\u2500\u2500\u2500\u2574mechanism: %v",
-		req.Mechanism.Mechanism)
+	Infof("mechanism: %v", req.Mechanism.Mechanism)
 
 	resp := &pkcs11.EncryptInitResp{}
 
@@ -914,6 +913,9 @@ func (p *Provider) EncryptUpdate(req *pkcs11.EncryptUpdateReq) (*pkcs11.EncryptU
 	case pkcs11.CkmAESCBC, pkcs11.CkmAESCBCPad:
 		blockSize = enc.BlockMode.BlockSize()
 
+	case pkcs11.CkmAESCTR:
+		blockSize = 1
+
 	default:
 		return nil, pkcs11.ErrFunctionNotSupported
 	}
@@ -946,6 +948,10 @@ func (p *Provider) EncryptUpdate(req *pkcs11.EncryptUpdateReq) (*pkcs11.EncryptU
 	case pkcs11.CkmAESCBC, pkcs11.CkmAESCBCPad:
 		enc.BlockMode.CryptBlocks(resp.EncryptedPart, resp.EncryptedPart)
 
+	case pkcs11.CkmAESCTR:
+		p.session.Encrypt.Stream.XORKeyStream(resp.EncryptedPart,
+			resp.EncryptedPart)
+
 	default:
 		return nil, pkcs11.ErrFunctionNotSupported
 	}
@@ -966,7 +972,7 @@ func (p *Provider) EncryptFinal(req *pkcs11.EncryptFinalReq) (*pkcs11.EncryptFin
 	resp := &pkcs11.EncryptFinalResp{}
 
 	switch enc.Mechanism {
-	case pkcs11.CkmAESECB, pkcs11.CkmAESCBC:
+	case pkcs11.CkmAESECB, pkcs11.CkmAESCBC, pkcs11.CkmAESCTR:
 		if len(enc.Buffer) != 0 {
 			p.session.Encrypt = nil
 			return nil, pkcs11.ErrDataLenRange

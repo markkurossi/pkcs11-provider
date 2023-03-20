@@ -66,6 +66,7 @@ public class PKCS11Test {
         "AES/CBC/PKCS5Padding",
         "AES/ECB/NoPadding",
         "AES/ECB/PKCS5Padding",
+        "AES/CTR/NoPadding",
     };
 
 /*
