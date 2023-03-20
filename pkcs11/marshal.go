@@ -1,7 +1,7 @@
 //
 // marshal.go
 //
-// Copyright (c) 2018-2021 Markku Rossi
+// Copyright (c) 2018-2023 Markku Rossi
 //
 // All rights reserved.
 //
@@ -212,7 +212,7 @@ func unmarshalValue(in io.Reader, value reflect.Value) (err error) {
 			return err
 		}
 		count := binary.BigEndian.Uint32(buf[:4])
-		array := reflect.New(value.Type())
+		array := reflect.Indirect(reflect.New(value.Type()))
 		for i := 0; uint32(i) < count; i++ {
 			el := reflect.New(value.Type().Elem())
 			if err := unmarshalValue(in, el); err != nil {
