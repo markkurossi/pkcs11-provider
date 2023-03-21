@@ -947,8 +947,7 @@ func (p *Provider) EncryptUpdate(req *pkcs11.EncryptUpdateReq) (*pkcs11.EncryptU
 		enc.BlockMode.CryptBlocks(resp.EncryptedPart, resp.EncryptedPart)
 
 	case pkcs11.CkmAESCTR:
-		p.session.Encrypt.Stream.XORKeyStream(resp.EncryptedPart,
-			resp.EncryptedPart)
+		enc.Stream.XORKeyStream(resp.EncryptedPart, resp.EncryptedPart)
 
 	default:
 		return nil, pkcs11.ErrFunctionNotSupported
@@ -1203,12 +1202,103 @@ func (p *Provider) Decrypt(req *pkcs11.DecryptReq) (*pkcs11.DecryptResp, error) 
 
 // DecryptUpdate implements the Provider.DecryptUpdate().
 func (p *Provider) DecryptUpdate(req *pkcs11.DecryptUpdateReq) (*pkcs11.DecryptUpdateResp, error) {
-	return nil, pkcs11.ErrFunctionNotSupported
+	if p.session == nil {
+		return nil, pkcs11.ErrSessionHandleInvalid
+	}
+	dec := p.session.Decrypt
+	if dec == nil {
+		return nil, pkcs11.ErrOperationNotInitialized
+	}
+
+	// Resolve output length.
+	var blockSize int
+	switch dec.Mechanism {
+	case pkcs11.CkmAESECB:
+		blockSize = dec.Block.BlockSize()
+
+	case pkcs11.CkmAESCBC, pkcs11.CkmAESCBCPad:
+		blockSize = dec.BlockMode.BlockSize()
+
+	case pkcs11.CkmAESCTR:
+		blockSize = 1
+
+	default:
+		return nil, pkcs11.ErrFunctionNotSupported
+	}
+	numBlocks := (len(dec.Buffer) + len(req.EncryptedPart)) / blockSize
+
+	resp := &pkcs11.DecryptUpdateResp{
+		PartLen: numBlocks * blockSize,
+	}
+	if req.PartSize == 0 {
+		// Querying output buffer size.
+		return resp, nil
+	}
+
+	// Create output buffer.
+	resp.Part = make([]byte, resp.PartLen)
+	n := copy(resp.Part, dec.Buffer)
+	limit := resp.PartLen - n
+	copy(resp.Part[n:], req.EncryptedPart[:limit])
+
+	// Save any trailing data.
+	n = copy(dec.Buffer[0:cap(dec.Buffer)], req.EncryptedPart[limit:])
+	dec.Buffer = dec.Buffer[:n]
+
+	switch dec.Mechanism {
+	case pkcs11.CkmAESECB:
+		for i := 0; i < resp.PartLen; i += blockSize {
+			dec.Block.Decrypt(resp.Part[i:], resp.Part[i:])
+		}
+
+	case pkcs11.CkmAESCBC, pkcs11.CkmAESCBCPad:
+		dec.BlockMode.CryptBlocks(resp.Part, resp.Part)
+
+	case pkcs11.CkmAESCTR:
+		dec.Stream.XORKeyStream(resp.Part, resp.Part)
+
+	default:
+		return nil, pkcs11.ErrFunctionNotSupported
+	}
+
+	return resp, nil
 }
 
 // DecryptFinal implements the Provider.DecryptFinal().
 func (p *Provider) DecryptFinal(req *pkcs11.DecryptFinalReq) (*pkcs11.DecryptFinalResp, error) {
-	return nil, pkcs11.ErrFunctionNotSupported
+	if p.session == nil {
+		return nil, pkcs11.ErrSessionHandleInvalid
+	}
+	dec := p.session.Decrypt
+	if dec == nil {
+		return nil, pkcs11.ErrOperationNotInitialized
+	}
+
+	resp := &pkcs11.DecryptFinalResp{}
+
+	switch dec.Mechanism {
+	case pkcs11.CkmAESECB, pkcs11.CkmAESCBC, pkcs11.CkmAESCTR:
+		if len(dec.Buffer) != 0 {
+			p.session.Decrypt = nil
+			return nil, pkcs11.ErrDataLenRange
+		}
+
+	case pkcs11.CkmAESCBCPad:
+		blockSize := dec.BlockMode.BlockSize()
+		resp.LastPartLen = blockSize
+		if req.LastPartSize == 0 {
+			// Querying buffer size.
+			return resp, nil
+		}
+		resp.LastPart = pkcs7.Pad(dec.Buffer, blockSize)
+		dec.BlockMode.CryptBlocks(resp.LastPart, resp.LastPart)
+
+	default:
+		return nil, pkcs11.ErrFunctionNotSupported
+	}
+
+	p.session.Decrypt = nil
+	return resp, nil
 }
 
 // DigestInit implements the Provider.DigestInit().

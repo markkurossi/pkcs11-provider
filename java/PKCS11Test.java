@@ -5,6 +5,7 @@
  */
 
 import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyStore;
@@ -15,7 +16,7 @@ import java.security.Provider;
 import java.security.Security;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
-import java.security.InvalidAlgorithmParameterException;
+import java.util.Arrays;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -23,6 +24,7 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.IvParameterSpec;
 
 public class PKCS11Test {
     private static Provider p;
@@ -137,13 +139,25 @@ public class PKCS11Test {
             for (String alg : AESBlockCiphers) {
                 System.out.printf("- %s\n", alg);
                 try {
-                    Cipher cipher = Cipher.getInstance(alg, p);
+                    Cipher encrypt = Cipher.getInstance(alg, p);
 
-                    cipher.init(Cipher.ENCRYPT_MODE, key);
-                    testAESCipher(cipher);
+                    encrypt.init(Cipher.ENCRYPT_MODE, key);
+
+                    Cipher decrypt = Cipher.getInstance(alg, p);
+                    byte[] iv = encrypt.getIV();
+
+                    if (iv != null) {
+                        decrypt.init(Cipher.DECRYPT_MODE, key,
+                                     new IvParameterSpec(encrypt.getIV()));
+                    } else {
+                        decrypt.init(Cipher.DECRYPT_MODE, key);
+                    }
+
+                    testAESCipher(encrypt, decrypt);
 
                 } catch (NoSuchAlgorithmException|NoSuchPaddingException
                          |InvalidKeyException|IllegalBlockSizeException
+                         |InvalidAlgorithmParameterException
                          |BadPaddingException e) {
                     System.err.printf("Cipher '%s' failed: %s\n", alg, e);
                 }
@@ -167,7 +181,7 @@ public class PKCS11Test {
                 cipher.init(Cipher.ENCRYPT_MODE, key, spec);
                 cipher.updateAAD(additional);
 
-                testAESCipher(cipher);
+                testAESCipher(cipher, null);
             } catch (IllegalBlockSizeException|BadPaddingException
                      |InvalidAlgorithmParameterException
                      |NoSuchPaddingException|InvalidKeyException e) {
@@ -180,19 +194,32 @@ public class PKCS11Test {
         }
     }
 
-    private static void testAESCipher(Cipher cipher)
+    private static void testAESCipher(Cipher encrypt, Cipher decrypt)
         throws IllegalBlockSizeException, BadPaddingException {
 
-        System.out.printf("  - cipher:    %s\n", cipher.getAlgorithm());
-        System.out.printf("  - blockSize: %d\n", cipher.getBlockSize());
-        byte[] iv = cipher.getIV();
+        System.out.printf("  - cipher   : %s\n", encrypt.getAlgorithm());
+        System.out.printf("  - blockSize: %d\n", encrypt.getBlockSize());
+        byte[] iv = encrypt.getIV();
         if (iv != null) {
-            System.out.printf("  - IV:        %s\n", byteArrayToHex(iv));
+            System.out.printf("  - IV       : %s\n", byteArrayToHex(iv));
         }
         byte[] plain = "Hello, world!!!!".getBytes();
-        byte[] encrypted = cipher.doFinal(plain);
+        byte[] encrypted = encrypt.doFinal(plain);
 
+        System.out.printf("  - plain    : %s\n", byteArrayToHex(plain));
         System.out.printf("  - encrypted: %s\n", byteArrayToHex(encrypted));
+
+        if (decrypt == null) {
+            return;
+        }
+
+        byte[] decrypted = decrypt.doFinal(encrypted);
+        System.out.printf("  - decrypted: %s\n", byteArrayToHex(decrypted));
+
+        if (!Arrays.equals(plain, decrypted)) {
+            System.err.println("decrypted does not match plaintext");
+            System.exit(1);
+        }
     }
 
     public static String byteArrayToHex(byte[] a) {
