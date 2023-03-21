@@ -76,7 +76,6 @@ $ make test
    - [ ] wrapping/aes_no_padding_wrapping.c
    - [ ] wrapping/aes_zero_padding_wrapping.c
    - [ ] encrypt/des_ecb.c
-   - [ ] encrypt/aes_ctr.c
  - [ ] Crypto provider with Go:
    - [ ] Ed25519 public key algorithm
    - [ ] Message sign and verify
