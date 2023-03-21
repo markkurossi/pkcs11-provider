@@ -870,11 +870,9 @@ func (p *Provider) Encrypt(req *pkcs11.EncryptReq) (*pkcs11.EncryptResp, error) 
 		resp.EncryptedData = req.Data
 
 	case pkcs11.CkmAESGCM:
-		if debug {
-			log.Printf("AEAD: IV: %x (%d), AAD: %x (%d)",
-				p.session.Encrypt.IV, len(p.session.Encrypt.IV),
-				p.session.Encrypt.AAD, len(p.session.Encrypt.AAD))
-		}
+		Debugf("AEAD: IV: %x (%d), AAD: %x (%d)",
+			p.session.Encrypt.IV, len(p.session.Encrypt.IV),
+			p.session.Encrypt.AAD, len(p.session.Encrypt.AAD))
 		resp.EncryptedDataLen += p.session.Encrypt.AEAD.Overhead()
 		if req.EncryptedDataSize == 0 {
 			// Querying output buffer size.
@@ -1007,16 +1005,15 @@ func (p *Provider) DecryptInit(req *pkcs11.DecryptInitReq) error {
 	}
 	obj, err := p.readObject(req.Key, pkcs11.ErrKeyHandleInvalid)
 	if err != nil {
-		log.Printf("readObject failed: key=%x, %v\n", req.Key, err)
+		Errorf("readObject failed: key=%x, %v\n", req.Key, err)
 		return err
 	}
 	key, ok := obj.Native.([]byte)
 	if !ok {
-		log.Printf("!key: obj.Native=%v(%T)", obj.Native, obj.Native)
+		Errorf("!key: obj.Native=%v(%T)", obj.Native, obj.Native)
 		return pkcs11.ErrKeyHandleInvalid
 	}
-	log.Printf("\u251c\u2500\u2500\u2500\u2500\u2574mechanism: %v",
-		req.Mechanism.Mechanism)
+	Infof("mechanism: %v", req.Mechanism.Mechanism)
 
 	switch req.Mechanism.Mechanism {
 	case pkcs11.CkmAESECB:
@@ -1077,11 +1074,11 @@ func (p *Provider) DecryptInit(req *pkcs11.DecryptInitReq) error {
 		var params pkcs11.GcmParams
 		err = pkcs11.Unmarshal(req.Mechanism.Parameter, &params)
 		if err != nil {
-			log.Printf("\u251c\u2500\u2500\u2574pkcs11.Unmarshal: %v", err)
+			Errorf("pkcs11.Unmarshal: %v", err)
 			return pkcs11.ErrMechanismParamInvalid
 		}
 		if params.IvBits != 96 {
-			log.Printf("\u251c\u2500\u2500\u2574%s: invalid IV length %v, expected 96",
+			Errorf("%s: invalid IV length %v, expected 96",
 				req.Mechanism.Mechanism, params.IvBits)
 			return pkcs11.ErrMechanismParamInvalid
 		}
@@ -1179,11 +1176,9 @@ func (p *Provider) Decrypt(req *pkcs11.DecryptReq) (*pkcs11.DecryptResp, error) 
 		resp.Data = req.EncryptedData
 
 	case pkcs11.CkmAESGCM:
-		if debug {
-			log.Printf("AEAD: IV: %x (%d), AAD: %x (%d)",
-				p.session.Decrypt.IV, len(p.session.Decrypt.IV),
-				p.session.Decrypt.AAD, len(p.session.Decrypt.AAD))
-		}
+		Debugf("AEAD: IV: %x (%d), AAD: %x (%d)",
+			p.session.Decrypt.IV, len(p.session.Decrypt.IV),
+			p.session.Decrypt.AAD, len(p.session.Decrypt.AAD))
 		if req.DataSize == 0 {
 			// Querying output buffer size.
 			return resp, nil
@@ -1243,7 +1238,7 @@ func (p *Provider) DigestInit(req *pkcs11.DigestInitReq) error {
 		return nil
 
 	default:
-		log.Printf("DigestInit: Mechanism=%v", req.Mechanism.Mechanism)
+		Errorf("DigestInit: mechanism=%v", req.Mechanism.Mechanism)
 		return pkcs11.ErrMechanismInvalid
 	}
 }
@@ -1496,7 +1491,7 @@ func (p *Provider) Verify(req *pkcs11.VerifyReq) error {
 		digest := verify.Digest.Sum(nil)
 		err := rsa.VerifyPKCS1v15(pub, verify.Hash, digest, req.Signature)
 		if err != nil {
-			log.Printf("Verify: rsa.VerifyPKCS1v15: %s", err)
+			Errorf("Verify: rsa.VerifyPKCS1v15: %s", err)
 			p.session.Verify = nil
 			return pkcs11.ErrSignatureInvalid
 		}
@@ -1617,7 +1612,7 @@ func (p *Provider) GenerateKey(req *pkcs11.GenerateKeyReq) (*pkcs11.GenerateKeyR
 		key := make([]byte, size)
 		_, err = rand.Read(key)
 		if err != nil {
-			log.Printf("rand.Read failed: %s", err)
+			Errorf("rand.Read failed: %s", err)
 			return nil, pkcs11.ErrDeviceError
 		}
 		tmpl := req.Template
@@ -1649,14 +1644,9 @@ func (p *Provider) GenerateKey(req *pkcs11.GenerateKeyReq) (*pkcs11.GenerateKeyR
 		}, nil
 
 	default:
-		log.Printf("GenerateKey: %s", req.Mechanism)
-		log.Printf("Template:")
-		for idx, attr := range req.Template {
-			log.Printf(" - %d: %s\n", idx, attr.Type)
-			if len(attr.Value) > 0 {
-				log.Printf("%s", hex.Dump(attr.Value))
-			}
-		}
+		Infof("GenerateKey: %s", req.Mechanism)
+		Infof("Template:")
+		req.Template.Print("\u2502 ")
 		return nil, pkcs11.ErrMechanismInvalid
 	}
 }
@@ -1690,9 +1680,9 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 			return nil, err
 		}
 		if false {
-			log.Printf("bits:\t%d\n", bits)
-			log.Printf("e:\t%s\n", e)
-			log.Printf("token:\t%v\n", token)
+			Infof("bits:\t%d\n", bits)
+			Infof("e:\t%s\n", e)
+			Infof("token:\t%v\n", token)
 		}
 		if bits < int(info.MinKeySize) || bits > int(info.MaxKeySize) {
 			return nil, pkcs11.ErrMechanismParamInvalid
@@ -1706,7 +1696,7 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 
 		// Store private key prime factors.
 		if len(key.Primes) != 2 {
-			log.Printf("rsa.GenerateKey: #primes != 2: %d", len(key.Primes))
+			Errorf("rsa.GenerateKey: #primes != 2: %d", len(key.Primes))
 			return nil, pkcs11.ErrDeviceError
 		}
 
@@ -1822,10 +1812,10 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 		}
 		p.session.Objects[pubHandle] = storage
 		if false {
-			log.Printf("GenerateKey: %s", req.Mechanism)
-			log.Printf(" - PublicKey:")
+			Infof("GenerateKey: %s", req.Mechanism)
+			Infof(" - PublicKey:")
 			pubObj.Attrs.Print("\u2502 ")
-			log.Printf(" - PrivateKey:")
+			Infof(" - PrivateKey:")
 			privObj.Attrs.Print("\u2502 ")
 		}
 
@@ -1835,10 +1825,10 @@ func (p *Provider) GenerateKeyPair(req *pkcs11.GenerateKeyPairReq) (*pkcs11.Gene
 		}, nil
 
 	default:
-		log.Printf("GenerateKeyPair: %s", req.Mechanism)
-		log.Printf("PublicKeyTemplate:")
+		Infof("GenerateKeyPair: %s", req.Mechanism)
+		Infof("PublicKeyTemplate:")
 		req.PublicKeyTemplate.Print("\u2502 ")
-		log.Printf("PrivateKeyTemplate:")
+		Infof("PrivateKeyTemplate:")
 		req.PrivateKeyTemplate.Print("\u2502 ")
 
 		return nil, pkcs11.ErrMechanismInvalid
@@ -1863,6 +1853,15 @@ func (p *Provider) GenerateRandom(req *pkcs11.GenerateRandomReq) (*pkcs11.Genera
 		return nil, pkcs11.ErrDeviceError
 	}
 	return resp, nil
+}
+
+// Debugf prints a debug message.
+func Debugf(format string, a ...interface{}) {
+	if !debug {
+		return
+	}
+	msg := fmt.Sprintf(format, a...)
+	log.Printf("\u255e\u2550\u2550\u2563%s", msg)
 }
 
 // Infof prints an informative message.
